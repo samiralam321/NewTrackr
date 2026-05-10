@@ -82,8 +82,8 @@ export function Feed({
 
   const fetchPosts = async (showLoading = true) => {
     if (showLoading) setIsLoading(true)
-    let currentUid = currentUserIdProp;
-    if (currentUid === undefined) {
+    let currentUid: string | null = currentUserIdProp || null;
+    if (!currentUid) {
       const { data: userData } = await supabase.auth.getUser()
       currentUid = userData.user?.id || null
     }

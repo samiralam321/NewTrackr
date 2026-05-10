@@ -99,7 +99,7 @@ export default async function ChallengesPage() {
   }
 
   // 4. Fetch questions if there's a challenge
-  let questions = []
+  let questions: any[] = []
   if (dailyChallenge) {
     const { data: qData } = await supabase
       .from('questions')
