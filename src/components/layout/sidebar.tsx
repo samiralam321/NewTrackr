@@ -6,6 +6,7 @@ import { Home, Compass, Trophy, Medal, Bookmark, Mail, Bell, CheckCircle2, LogOu
 import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useClerk } from "@clerk/nextjs"
 
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
@@ -14,6 +15,7 @@ export function Sidebar({ profile }: { profile?: any }) {
   const [activeDays, setActiveDays] = useState([false, false, false, false, false, false, false])
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const supabase = createClient()
+  const { signOut: clerkSignOut } = useClerk()
 
   // Contact Creator states
   const [isContactOpen, setIsContactOpen] = useState(false)
@@ -32,6 +34,7 @@ export function Sidebar({ profile }: { profile?: any }) {
 
   const confirmLogout = async () => {
     await supabase.auth.signOut()
+    await clerkSignOut()
     router.push('/')
     router.refresh()
   }

@@ -1,25 +1,26 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
+import { useSignIn } from "@clerk/nextjs"
 
 export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false)
-  const supabase = createClient()
+  const { signIn, isLoaded } = useSignIn() as any
 
   const handleGoogleLogin = async () => {
+    if (!isLoaded) return
     setIsLoading(true)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${location.origin}/auth/callback`,
-      },
-    })
     
-    if (error) {
-      console.error('Error logging in:', error.message)
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/dashboard",
+      })
+    } catch (err: any) {
+      console.error('Error logging in with Clerk:', err)
       setIsLoading(false)
     }
   }
