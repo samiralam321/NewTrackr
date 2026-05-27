@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Home, Compass, Trophy, Medal, Bookmark, Mail, Bell, CheckCircle2, LogOut } from "lucide-react"
+import { Home, Compass, Trophy, Medal, Bookmark, Mail, Bell, CheckCircle2, LogOut, MessageSquare } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -15,10 +15,52 @@ export function Sidebar({ profile }: { profile?: any }) {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const supabase = createClient()
 
+  // Contact Creator states
+  const [isContactOpen, setIsContactOpen] = useState(false)
+  const [contactName, setContactName] = useState("")
+  const [contactEmail, setContactEmail] = useState("")
+  const [contactMessage, setContactMessage] = useState("")
+  const [isSendingContact, setIsSendingContact] = useState(false)
+  const [contactSent, setContactSent] = useState(false)
+
   const confirmLogout = async () => {
     await supabase.auth.signOut()
     router.push('/')
     router.refresh()
+  }
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSendingContact(true)
+    
+    try {
+      await fetch('https://formsubmit.co/ajax/sa8103339@gmail.com', {
+        method: "POST",
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            name: contactName,
+            email: contactEmail,
+            message: contactMessage,
+            _subject: "Trackr Creator Contact Form"
+        })
+      })
+      
+      setContactSent(true)
+      setTimeout(() => {
+        setIsContactOpen(false)
+        setContactSent(false)
+        setContactName("")
+        setContactEmail("")
+        setContactMessage("")
+      }, 2000)
+    } catch (error) {
+      alert("Failed to send message. Please try again.")
+    } finally {
+      setIsSendingContact(false)
+    }
   }
 
   useEffect(() => {
@@ -122,7 +164,7 @@ export function Sidebar({ profile }: { profile?: any }) {
       </Link>
 
       {/* Nav Items */}
-      <nav className="flex flex-col gap-1 mb-10">
+      <nav className="flex flex-col gap-1 mb-6">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -147,6 +189,17 @@ export function Sidebar({ profile }: { profile?: any }) {
             </Link>
           )
         })}
+
+        {/* Contact Button */}
+        <button 
+          onClick={() => setIsContactOpen(true)}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A24] hover:text-gray-900 dark:hover:text-white text-left cursor-pointer w-full"
+        >
+          <div className="relative flex items-center justify-center">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+          Contact Creator
+        </button>
       </nav>
 
       {/* Streak Widget */}
@@ -228,6 +281,76 @@ export function Sidebar({ profile }: { profile?: any }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Contact Creator Modal */}
+      {isContactOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/60 z-[9999] backdrop-blur-[2px] animate-in fade-in duration-200"
+            onClick={() => !isSendingContact && setIsContactOpen(false)}
+          />
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-white dark:bg-[#1A1A24] w-full max-w-md rounded-3xl p-6 shadow-2xl pointer-events-auto animate-in zoom-in-95 fade-in duration-200 border border-gray-100 dark:border-[#2D2B3B]">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Contact Admin / Creator 💬</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Have any feedback, issues, or suggestions? Drop the creator a line directly!</p>
+              
+              {contactSent ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center animate-in zoom-in duration-300">
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Message Sent!</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Your message is on its way to the creator's inbox.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleContactSubmit} className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Your Name</label>
+                    <input 
+                      type="text" 
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      placeholder="Enter your name" 
+                      required
+                      className="w-full bg-gray-50 dark:bg-[#0B0A10] border border-gray-200 dark:border-[#2D2B3B] text-gray-900 dark:text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Your Email</label>
+                    <input 
+                      type="email" 
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      placeholder="name@example.com" 
+                      required
+                      className="w-full bg-gray-50 dark:bg-[#0B0A10] border border-gray-200 dark:border-[#2D2B3B] text-gray-900 dark:text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Message</label>
+                    <textarea 
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      placeholder="Type your thoughts here..." 
+                      rows={4}
+                      required
+                      className="w-full bg-gray-50 dark:bg-[#0B0A10] border border-gray-200 dark:border-[#2D2B3B] text-gray-900 dark:text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 resize-y"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 mt-2">
+                    <button type="button" onClick={() => setIsContactOpen(false)} disabled={isSendingContact} className="px-5 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#2D2B3B] rounded-xl transition-colors disabled:opacity-50">
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={isSendingContact} className="px-5 py-2.5 text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-xl shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50">
+                      {isSendingContact ? 'Sending...' : 'Send Message'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </>
       )}
     </aside>
   )

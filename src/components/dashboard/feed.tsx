@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { Bookmark, Heart, MessageCircle, Send, Trash2, MoreVertical, Edit2, Pin, Flag, BellOff, UserX, AlertTriangle } from "lucide-react"
+import { Bookmark, Heart, MessageCircle, Send, Trash2, MoreVertical, Edit2, Pin, Flag, BellOff, UserX, AlertTriangle, Share2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Post, Comment } from "@/lib/supabase/types"
 import Link from "next/link"
@@ -43,6 +43,7 @@ export function Feed({
   const [reportReason, setReportReason] = useState("")
   const [blockUser, setBlockUser] = useState<{id: string, name: string} | null>(null)
   const [hiddenUserIds, setHiddenUserIds] = useState<string[]>([])
+  const [pinnedPostId, setPinnedPostId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   
   const supabase = createClient()
@@ -70,6 +71,12 @@ export function Feed({
       console.warn("Failed to load muted or blocked users from localStorage", e)
     }
   }, [currentUserId])
+
+  // Load pinned post on mount / userId change
+  useEffect(() => {
+    const storedPinned = localStorage.getItem(`pinned_post_${userIdFilter || currentUserId}`)
+    setPinnedPostId(storedPinned)
+  }, [userIdFilter, currentUserId])
 
   useEffect(() => {
     fetchPosts()
@@ -156,14 +163,24 @@ export function Feed({
       return
     }
 
-    let formattedPosts = data.map((p: any) => ({
-      ...p,
-      user_has_liked: p.likes.some((l: any) => l.user_id === currentUid),
-      user_has_bookmarked: p.bookmarks.some((b: any) => b.user_id === currentUid),
-      likes_count: p.likes.length,
-      comments_count: p.comments.length,
-      bookmarks_count: p.bookmarks.length
-    })) as Post[]
+    let formattedPosts = data.map((p: any) => {
+      const activePinnedId = localStorage.getItem(`pinned_post_${userIdFilter || currentUid}`)
+      return {
+        ...p,
+        user_has_liked: p.likes.some((l: any) => l.user_id === currentUid),
+        user_has_bookmarked: p.bookmarks.some((b: any) => b.user_id === currentUid),
+        likes_count: p.likes.length,
+        comments_count: p.comments.length,
+        bookmarks_count: p.bookmarks.length,
+        is_pinned: p.id === activePinnedId
+      }
+    }) as Post[]
+
+    // Sort the pinned post to the very top of the feed
+    const activePinnedId = localStorage.getItem(`pinned_post_${userIdFilter || currentUid}`)
+    if (activePinnedId) {
+      formattedPosts = formattedPosts.sort((a, b) => (a.id === activePinnedId ? -1 : b.id === activePinnedId ? 1 : 0))
+    }
 
     if (savedOnlyFilter && currentUid) {
       formattedPosts = formattedPosts.filter(p => p.user_has_bookmarked)
@@ -310,9 +327,62 @@ export function Feed({
   }
 
   const handlePinPost = async (postId: string) => {
-    const { error } = await supabase.from('posts').update({ is_pinned: true } as any).eq('id', postId)
-    if (!error) {
-      setPosts(posts.map(p => p.id === postId ? { ...p, is_pinned: true } as any : p))
+    try {
+      const { error } = await supabase.from('posts').update({ is_pinned: true } as any).eq('id', postId)
+      if (error) {
+        console.warn("is_pinned db update bypassed (column missing). Falling back to localStorage.", error)
+      }
+    } catch (e) {
+      console.warn("Pin db update error:", e)
+    }
+
+    localStorage.setItem(`pinned_post_${currentUserId}`, postId)
+    setPinnedPostId(postId)
+    setPosts(prev => {
+      const updated = prev.map(p => p.id === postId ? { ...p, is_pinned: true } as any : { ...p, is_pinned: false } as any)
+      return [...updated].sort((a, b) => (a.id === postId ? -1 : b.id === postId ? 1 : 0))
+    })
+  }
+
+  const handleUnpinPost = async (postId: string) => {
+    try {
+      const { error } = await supabase.from('posts').update({ is_pinned: false } as any).eq('id', postId)
+      if (error) {
+        console.warn("is_pinned db unpin update bypassed.", error)
+      }
+    } catch (e) {
+      console.warn("Unpin db update error:", e)
+    }
+
+    localStorage.removeItem(`pinned_post_${currentUserId}`)
+    setPinnedPostId(null)
+    setPosts(prev => {
+      const updated = prev.map(p => p.id === postId ? { ...p, is_pinned: false } as any : p)
+      return [...updated].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    })
+  }
+
+  const handleSharePost = async (post: Post) => {
+    const postUrl = `${window.location.origin}/profile/${post.user_id}?postId=${post.id}`
+    const shareData = {
+      title: `${post.profiles?.full_name || 'A user'} shared a progress update on Trackr`,
+      text: post.content.substring(0, 100) + '...',
+      url: postUrl
+    }
+    
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData)
+      } catch (err) {
+        console.warn("Share failed or cancelled:", err)
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(postUrl)
+        alert("Post link copied to clipboard! 📋 Share it anywhere.")
+      } catch (err) {
+        alert("Failed to copy link.")
+      }
     }
   }
 
@@ -475,12 +545,21 @@ export function Feed({
                         >
                           <Edit2 className="w-4 h-4 text-gray-400" /> Edit Post
                         </button>
-                        <button 
-                          onClick={() => { handlePinPost(post.id); setOpenMenuId(null); }}
-                          className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors"
-                        >
-                          <Pin className="w-4 h-4 text-gray-400" /> Pin to Profile
-                        </button>
+                        {pinnedPostId === post.id ? (
+                          <button 
+                            onClick={() => { handleUnpinPost(post.id); setOpenMenuId(null); }}
+                            className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors"
+                          >
+                            <Pin className="w-4 h-4 text-violet-500 fill-violet-500" /> Unpin from Profile
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => { handlePinPost(post.id); setOpenMenuId(null); }}
+                            className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors"
+                          >
+                            <Pin className="w-4 h-4 text-gray-400" /> Pin to Profile
+                          </button>
+                        )}
                       </>
                     ) : (
                       <>
@@ -614,6 +693,16 @@ export function Feed({
               <button onClick={() => toggleBookmark(post.id, post.user_has_bookmarked || false)} className={`flex items-center gap-2 text-[15px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${post.user_has_bookmarked ? 'text-violet-600 dark:text-violet-500' : 'text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400'}`}>
                 <Bookmark className={`w-5 h-5 transition-transform duration-300 ${post.user_has_bookmarked ? 'fill-current scale-110' : ''}`} />
                 <span className="w-4 text-left">{(post as any).bookmarks_count || 0}</span>
+              </button>
+              
+              <div className="w-px h-5 bg-gray-200 dark:bg-gray-800"></div>
+
+              <button 
+                onClick={() => handleSharePost(post)} 
+                className="flex items-center gap-2 text-[15px] font-semibold text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-200 hover:scale-105 active:scale-95"
+                title="Share post"
+              >
+                <Share2 className="w-5 h-5" />
               </button>
 
               {post.user_id === currentUserId && (
