@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Flame, Star, BookOpen, Share2, Puzzle, Trophy, MapPin, Calendar, Edit2, Users, Compass, FileText, MessageCircle, Bookmark, Heart, Award, ChevronLeft } from "lucide-react"
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog"
 import Link from "next/link"
@@ -8,6 +8,7 @@ import { FollowButton } from "@/components/profile/follow-button"
 import { Feed } from "@/components/dashboard/feed"
 import { FollowListDialog } from "@/components/profile/follow-list-dialog"
 import { ProfileMenu } from "@/components/profile/profile-menu"
+import { createClient } from "@/lib/supabase/client"
 
 export function ProfileDashboard({ 
   profile, 
@@ -24,21 +25,98 @@ export function ProfileDashboard({
   isCurrentUser: boolean,
   currentUserId: string
 }) {
-  const safePosts = posts || []
-  const totalPosts = safePosts.length
-  
+  const [profileState, setProfileState] = useState(profile)
+  const [postsCountState, setPostsCountState] = useState(posts?.length || 0)
+  const [followersCountState, setFollowersCountState] = useState(followersCount || 0)
+  const [followingCountState, setFollowingCountState] = useState(followingCount || 0)
   const [activeTab, setActiveTab] = useState("posts")
+  
+  const supabase = createClient()
+
+  // Sync state if initial props change
+  useEffect(() => {
+    setProfileState(profile)
+    setPostsCountState(posts?.length || 0)
+    setFollowersCountState(followersCount || 0)
+    setFollowingCountState(followingCount || 0)
+  }, [profile, posts, followersCount, followingCount])
+
+  // Real-time Postgres subscriptions for Streaks, Posts Count, and Followers/Following Count
+  useEffect(() => {
+    const channel = supabase
+      .channel(`profile-dashboard-realtime:${profile.id}`)
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'posts',
+        filter: `user_id=eq.${profile.id}`
+      }, async () => {
+        // Re-fetch profile to get updated streak & last post date
+        const { data: updatedProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', profile.id)
+          .single()
+        if (updatedProfile) {
+          setProfileState(updatedProfile)
+        }
+        
+        // Re-fetch total posts count
+        const { count } = await supabase
+          .from('posts')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', profile.id)
+        if (count !== null) {
+          setPostsCountState(count)
+        }
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'follows',
+        filter: `following_id=eq.${profile.id}`
+      }, async () => {
+        // Re-fetch followers count
+        const { count } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('following_id', profile.id)
+        if (count !== null) {
+          setFollowersCountState(count)
+        }
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'follows',
+        filter: `follower_id=eq.${profile.id}`
+      }, async () => {
+        // Re-fetch following count
+        const { count } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('follower_id', profile.id)
+        if (count !== null) {
+          setFollowingCountState(count)
+        }
+      })
+      .subscribe()
+       
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [profile.id])
 
   // Main Streak Logic (Synchronized with sidebar)
-  let displayStreak = profile?.consistency_score || 0
-  if (profile?.last_post_date) {
+  let displayStreak = profileState?.consistency_score || 0
+  if (profileState?.last_post_date) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
     
-    const lastPost = new Date(profile.last_post_date)
+    const lastPost = new Date(profileState.last_post_date)
     lastPost.setHours(0, 0, 0, 0)
     
     if (lastPost < yesterday) {
@@ -48,16 +126,16 @@ export function ProfileDashboard({
 
   // Badges Logic
   const badges = [
-    { id: 'first_post', name: 'First Post', active: totalPosts > 0, icon: Star, color: 'text-violet-500 bg-violet-50' },
+    { id: 'first_post', name: 'First Post', active: postsCountState > 0, icon: Star, color: 'text-violet-500 bg-violet-50 font-bold' },
     { id: 'streak_starter', name: 'Streak Starter', active: displayStreak > 0, icon: Flame, color: 'text-orange-500 bg-orange-50' },
-    { id: 'active_learner', name: 'Active Learner', active: totalPosts >= 10, icon: BookOpen, color: 'text-emerald-500 bg-emerald-50' },
-    { id: 'sharer', name: 'Sharer', active: (followersCount || 0) > 0, icon: Share2, color: 'text-blue-500 bg-blue-50' },
-    { id: 'problem_solver', name: 'Problem Solver', active: safePosts.some(p => p.tags?.includes('#DSA') || p.tags?.includes('#Algorithms') || p.tags?.includes('DSA')), icon: Puzzle, color: 'text-fuchsia-500 bg-fuchsia-50' },
-    { id: 'top_contributor', name: 'Top Contributor', active: totalPosts >= 50, icon: Trophy, color: 'text-amber-500 bg-amber-50' }
+    { id: 'active_learner', name: 'Active Learner', active: postsCountState >= 10, icon: BookOpen, color: 'text-emerald-500 bg-emerald-50' },
+    { id: 'sharer', name: 'Sharer', active: (followersCountState || 0) > 0, icon: Share2, color: 'text-blue-500 bg-blue-50' },
+    { id: 'problem_solver', name: 'Problem Solver', active: (posts || []).some(p => p.tags?.includes('#DSA') || p.tags?.includes('#Algorithms') || p.tags?.includes('DSA')), icon: Puzzle, color: 'text-fuchsia-500 bg-fuchsia-50' },
+    { id: 'top_contributor', name: 'Top Contributor', active: postsCountState >= 50, icon: Trophy, color: 'text-amber-500 bg-amber-50' }
   ]
 
   // Format Joined Date
-  const joinedDate = new Date(profile?.created_at || profile?.updated_at || new Date()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  const joinedDate = new Date(profileState?.created_at || profileState?.updated_at || new Date()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 
   // Current Streak Widget Logic
   const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -89,7 +167,7 @@ export function ProfileDashboard({
               <div className="relative -mt-16 md:-mt-20 flex flex-col">
                 <div className="relative inline-block">
                   <img 
-                    src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.full_name || 'User'}&background=EA580C&color=fff`} 
+                    src={profileState?.avatar_url || `https://ui-avatars.com/api/?name=${profileState?.full_name || 'User'}&background=EA580C&color=fff`} 
                     alt="Avatar" 
                     className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white dark:border-[#0B0A10] shadow-md bg-white"
                   />
@@ -97,26 +175,40 @@ export function ProfileDashboard({
                 </div>
               </div>
               
-              <div className="mt-4 flex gap-3">
+              <div className="mt-4 flex gap-3 items-center">
                 {isCurrentUser ? (
-                  <EditProfileDialog profile={profile} />
+                  <EditProfileDialog profile={profileState} />
                 ) : (
-                  <FollowButton targetUserId={profile.id} />
+                  <>
+                    <FollowButton 
+                      targetUserId={profileState.id} 
+                      onFollowChange={(isFollowing) => {
+                        setFollowersCountState(prev => prev + (isFollowing ? 1 : -1))
+                      }}
+                    />
+                    <Link 
+                      href={`/messages?userId=${profileState.id}`}
+                      className="flex items-center justify-center w-11 h-11 bg-white dark:bg-[#1A1A24] border border-gray-200 dark:border-[#2D2B3B] text-gray-700 dark:text-gray-200 hover:text-violet-600 dark:hover:text-violet-400 rounded-xl transition-all duration-200 shadow-sm active:scale-95 shrink-0"
+                      title="Send Message"
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                    </Link>
+                  </>
                 )}
               </div>
             </div>
 
             <div className="mt-4">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                {profile?.full_name || 'Anonymous User'}
+                {profileState?.full_name || 'Anonymous User'}
               </h1>
               
               <p className="text-[15px] text-gray-600 dark:text-gray-300 font-medium mt-1.5 flex items-center gap-2">
-                {profile?.college || 'Trackr Member'} 🎓
+                {profileState?.college || 'Trackr Member'} 🎓
               </p>
               
               <p className="text-[15px] text-gray-700 dark:text-gray-200 mt-4 max-w-2xl leading-relaxed">
-                {profile?.bio || 'Learning. Building. Sharing. 🚀'}
+                {profileState?.bio || 'Learning. Building. Sharing. 🚀'}
               </p>
               
               <div className="flex items-center gap-6 mt-4 text-sm text-gray-500 dark:text-gray-400 font-medium">
@@ -150,30 +242,30 @@ export function ProfileDashboard({
               <BookOpen className="w-5 h-5 text-violet-500" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{totalPosts}</span>
+              <span className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{postsCountState}</span>
               <span className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">Posts</span>
             </div>
           </div>
 
-          <FollowListDialog userId={profile.id} type="followers" count={followersCount || 0}>
+          <FollowListDialog userId={profileState.id} type="followers" count={followersCountState || 0}>
             <div className="flex items-center justify-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-[#1A1A24] rounded-xl transition-colors cursor-pointer w-full text-left">
               <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
                 <Users className="w-5 h-5 text-emerald-500" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{followersCount || 0}</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{followersCountState || 0}</span>
                 <span className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">Followers</span>
               </div>
             </div>
           </FollowListDialog>
 
-          <FollowListDialog userId={profile.id} type="following" count={followingCount || 0}>
+          <FollowListDialog userId={profileState.id} type="following" count={followingCountState || 0}>
             <div className="flex items-center justify-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-[#1A1A24] rounded-xl transition-colors cursor-pointer w-full text-left">
               <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
                 <Users className="w-5 h-5 text-blue-500" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{followingCount || 0}</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{followingCountState || 0}</span>
                 <span className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">Following</span>
               </div>
             </div>
@@ -235,16 +327,16 @@ export function ProfileDashboard({
               </div>
               
               <div className={`space-y-0 mt-0 ${activeTab === 'posts' ? 'block' : 'hidden'}`}>
-                <Feed userIdFilter={profile.id} currentUserIdProp={currentUserId} />
+                <Feed userIdFilter={profileState.id} currentUserIdProp={currentUserId} />
               </div>
               <div className={`space-y-0 mt-0 ${activeTab === 'likes' ? 'block' : 'hidden'}`}>
-                <Feed likedByFilter={profile.id} currentUserIdProp={currentUserId} />
+                <Feed likedByFilter={profileState.id} currentUserIdProp={currentUserId} />
               </div>
               <div className={`space-y-0 mt-0 ${activeTab === 'replies' ? 'block' : 'hidden'}`}>
-                <Feed commentedByFilter={profile.id} currentUserIdProp={currentUserId} />
+                <Feed commentedByFilter={profileState.id} currentUserIdProp={currentUserId} />
               </div>
               <div className={`space-y-0 mt-0 ${activeTab === 'highlights' ? 'block' : 'hidden'}`}>
-                <Feed userIdFilter={profile.id} highlightsOnlyFilter={true} currentUserIdProp={currentUserId} />
+                <Feed userIdFilter={profileState.id} highlightsOnlyFilter={true} currentUserIdProp={currentUserId} />
               </div>
             </div>
 

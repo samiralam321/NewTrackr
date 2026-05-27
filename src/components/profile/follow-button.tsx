@@ -6,10 +6,12 @@ import { UserPlus, UserMinus } from "lucide-react"
 
 export function FollowButton({ 
   targetUserId, 
-  initialIsFollowing = false 
+  initialIsFollowing = false,
+  onFollowChange
 }: { 
   targetUserId: string
   initialIsFollowing?: boolean 
+  onFollowChange?: (isFollowing: boolean) => void
 }) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -47,7 +49,11 @@ export function FollowButton({
 
     // Optimistic UI update
     const previousState = isFollowing
-    setIsFollowing(!isFollowing)
+    const newState = !isFollowing
+    setIsFollowing(newState)
+    
+    // Optimistic parent update for real-time counts
+    if (onFollowChange) onFollowChange(newState)
 
     if (previousState) {
       // Unfollow
@@ -56,14 +62,20 @@ export function FollowButton({
         .delete()
         .match({ follower_id: currentUserId, following_id: targetUserId })
       
-      if (error) setIsFollowing(previousState)
+      if (error) {
+        setIsFollowing(previousState)
+        if (onFollowChange) onFollowChange(previousState)
+      }
     } else {
       // Follow
       const { error } = await supabase
         .from('follows')
         .insert({ follower_id: currentUserId, following_id: targetUserId })
         
-      if (error) setIsFollowing(previousState)
+      if (error) {
+        setIsFollowing(previousState)
+        if (onFollowChange) onFollowChange(previousState)
+      }
     }
   }
 

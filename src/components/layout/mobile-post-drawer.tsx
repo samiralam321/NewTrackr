@@ -72,6 +72,44 @@ export function MobilePostDrawer() {
 
       if (error) throw error
 
+      // Update streak (Sync Consistency Score)
+      try {
+        const { data: profile } = await supabase.from('profiles').select('consistency_score, last_post_date').eq('id', userData.user.id).single()
+        if (profile) {
+          const today = new Date()
+          const todayStr = today.toISOString().split('T')[0]
+          
+          let newStreak = profile.consistency_score || 0
+          const lastPostDate = profile.last_post_date ? new Date(profile.last_post_date) : null
+          
+          if (!lastPostDate) {
+            newStreak = 1
+          } else {
+            const lastPostStr = lastPostDate.toISOString().split('T')[0]
+            if (lastPostStr !== todayStr) {
+              const yesterday = new Date(today)
+              yesterday.setDate(yesterday.getDate() - 1)
+              const yesterdayStr = yesterday.toISOString().split('T')[0]
+              
+              if (lastPostStr === yesterdayStr) {
+                newStreak += 1
+              } else {
+                newStreak = 1 // Reset streak if yesterday was missed
+              }
+            }
+          }
+
+          if (profile.last_post_date !== todayStr || newStreak !== profile.consistency_score) {
+            await supabase.from('profiles').update({
+              consistency_score: newStreak,
+              last_post_date: todayStr
+            }).eq('id', userData.user.id)
+          }
+        }
+      } catch (streakErr) {
+        console.error("Error updating streak on mobile post:", streakErr)
+      }
+
       // Reset form
       setContent("")
       setTags(["#DSA", "#Coding"])

@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, Suspense } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Send, Search, MessageCircle, ChevronLeft, Plus, Smile, Info, Image as ImageIcon } from "lucide-react"
+import { Send, Search, MessageCircle, ChevronLeft, Plus, Smile, Info, Image as ImageIcon, Loader2 } from "lucide-react"
 import { usePresence } from "@/components/providers/presence-provider"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 
 type Profile = {
   id: string
@@ -20,7 +21,7 @@ type Message = {
   created_at: string
 }
 
-export default function MessagesPage() {
+function MessagesContent() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [users, setUsers] = useState<Profile[]>([])
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null)
@@ -39,6 +40,8 @@ export default function MessagesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
   const onlineUsers = usePresence()
+  const searchParams = useSearchParams()
+  const targetUserId = searchParams.get('userId')
   
   const commonEmojis = ["👍", "❤️", "😂", "🔥", "😊", "🎉", "👀", "🙌"]
 
@@ -54,7 +57,15 @@ export default function MessagesPage() {
           .select('id, full_name, avatar_url')
           .neq('id', user.id)
         
-        if (data) setUsers(data)
+        if (data) {
+          setUsers(data)
+          if (targetUserId) {
+            const foundUser = data.find(u => u.id === targetUserId)
+            if (foundUser) {
+              setSelectedUser(foundUser)
+            }
+          }
+        }
 
         // Fetch all messages involving the current user to get latest message per conversation
         const { data: msgs } = await supabase
@@ -489,5 +500,13 @@ export default function MessagesPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div className="h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-[#050505]"><Loader2 className="w-8 h-8 animate-spin text-violet-600" /></div>}>
+      <MessagesContent />
+    </Suspense>
   )
 }
