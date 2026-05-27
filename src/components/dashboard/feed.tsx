@@ -57,6 +57,20 @@ export function Feed({
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  // Load muted and blocked users from localStorage
+  useEffect(() => {
+    if (!currentUserId) return
+    try {
+      const storedMuted = localStorage.getItem(`muted_users_${currentUserId}`)
+      const storedBlocked = localStorage.getItem(`blocked_users_${currentUserId}`)
+      const muted = storedMuted ? JSON.parse(storedMuted) : []
+      const blocked = storedBlocked ? JSON.parse(storedBlocked) : []
+      setHiddenUserIds(Array.from(new Set([...muted, ...blocked])))
+    } catch (e) {
+      console.warn("Failed to load muted or blocked users from localStorage", e)
+    }
+  }, [currentUserId])
+
   useEffect(() => {
     fetchPosts()
     
@@ -315,27 +329,59 @@ export function Feed({
 
   const handleBlockSubmit = async () => {
     if (!blockUser || !currentUserId) return
-    const { error } = await supabase.from('blocks').insert({
-      blocker_id: currentUserId,
-      blocked_user_id: blockUser.id
-    } as any)
     
-    if (error) console.error("Error blocking user:", error)
+    try {
+      const { error } = await supabase.from('blocks').insert({
+        blocker_id: currentUserId,
+        blocked_user_id: blockUser.id
+      } as any)
+      
+      if (error) {
+        console.warn("Supabase database block sync bypassed (table may be missing). falling back to local storage.", error.message || error)
+      }
+    } catch (e) {
+      console.warn("Block database insert error:", e)
+    }
     
-    setHiddenUserIds(prev => [...prev, blockUser.id])
+    try {
+      const storedBlocked = localStorage.getItem(`blocked_users_${currentUserId}`)
+      const blocked = storedBlocked ? JSON.parse(storedBlocked) : []
+      const newBlocked = Array.from(new Set([...blocked, blockUser.id]))
+      localStorage.setItem(`blocked_users_${currentUserId}`, JSON.stringify(newBlocked))
+    } catch (e) {
+      console.warn("Failed to save blocked user to localStorage", e)
+    }
+    
+    setHiddenUserIds(prev => Array.from(new Set([...prev, blockUser.id])))
     setBlockUser(null)
   }
 
   const handleMuteUser = async (userId: string) => {
     if (!currentUserId) return
-    const { error } = await supabase.from('mutes').insert({
-      muter_id: currentUserId,
-      muted_user_id: userId
-    } as any)
     
-    if (error) console.error("Error muting user:", error)
+    try {
+      const { error } = await supabase.from('mutes').insert({
+        muter_id: currentUserId,
+        muted_user_id: userId
+      } as any)
+      
+      if (error) {
+        console.warn("Supabase database mute sync bypassed (table may be missing). falling back to local storage.", error.message || error)
+      }
+    } catch (e) {
+      console.warn("Mute database insert error:", e)
+    }
     
-    setHiddenUserIds(prev => [...prev, userId])
+    try {
+      const storedMuted = localStorage.getItem(`muted_users_${currentUserId}`)
+      const muted = storedMuted ? JSON.parse(storedMuted) : []
+      const newMuted = Array.from(new Set([...muted, userId]))
+      localStorage.setItem(`muted_users_${currentUserId}`, JSON.stringify(newMuted))
+    } catch (e) {
+      console.warn("Failed to save muted user to localStorage", e)
+    }
+    
+    setHiddenUserIds(prev => Array.from(new Set([...prev, userId])))
   }
 
   return (
