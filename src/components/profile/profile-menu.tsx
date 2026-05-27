@@ -4,7 +4,6 @@ import { useState } from "react"
 import { MoreVertical, Share2, Settings, HelpCircle, LogOut } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { useClerk } from "@clerk/nextjs"
 
 export function ProfileMenu() {
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -19,12 +18,10 @@ export function ProfileMenu() {
   
   const router = useRouter()
   const supabase = createClient()
-  const { signOut: clerkSignOut } = useClerk()
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
     await supabase.auth.signOut()
-    await clerkSignOut()
     router.push('/login')
   }
 

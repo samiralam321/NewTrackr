@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ClerkProvider } from "@clerk/nextjs";
-import { SupabaseAuthSync } from "@/components/providers/clerk-supabase-sync-provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,21 +29,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html
-        lang="en"
-        className={`${inter.variable} font-sans h-full antialiased`}
+    <html
+      lang="en"
+      className={`${inter.variable} font-sans h-full antialiased`}
+    >
+      <body
+        className={`${inter.variable} antialiased`}
       >
-        <body
-          className={`${inter.variable} antialiased`}
-        >
-          <ThemeProvider>
-            <SupabaseAuthSync>
-              {children}
-            </SupabaseAuthSync>
-          </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }
