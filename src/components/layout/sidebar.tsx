@@ -163,31 +163,31 @@ export function Sidebar({ profile }: { profile?: any }) {
   }
 
   return (
-    <aside className="w-[280px] h-screen sticky top-0 z-50 border-r border-gray-100 dark:border-[#2D2B3B] bg-white dark:bg-[#0B0A10] flex flex-col pt-4 pb-4 px-4 shrink-0 transition-colors duration-300">
+    <aside className="w-[280px] h-screen sticky top-0 z-50 border-r border-gray-100 dark:border-[#2D2B3B] bg-white dark:bg-[#0B0A10] flex flex-col pt-3 pb-3 px-3 shrink-0 transition-colors duration-300">
       {/* Logo */}
-      <Link href="/dashboard" className="flex items-center gap-3 px-2 mb-4">
-        <img src="/logo.png" alt="Trackr Logo" className="w-12 h-12 object-contain drop-shadow-sm scale-[1.2] origin-left" />
-        <span className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Trackr</span>
+      <Link href="/dashboard" className="flex items-center gap-2 px-2 mb-2">
+        <img src="/logo.png" alt="Trackr Logo" className="w-10 h-10 object-contain drop-shadow-sm scale-[1.2] origin-left" />
+        <span className="text-xl font-black tracking-tight text-gray-900 dark:text-white">Trackr</span>
       </Link>
 
       {/* Scrollable Middle Container */}
       <div className="flex-1 overflow-y-auto min-h-0 pr-1 flex flex-col no-scrollbar select-none">
         {/* Nav Items */}
-        <nav className="flex flex-col gap-0.5 mb-3 shrink-0">
+        <nav className="flex flex-col gap-0.5 mb-2 shrink-0">
           {navItems.map((item) => {
             const isActive = pathname === item.href
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl font-medium transition-colors relative ${
+                className={`flex items-center gap-3 px-3 py-1.5 rounded-xl font-semibold text-[14px] transition-colors relative ${
                   isActive 
                     ? 'bg-[#EEECFF] dark:bg-[#1A1A24] text-violet-600 dark:text-violet-400' 
                     : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A24] hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 <div className="relative flex items-center justify-center">
-                  <item.icon className="w-5 h-5" />
+                  <item.icon className="w-[18px] h-[18px]" />
                   {item.name === 'Notifications' && unreadCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-[16px] h-[16px] flex items-center justify-center shadow-sm leading-none border-2 border-white dark:border-[#0B0A10] z-10">
                       {unreadCount > 5 ? '5+' : unreadCount}
@@ -202,35 +202,35 @@ export function Sidebar({ profile }: { profile?: any }) {
           {/* Contact Button */}
           <button 
             onClick={() => setIsContactOpen(true)}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl font-medium transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A24] hover:text-gray-900 dark:hover:text-white text-left cursor-pointer w-full"
+            className="flex items-center gap-3 px-3 py-1.5 rounded-xl font-semibold text-[14px] transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A24] hover:text-gray-900 dark:hover:text-white text-left cursor-pointer w-full"
           >
             <div className="relative flex items-center justify-center">
-              <MessageSquare className="w-5 h-5" />
+              <MessageSquare className="w-[18px] h-[18px]" />
             </div>
             Contact
           </button>
         </nav>
 
         {/* Streak Widget */}
-        <div className="mt-auto mb-4 px-2 shrink-0">
-          <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Keep your streak alive!</p>
-          <div className="flex items-end gap-2.5 mb-3">
-            <div className="text-3xl">{displayStreak > 0 ? '🔥' : '⏳'}</div>
+        <div className="mt-3 mb-2 px-2 shrink-0">
+          <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Keep your streak alive!</p>
+          <div className="flex items-end gap-2 mb-2">
+            <div className="text-2xl">{displayStreak > 0 ? '🔥' : '⏳'}</div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold leading-none text-gray-900 dark:text-white">{displayStreak}</span>
-              <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">day streak</span>
+              <span className="text-lg font-extrabold leading-none text-gray-900 dark:text-white">{displayStreak}</span>
+              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">day streak</span>
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-0.5">
             {days.map((day, i) => (
-              <div key={i} className="flex flex-col items-center gap-1">
-                <span className="text-[9px] font-bold text-gray-400">{day}</span>
+              <div key={i} className="flex flex-col items-center gap-0.5">
+                <span className="text-[8px] font-bold text-gray-400">{day}</span>
                 {activeDays[i] ? (
-                  <div className="w-5.5 h-5.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400 flex items-center justify-center">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  <div className="w-[18px] h-[18px] rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400 flex items-center justify-center">
+                    <CheckCircle2 className="w-[11px] h-[11px]" />
                   </div>
                 ) : (
-                  <div className="w-5.5 h-5.5 rounded-full bg-gray-100 dark:bg-[#1A1A24] flex items-center justify-center">
+                  <div className="w-[18px] h-[18px] rounded-full bg-gray-100 dark:bg-[#1A1A24] flex items-center justify-center">
                     <div className="w-1 h-1 rounded-full bg-gray-300 dark:bg-[#2D2B3B]"></div>
                   </div>
                 )}
@@ -241,30 +241,30 @@ export function Sidebar({ profile }: { profile?: any }) {
       </div>
 
       {/* Fixed Bottom Controls */}
-      <div className="mt-2 pt-2.5 border-t border-gray-100 dark:border-[#2D2B3B]/60 shrink-0">
-        <div className="mb-2.5 flex justify-center">
+      <div className="mt-1.5 pt-2 border-t border-gray-100 dark:border-[#2D2B3B]/60 shrink-0">
+        <div className="mb-1.5 flex justify-center">
           <ThemeToggle />
         </div>
 
         {/* Profile Info */}
-        <div className="flex items-center gap-2">
-          <Link href="/profile" className="flex-1 flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-colors border border-gray-100 dark:border-[#2D2B3B] shadow-sm min-w-0">
+        <div className="flex items-center gap-1.5">
+          <Link href="/profile" className="flex-1 flex items-center gap-2.5 px-2.5 py-2 rounded-2xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-colors border border-gray-100 dark:border-[#2D2B3B] shadow-sm min-w-0">
             <img 
               src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.full_name || 'User'}&background=7C3AED&color=fff`} 
               alt="Profile" 
-              className="w-10 h-10 rounded-full object-cover shrink-0"
+              className="w-9 h-9 rounded-full object-cover shrink-0"
             />
             <div className="flex flex-col overflow-hidden">
-              <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">{profile?.full_name ? profile.full_name.split(' ')[0] : 'User'}</span>
-              <span className="text-xs font-medium text-violet-600 dark:text-violet-400 truncate">View profile</span>
+              <span className="text-xs font-bold text-gray-900 dark:text-white truncate leading-snug">{profile?.full_name ? profile.full_name.split(' ')[0] : 'User'}</span>
+              <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 truncate">View profile</span>
             </div>
           </Link>
           <button 
             onClick={() => setIsLogoutModalOpen(true)}
-            className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
+            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
             title="Log out"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4.5 h-4.5" />
           </button>
         </div>
       </div>
