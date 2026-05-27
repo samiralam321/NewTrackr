@@ -13,8 +13,8 @@ export function Greeting({ name }: { name: string }) {
   }, [])
 
   return (
-    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 transition-colors">
-      {greeting}, {name}! <span className="text-2xl">👋</span>
+    <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900 dark:text-white transition-colors leading-tight">
+      {greeting}, {name}! <span className="inline-block">👋</span>
     </h1>
   )
 }
