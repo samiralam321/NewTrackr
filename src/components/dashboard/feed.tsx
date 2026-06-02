@@ -677,11 +677,11 @@ export function Feed({
           {/* Desktop Action Bar */}
           <div className="hidden md:flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#2D2B3B] transition-colors px-1">
             {/* Left Group */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               {/* Like */}
               <button 
                 onClick={() => toggleLike(post.id, post.user_has_liked || false)} 
-                className={`flex items-center gap-2 text-[14px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
+                className={`flex items-center gap-2.5 text-[14px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
                   post.user_has_liked ? 'text-red-500 dark:text-red-500' : 'text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400'
                 }`}
               >
@@ -695,7 +695,7 @@ export function Feed({
               {/* Comment */}
               <button 
                 onClick={() => toggleComments(post.id)} 
-                className="flex items-center gap-2 text-[14px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-all duration-200 hover:scale-105 active:scale-95"
+                className="flex items-center gap-2.5 text-[14px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 <MessageCircle className="w-[19px] h-[19px]" /> 
                 <span>{(post as any).comments_count}</span>
@@ -703,11 +703,11 @@ export function Feed({
             </div>
 
             {/* Right Group */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               {/* Save/Bookmark */}
               <button 
                 onClick={() => toggleBookmark(post.id, post.user_has_bookmarked || false)} 
-                className={`flex items-center gap-2 text-[14px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
+                className={`flex items-center gap-2.5 text-[14px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
                   post.user_has_bookmarked ? 'text-violet-600 dark:text-violet-500' : 'text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400'
                 }`}
               >
@@ -721,7 +721,7 @@ export function Feed({
               {/* Share */}
               <button 
                 onClick={() => handleSharePost(post)} 
-                className="flex items-center gap-2 text-[14px] font-semibold text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-200 hover:scale-105 active:scale-95"
+                className="flex items-center gap-2.5 text-[14px] font-semibold text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-200 hover:scale-105 active:scale-95"
                 title="Share post"
               >
                 <Share2 className="w-[19px] h-[19px]" />
@@ -735,7 +735,7 @@ export function Feed({
 
                   <button 
                     onClick={() => setPostToDelete(post.id)} 
-                    className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition-all duration-200 hover:scale-110 active:scale-95"
+                    className="flex items-center gap-2.5 text-gray-400 hover:text-red-500 transition-all duration-200 hover:scale-110 active:scale-95"
                     title="Delete post"
                   >
                     <Trash2 className="w-[19px] h-[19px]" />
