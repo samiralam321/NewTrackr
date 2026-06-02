@@ -24,6 +24,12 @@ export async function updateSession(request: NextRequest) {
           )
         },
       },
+      cookieOptions: {
+        maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
+        path: '/',
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      }
     }
   )
 
