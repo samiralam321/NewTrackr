@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Loader2, Mail, Lock } from "lucide-react"
 
 export function AuthForm() {
@@ -19,6 +19,48 @@ export function AuthForm() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const supabase = createClient()
+
+  // Client-Side Session Auto-Restore & Redirect
+  useEffect(() => {
+    const checkActiveSession = async () => {
+      try {
+        // 1. Instantly check if we have a valid session in localStorage/cookies
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          // Explicitly sync the session back to cookies first
+          const cookieOptions = {
+            maxAge: 30 * 24 * 60 * 60, // 30 days
+            path: '/'
+          }
+          // Restore token to cookies to ensure Next.js SSR and proxy.ts middleware pick it up immediately
+          document.cookie = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL!.replace('https://', '').split('.')[0]}-auth-token=${encodeURIComponent(JSON.stringify(session))}; max-age=${cookieOptions.maxAge}; path=${cookieOptions.path}; SameSite=Lax`
+          
+          window.location.href = '/dashboard'
+        }
+      } catch (err) {
+        console.warn("Client session restore skipped:", err)
+      }
+    }
+
+    checkActiveSession()
+
+    // 2. Set up listener to capture OAuth (Google) or Email auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+        const cookieOptions = {
+          maxAge: 30 * 24 * 60 * 60, // 30 days
+          path: '/'
+        }
+        document.cookie = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL!.replace('https://', '').split('.')[0]}-auth-token=${encodeURIComponent(JSON.stringify(session))}; max-age=${cookieOptions.maxAge}; path=${cookieOptions.path}; SameSite=Lax`
+        
+        window.location.href = '/dashboard'
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [supabase])
 
   const handleGoogleLogin = async () => {
     setIsLoading(true)
