@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Loader2, Camera } from "lucide-react"
+import { Loader2, Camera, UploadCloud, FileText, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 
@@ -16,6 +16,8 @@ type ProfileProps = {
   bio: string | null
   college: string | null
   avatar_url: string | null
+  resume_url?: string | null
+  resume_name?: string | null
 }
 
 export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
@@ -26,8 +28,13 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
   const [college, setCollege] = useState(profile.college || "")
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(profile.avatar_url)
+  const [resumeFile, setResumeFile] = useState<File | null>(null)
+  const [resumeUrl, setResumeUrl] = useState<string | null>(profile.resume_url || null)
+  const [resumeName, setResumeName] = useState<string | null>(profile.resume_name || null)
+  const [isDeletingResume, setIsDeletingResume] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const resumeInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
   const router = useRouter()
 
@@ -60,13 +67,39 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
         avatarUrl = publicUrl.publicUrl
       }
 
+      let finalResumeUrl = resumeUrl
+      let finalResumeName = resumeName
+
+      if (isDeletingResume) {
+        finalResumeUrl = null
+        finalResumeName = null
+      } else if (resumeFile) {
+        const fileExt = resumeFile.name.split('.').pop()
+        const fileName = `${profile.id}-resume-${Date.now()}.${fileExt}`
+        
+        const { error: uploadError } = await supabase.storage
+          .from('resumes')
+          .upload(fileName, resumeFile, { upsert: true })
+        
+        if (uploadError) throw uploadError
+
+        const { data: publicUrl } = supabase.storage
+          .from('resumes')
+          .getPublicUrl(fileName)
+        
+        finalResumeUrl = publicUrl.publicUrl
+        finalResumeName = resumeFile.name
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
           full_name: fullName,
           bio,
           college,
-          avatar_url: avatarUrl
+          avatar_url: avatarUrl,
+          resume_url: finalResumeUrl,
+          resume_name: finalResumeName
         })
         .eq('id', profile.id)
 
@@ -133,6 +166,64 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
               placeholder="Tell us about yourself..."
               className="resize-none rounded-xl border-gray-200 h-24"
             />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="resume">Resume (PDF or Word)</Label>
+            <div className="flex items-center gap-3">
+              {resumeFile || resumeName ? (
+                <div className="flex-1 flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/50 dark:bg-[#1A1A24] dark:border-[#2D2B3B] transition-all">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <FileText className="w-5 h-5 text-violet-500 shrink-0" />
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 truncate max-w-[220px]">
+                      {resumeFile ? resumeFile.name : resumeName}
+                    </span>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => {
+                      setResumeFile(null)
+                      setResumeUrl(null)
+                      setResumeName(null)
+                      setIsDeletingResume(true)
+                      if (resumeInputRef.current) resumeInputRef.current.value = ""
+                    }} 
+                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => resumeInputRef.current?.click()} 
+                  className="w-full h-11 border-dashed border-gray-200 hover:border-violet-500 hover:bg-violet-50/10 dark:border-[#2D2B3B] rounded-xl flex items-center justify-center gap-2.5 text-gray-500 hover:text-violet-600 font-semibold transition-all duration-200 cursor-pointer"
+                >
+                  <UploadCloud className="w-5 h-5" />
+                  Upload Resume
+                </Button>
+              )}
+              <input 
+                type="file" 
+                ref={resumeInputRef} 
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0]
+                    if (file.size > 5 * 1024 * 1024) {
+                      alert("File is too large. Max size is 5MB.")
+                      return
+                    }
+                    setResumeFile(file)
+                    setIsDeletingResume(false)
+                  }
+                }} 
+                accept=".pdf,.doc,.docx" 
+                className="hidden" 
+              />
+            </div>
           </div>
         </div>
         <div className="flex justify-end gap-3">

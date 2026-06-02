@@ -1,11 +1,45 @@
 'use client'
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, Compass, Bell, Mail } from "lucide-react"
 
 export function MobileBottomNav({ profile }: { profile?: any }) {
   const pathname = usePathname()
+  const [hideNav, setHideNav] = useState(false)
+
+  useEffect(() => {
+    const checkChat = () => {
+      const params = new URLSearchParams(window.location.search)
+      setHideNav(window.location.pathname === '/messages' && !!params.get('userId'))
+    }
+    
+    checkChat()
+    
+    window.addEventListener('popstate', checkChat)
+    
+    const originalPushState = window.history.pushState
+    const originalReplaceState = window.history.replaceState
+    
+    window.history.pushState = function(...args) {
+      originalPushState.apply(this, args)
+      setTimeout(checkChat, 0)
+    }
+    
+    window.history.replaceState = function(...args) {
+      originalReplaceState.apply(this, args)
+      setTimeout(checkChat, 0)
+    }
+    
+    return () => {
+      window.removeEventListener('popstate', checkChat)
+      window.history.pushState = originalPushState
+      window.history.replaceState = originalReplaceState
+    }
+  }, [])
+
+  if (hideNav) return null
 
   const navItems = [
     { name: 'Home', href: '/dashboard', icon: Home },

@@ -43,6 +43,17 @@ function MessagesContent() {
   const searchParams = useSearchParams()
   const targetUserId = searchParams.get('userId')
   
+  const selectUserAndUrl = (user: Profile | null) => {
+    setSelectedUser(user)
+    if (typeof window !== 'undefined') {
+      if (user) {
+        window.history.pushState(null, '', `/messages?userId=${user.id}`)
+      } else {
+        window.history.pushState(null, '', `/messages`)
+      }
+    }
+  }
+
   const commonEmojis = ["👍", "❤️", "😂", "🔥", "😊", "🎉", "👀", "🙌"]
 
   useEffect(() => {
@@ -50,38 +61,28 @@ function MessagesContent() {
       const { data: { user } } = await supabase.auth.getUser()
       setCurrentUser(user)
 
-      // Fetch all users to chat with (excluding self)
       if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-          .neq('id', user.id)
-        
-        if (data) {
-          setUsers(data)
-          if (targetUserId) {
-            const foundUser = data.find(u => u.id === targetUserId)
-            if (foundUser) {
-              setSelectedUser(foundUser)
-            }
-          }
-        }
-
-        // Fetch all messages involving the current user to get latest message per conversation
+        // Fetch all messages involving the current user to find active participants
         const { data: msgs } = await supabase
           .from('messages')
           .select('*')
           .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
           .order('created_at', { ascending: false })
         
-        if (msgs) {
-          const latest: Record<string, Message> = {}
-          const unreads: Record<string, number> = {}
-          const stored = localStorage.getItem('trackr_read_timestamps')
-          const readTimestamps = stored ? JSON.parse(stored) : {}
+        const activeUserIds = new Set<string>()
+        if (targetUserId) {
+          activeUserIds.add(targetUserId)
+        }
 
+        const latest: Record<string, Message> = {}
+        const unreads: Record<string, number> = {}
+        const stored = localStorage.getItem('trackr_read_timestamps')
+        const readTimestamps = stored ? JSON.parse(stored) : {}
+
+        if (msgs) {
           msgs.forEach(m => {
             const otherId = m.sender_id === user.id ? m.receiver_id : m.sender_id
+            activeUserIds.add(otherId)
             if (!latest[otherId]) {
               latest[otherId] = m
             }
@@ -95,10 +96,30 @@ function MessagesContent() {
           setLatestMessages(latest)
           setUnreadCounts(unreads)
         }
+
+        // Fetch profiles only for active users
+        if (activeUserIds.size > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .in('id', Array.from(activeUserIds))
+          
+          if (profilesData) {
+            setUsers(profilesData)
+            if (targetUserId) {
+              const foundUser = profilesData.find(u => u.id === targetUserId)
+              if (foundUser) {
+                setSelectedUser(foundUser)
+              }
+            }
+          }
+        } else {
+          setUsers([])
+        }
       }
     }
     init()
-  }, [])
+  }, [targetUserId])
 
   const markAsRead = (otherUserId: string) => {
     const stored = localStorage.getItem('trackr_read_timestamps')
@@ -109,10 +130,62 @@ function MessagesContent() {
     setUnreadCounts(prev => ({ ...prev, [otherUserId]: 0 }))
   }
 
+  // Global Messages Realtime Subscription
+  useEffect(() => {
+    if (!currentUser) return
+
+    const channel = supabase
+      .channel(`global-messages:${currentUser.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages'
+      }, async (payload) => {
+        const newMsg = payload.new as Message
+        
+        if (newMsg.sender_id === currentUser.id || newMsg.receiver_id === currentUser.id) {
+          const otherId = newMsg.sender_id === currentUser.id ? newMsg.receiver_id : newMsg.sender_id
+          
+          setLatestMessages(prev => ({ ...prev, [otherId]: newMsg }))
+          
+          setUsers(prev => {
+            const exists = prev.some(u => u.id === otherId)
+            if (!exists) {
+              supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url')
+                .eq('id', otherId)
+                .single()
+                .then(({ data }) => {
+                  if (data) {
+                    setUsers(current => {
+                      if (!current.some(u => u.id === otherId)) {
+                        return [...current, data]
+                      }
+                      return current
+                    })
+                  }
+                })
+            }
+            return prev
+          })
+
+          if (newMsg.sender_id !== currentUser.id && selectedUser?.id !== otherId) {
+            setUnreadCounts(prev => ({ ...prev, [otherId]: (prev[otherId] || 0) + 1 }))
+          }
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [currentUser, selectedUser])
+
+  // Specific Chat Message Fetch & Subscription
   useEffect(() => {
     if (!currentUser || !selectedUser) return
 
-    // Fetch message history between current user and selected user
     const fetchMessages = async () => {
       const { data } = await supabase
         .from('messages')
@@ -126,29 +199,22 @@ function MessagesContent() {
 
     fetchMessages()
 
-    // Realtime subscription
     const channel = supabase
-      .channel(`messages:${currentUser.id}-${selectedUser.id}`)
+      .channel(`chat:${currentUser.id}-${selectedUser.id}`)
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
         table: 'messages',
-        filter: `or(and(sender_id.eq.${currentUser.id},receiver_id.eq.${selectedUser.id}),and(sender_id.eq.${selectedUser.id},receiver_id.eq.${currentUser.id}))`
+        filter: `receiver_id=eq.${currentUser.id}`
       }, (payload) => {
         const newMsg = payload.new as Message
-        // Only append messages from the other user, since we optimistically add our own
-        if (newMsg.sender_id !== currentUser.id) {
-          setMessages(prev => [...prev, newMsg])
-          setLatestMessages(prev => ({ ...prev, [newMsg.sender_id]: newMsg }))
-          
-          if (selectedUser.id === newMsg.sender_id) {
-            // Automatically mark as read if we are looking at the chat
-            markAsRead(newMsg.sender_id)
-            scrollToBottom()
-          } else {
-            // Increment unread count if we are not looking at the chat
-            setUnreadCounts(prev => ({ ...prev, [newMsg.sender_id]: (prev[newMsg.sender_id] || 0) + 1 }))
-          }
+        if (newMsg.sender_id === selectedUser.id) {
+          setMessages(prev => {
+            if (prev.some(m => m.id === newMsg.id)) return prev
+            return [...prev, newMsg]
+          })
+          markAsRead(selectedUser.id)
+          scrollToBottom()
         }
       })
       .subscribe()
@@ -294,7 +360,7 @@ function MessagesContent() {
         </div>
 
         {/* Conversation List */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-1">
+        <div className="flex-1 overflow-y-auto p-3 pb-20 md:pb-3 space-y-1">
           {filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[200px] px-4 text-center">
                <div className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mb-3 border border-gray-100">
@@ -317,7 +383,7 @@ function MessagesContent() {
             return (
               <button
                 key={user.id}
-                onClick={() => setSelectedUser(user)}
+                onClick={() => selectUserAndUrl(user)}
                 className={`w-full flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 relative group text-left ${
                   isSelected 
                     ? 'bg-gradient-to-r from-violet-50 to-fuchsia-50/50 shadow-sm shadow-violet-100/50' 
@@ -368,7 +434,7 @@ function MessagesContent() {
             <div className="px-4 md:px-8 py-4 md:py-5 border-b border-gray-100 flex items-center justify-between bg-white/80 backdrop-blur-md shrink-0">
               <div className="flex items-center gap-4">
                 <button 
-                  onClick={() => setSelectedUser(null)}
+                  onClick={() => selectUserAndUrl(null)}
                   className="md:hidden p-2 -ml-2 text-violet-600 hover:bg-violet-50 rounded-full"
                 >
                   <ChevronLeft className="w-6 h-6" />
@@ -448,44 +514,48 @@ function MessagesContent() {
                   ))}
                 </div>
               )}
-              <div className="flex items-center gap-3 max-w-4xl mx-auto bg-white p-2 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 relative">
-                <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" />
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-violet-500 transition-colors shrink-0"
-                >
-                  {isUploading ? <Plus className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-                </button>
-                
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      sendMessage()
-                    }
-                  }}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-transparent px-2 py-2 text-[15px] focus:outline-none placeholder:text-gray-400 text-gray-800"
-                />
-                
-                <div className="flex items-center gap-2 shrink-0 pr-1">
+              
+              <div className="flex items-center gap-3 max-w-4xl mx-auto w-full">
+                {/* Text Input Pill */}
+                <div className="flex-1 flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 relative min-w-0">
+                  <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" />
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-violet-500 transition-colors shrink-0"
+                  >
+                    {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-violet-500" /> : <Plus className="w-5 h-5" />}
+                  </button>
+                  
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={e => setNewMessage(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        sendMessage()
+                      }
+                    }}
+                    placeholder="Type a message..."
+                    className="flex-1 min-w-0 bg-transparent px-1 py-1.5 text-[15px] focus:outline-none placeholder:text-gray-400 text-gray-800"
+                  />
+                  
                   <button 
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors shrink-0"
                   >
                     <Smile className="w-5 h-5" />
                   </button>
-                  <button
-                    onClick={sendMessage}
-                    disabled={!newMessage.trim()}
-                    className="w-10 h-10 bg-violet-600 text-white rounded-full flex items-center justify-center hover:bg-violet-700 disabled:opacity-50 disabled:hover:bg-violet-600 transition-colors shadow-md shadow-violet-500/20"
-                  >
-                    <Send className="w-4 h-4 ml-0.5" />
-                  </button>
                 </div>
+
+                {/* Separate Circular Send Button */}
+                <button
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim()}
+                  className="w-11 h-11 bg-violet-600 text-white rounded-full flex items-center justify-center hover:bg-violet-700 disabled:opacity-50 disabled:hover:bg-violet-600 transition-all shrink-0 shadow-md shadow-violet-500/20 active:scale-95 animate-in zoom-in-50 duration-150"
+                >
+                  <Send className="w-4.5 h-4.5 ml-0.5" />
+                </button>
               </div>
             </div>
           </>

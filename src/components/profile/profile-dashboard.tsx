@@ -211,6 +211,20 @@ export function ProfileDashboard({
                 {profileState?.bio || 'Learning. Building. Sharing. 🚀'}
               </p>
               
+              {profileState?.resume_url && (
+                <div className="mt-4 flex items-center gap-2">
+                  <a 
+                    href={profileState.resume_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-violet-50 text-violet-600 dark:bg-violet-950/20 dark:text-violet-400 border border-violet-100 dark:border-violet-900/30 hover:bg-violet-100 dark:hover:bg-violet-950/40 transition-all duration-200 shadow-sm"
+                  >
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span>{profileState.resume_name || "View Resume"}</span>
+                  </a>
+                </div>
+              )}
+              
               <div className="flex items-center gap-6 mt-4 text-sm text-gray-500 dark:text-gray-400 font-medium">
                 <div className="flex items-center gap-1.5">
                   <MapPin className="w-4 h-4" />

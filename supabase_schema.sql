@@ -5,6 +5,8 @@ create table public.profiles (
   avatar_url text,
   bio text,
   college text,
+  resume_url text,
+  resume_name text,
   consistency_score integer default 0,
   last_post_date date,
   updated_at timestamp with time zone default timezone('utc'::text, now())
@@ -110,6 +112,7 @@ create policy "Users can delete own likes."
 -- Storage bucket setup
 insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true);
 insert into storage.buckets (id, name, public) values ('post_images', 'post_images', true);
+insert into storage.buckets (id, name, public) values ('resumes', 'resumes', true);
 
 -- Storage policies for avatars
 create policy "Avatar images are publicly accessible."
@@ -132,6 +135,23 @@ create policy "Post images are publicly accessible."
 create policy "Anyone can upload post images."
   on storage.objects for insert
   with check ( bucket_id = 'post_images' );
+
+-- Storage policies for resumes
+create policy "Resumes are publicly accessible."
+  on storage.objects for select
+  using ( bucket_id = 'resumes' );
+
+create policy "Anyone can upload a resume."
+  on storage.objects for insert
+  with check ( bucket_id = 'resumes' );
+
+create policy "Anyone can update their resume."
+  on storage.objects for update
+  using ( bucket_id = 'resumes' );
+
+create policy "Anyone can delete their resume."
+  on storage.objects for delete
+  using ( bucket_id = 'resumes' );
 
 -- Function to handle new user signup
 create or replace function public.handle_new_user()

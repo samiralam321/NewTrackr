@@ -58,9 +58,9 @@ export default function LandingPage() {
             {/* Social Proof */}
             <div className="mt-12 flex items-center gap-4">
               <div className="flex -space-x-3">
-                <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/100?img=1" alt=""/>
-                <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/100?img=2" alt=""/>
-                <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/100?img=3" alt=""/>
+                <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover aspect-square" src="/student-1.png" alt="Student 1"/>
+                <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover aspect-square" src="/student-2.png" alt="Student 2"/>
+                <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover aspect-square" src="/student-3.png" alt="Student 3"/>
               </div>
               <div className="text-sm">
                 <p className="font-semibold text-[#2D2459]">Join 25,000+ students</p>

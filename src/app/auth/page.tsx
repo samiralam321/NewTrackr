@@ -57,12 +57,12 @@ export default function AuthPage() {
           <div className="absolute top-1/2 left-8 text-[#D6BCFA] opacity-50 z-0 text-sm">✦</div>
 
           {/* Bottom Illustration Container */}
-          <div className="mt-auto -mx-12 flex justify-center relative items-end min-h-[300px]">
+          <div className="mt-auto -mx-12 flex justify-center relative items-end min-h-[240px]">
              {/* Background Smooth Mound */}
              <div className="absolute bottom-[-150px] left-[-20%] right-[-20%] h-[400px] bg-[#F2F0FF] rounded-[100%] z-0"></div>
              
              {/* Character Image */}
-             <div className="relative z-10 w-[85%] max-w-[340px] flex justify-center pb-2">
+             <div className="relative z-10 w-[92%] max-w-[350px] flex justify-center pb-2">
                <img 
                  src="/auth-character.png" 
                  alt="Trackr Mascot" 

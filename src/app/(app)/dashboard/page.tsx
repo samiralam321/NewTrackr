@@ -17,10 +17,10 @@ export default async function DashboardPage() {
   return (
     <div className="flex h-screen w-full">
       {/* Main Feed Content */}
-      <main className="flex-1 overflow-y-auto px-4 md:px-10 py-6 md:py-8">
+      <main className="flex-1 overflow-y-auto px-4 md:px-10 py-5 md:py-8">
         
         {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-5 md:mb-8 gap-2 md:gap-4">
           
           {/* Mobile Top Row: Menu & Profile Avatar */}
           <div className="flex md:hidden items-center justify-between w-full mb-1">

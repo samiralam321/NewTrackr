@@ -136,9 +136,9 @@ export function MobilePostDrawer() {
       {/* Floating Action Button (FAB) */}
       <button 
         onClick={() => setIsOpen(true)}
-        className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-violet-700 active:scale-95 transition-transform z-40"
+        className="md:hidden fixed bottom-20 right-5 w-14 h-14 bg-gradient-to-tr from-violet-600 to-indigo-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-violet-500/30 hover:scale-105 active:scale-95 transition-all duration-200 z-40"
       >
-        <PenLine className="w-6 h-6" />
+        <PenLine className="w-5 h-5" />
       </button>
 
       {/* Full Screen Drawer/Modal */}
