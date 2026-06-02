@@ -9,6 +9,7 @@ import { Feed } from "@/components/dashboard/feed"
 import { FollowListDialog } from "@/components/profile/follow-list-dialog"
 import { ProfileMenu } from "@/components/profile/profile-menu"
 import { createClient } from "@/lib/supabase/client"
+import { usePresence } from "@/components/providers/presence-provider"
 
 export function ProfileDashboard({ 
   profile, 
@@ -30,6 +31,8 @@ export function ProfileDashboard({
   const [followersCountState, setFollowersCountState] = useState(followersCount || 0)
   const [followingCountState, setFollowingCountState] = useState(followingCount || 0)
   const [activeTab, setActiveTab] = useState("posts")
+  const onlineUsers = usePresence()
+  const isOnline = onlineUsers.includes(profileState.id)
   
   const supabase = createClient()
 
@@ -171,7 +174,9 @@ export function ProfileDashboard({
                     alt="Avatar" 
                     className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white dark:border-[#0B0A10] shadow-md bg-white"
                   />
-                  <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-2 border-white dark:border-[#0B0A10] rounded-full"></div>
+                  {isOnline && (
+                    <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-2 border-white dark:border-[#0B0A10] rounded-full"></div>
+                  )}
                 </div>
               </div>
               
