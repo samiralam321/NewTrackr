@@ -394,7 +394,15 @@ function MessagesContent() {
                </p>
             </div>
           ) : (
-            filteredUsers.map((user, idx) => {
+            [...filteredUsers]
+              .sort((a, b) => {
+                const lastMsgA = latestMessages[a.id]
+                const lastMsgB = latestMessages[b.id]
+                const timeA = lastMsgA ? new Date(lastMsgA.created_at).getTime() : (a.id === targetUserId ? Date.now() : 0)
+                const timeB = lastMsgB ? new Date(lastMsgB.created_at).getTime() : (b.id === targetUserId ? Date.now() : 0)
+                return timeB - timeA
+              })
+              .map((user, idx) => {
             const isSelected = selectedUser?.id === user.id;
             
             const lastMsg = latestMessages[user.id]

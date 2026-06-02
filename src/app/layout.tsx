@@ -21,6 +21,11 @@ export const metadata: Metadata = {
   title: "Trackr - Share Progress & Stay Accountable",
   description: "A focused space for students to share daily learning progress, build consistency, and become 1% better every day.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

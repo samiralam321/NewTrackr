@@ -22,7 +22,8 @@ export function ProfileMenu() {
   const handleLogout = async () => {
     setIsLoggingOut(true)
     await supabase.auth.signOut()
-    router.push('/login')
+    router.push('/')
+    router.refresh()
   }
 
   const handleShare = async () => {
