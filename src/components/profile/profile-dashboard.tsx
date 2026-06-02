@@ -240,47 +240,47 @@ export function ProfileDashboard({
         </div>
 
         {/* STATS BAR */}
-        <div className="bg-white dark:bg-[#0B0A10] rounded-2xl border border-gray-100 dark:border-[#2D2B3B] shadow-sm p-2 grid grid-cols-4 divide-x divide-gray-100 dark:divide-[#2D2B3B]">
-          <div className="flex items-center justify-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-[#1A1A24] rounded-xl transition-colors cursor-default">
-            <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-0 bg-transparent md:bg-white dark:md:bg-[#0B0A10] md:rounded-2xl md:border md:border-gray-100 dark:md:border-[#2D2B3B] md:shadow-sm md:p-2 md:divide-x md:divide-gray-100 dark:md:divide-[#2D2B3B]">
+          <div className="flex items-center gap-3 md:gap-4 p-3.5 md:p-4 bg-white dark:bg-[#0B0A10] md:bg-transparent border border-gray-100 dark:border-[#2D2B3B] md:border-0 rounded-2xl md:rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] md:hover:bg-gray-50 dark:md:hover:bg-[#1A1A24] transition-all duration-200 shadow-sm md:shadow-none cursor-default">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0">
               <Flame className="w-5 h-5 text-orange-500" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{displayStreak}</span>
-              <span className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">Day Streak</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[17px] md:text-xl font-bold text-gray-900 dark:text-white leading-tight">{displayStreak}</span>
+              <span className="text-[11px] md:text-[12px] text-gray-500 dark:text-gray-400 font-semibold md:font-medium truncate">Day Streak</span>
             </div>
           </div>
           
-          <div className="flex items-center justify-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-[#1A1A24] rounded-xl transition-colors cursor-default">
-            <div className="w-10 h-10 rounded-full bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
+          <div className="flex items-center gap-3 md:gap-4 p-3.5 md:p-4 bg-white dark:bg-[#0B0A10] md:bg-transparent border border-gray-100 dark:border-[#2D2B3B] md:border-0 rounded-2xl md:rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] md:hover:bg-gray-50 dark:md:hover:bg-[#1A1A24] transition-all duration-200 shadow-sm md:shadow-none cursor-default">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center shrink-0">
               <BookOpen className="w-5 h-5 text-violet-500" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{postsCountState}</span>
-              <span className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">Posts</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[17px] md:text-xl font-bold text-gray-900 dark:text-white leading-tight">{postsCountState}</span>
+              <span className="text-[11px] md:text-[12px] text-gray-500 dark:text-gray-400 font-semibold md:font-medium truncate">Posts</span>
             </div>
           </div>
 
           <FollowListDialog userId={profileState.id} type="followers" count={followersCountState || 0}>
-            <div className="flex items-center justify-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-[#1A1A24] rounded-xl transition-colors cursor-pointer w-full text-left">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+            <div className="flex items-center gap-3 md:gap-4 p-3.5 md:p-4 bg-white dark:bg-[#0B0A10] md:bg-transparent border border-gray-100 dark:border-[#2D2B3B] md:border-0 rounded-2xl md:rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] md:hover:bg-gray-50 dark:md:hover:bg-[#1A1A24] transition-all duration-200 shadow-sm md:shadow-none cursor-pointer w-full text-left">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5 text-emerald-500" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{followersCountState || 0}</span>
-                <span className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">Followers</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[17px] md:text-xl font-bold text-gray-900 dark:text-white leading-tight">{followersCountState || 0}</span>
+                <span className="text-[11px] md:text-[12px] text-gray-500 dark:text-gray-400 font-semibold md:font-medium truncate">Followers</span>
               </div>
             </div>
           </FollowListDialog>
 
           <FollowListDialog userId={profileState.id} type="following" count={followingCountState || 0}>
-            <div className="flex items-center justify-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-[#1A1A24] rounded-xl transition-colors cursor-pointer w-full text-left">
-              <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+            <div className="flex items-center gap-3 md:gap-4 p-3.5 md:p-4 bg-white dark:bg-[#0B0A10] md:bg-transparent border border-gray-100 dark:border-[#2D2B3B] md:border-0 rounded-2xl md:rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] md:hover:bg-gray-50 dark:md:hover:bg-[#1A1A24] transition-all duration-200 shadow-sm md:shadow-none cursor-pointer w-full text-left">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5 text-blue-500" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{followingCountState || 0}</span>
-                <span className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">Following</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[17px] md:text-xl font-bold text-gray-900 dark:text-white leading-tight">{followingCountState || 0}</span>
+                <span className="text-[11px] md:text-[12px] text-gray-500 dark:text-gray-400 font-semibold md:font-medium truncate">Following</span>
               </div>
             </div>
           </FollowListDialog>
