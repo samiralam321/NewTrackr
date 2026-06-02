@@ -10,8 +10,12 @@ import { Loader2, Mail, Lock } from "lucide-react"
 export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
+  const [isForgotPassword, setIsForgotPassword] = useState(false)
+  
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [resetEmail, setResetEmail] = useState("")
+  
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const supabase = createClient()
@@ -29,6 +33,34 @@ export function AuthForm() {
     if (error) {
       console.error('Error logging in:', error.message)
       setErrorMsg(error.message)
+      setIsLoading(false)
+    }
+  }
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setErrorMsg(null)
+    setSuccessMsg(null)
+
+    if (!resetEmail.trim()) {
+      setErrorMsg("Please enter your email address.")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+        redirectTo: `${location.origin}/auth/callback?type=recovery`,
+      })
+      
+      if (error) throw error
+      
+      setSuccessMsg("Password reset link sent! Please check your email inbox to proceed.")
+    } catch (err: any) {
+      console.error("Reset password error:", err)
+      setErrorMsg(err.message || "An error occurred while sending reset link.")
+    } finally {
       setIsLoading(false)
     }
   }
@@ -86,6 +118,77 @@ export function AuthForm() {
     }
   }
 
+  // Forgot Password Slate
+  if (isForgotPassword) {
+    return (
+      <div className="space-y-6 text-left animate-in fade-in duration-200">
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 mb-1.5">Reset Password 🔒</h3>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            Enter your email address below, and we'll send you a password recovery link.
+          </p>
+        </div>
+
+        <form onSubmit={handleResetPassword} className="space-y-4">
+          {errorMsg && (
+            <div className="p-3 text-sm font-semibold text-red-600 bg-red-50 rounded-xl border border-red-100">
+              {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div className="p-3 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-xl border border-emerald-100">
+              {successMsg}
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor="reset-email">Email address</Label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
+              <Input 
+                id="reset-email" 
+                type="email" 
+                placeholder="name@university.edu"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                disabled={isLoading}
+                className="pl-10 h-11 rounded-xl border-gray-200 focus-visible:ring-violet-500" 
+                required
+              />
+            </div>
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-white rounded-xl shadow-sm text-base font-semibold transition-all duration-200 flex items-center justify-center cursor-pointer"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              "Send Reset Link"
+            )}
+          </Button>
+        </form>
+
+        <div className="text-center">
+          <button 
+            type="button"
+            onClick={() => {
+              setIsForgotPassword(false)
+              setErrorMsg(null)
+              setSuccessMsg(null)
+            }} 
+            className="text-violet-600 hover:text-violet-700 font-bold underline text-sm cursor-pointer"
+          >
+            Back to Sign In
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Standard Login/Signup Slate
   return (
     <div className="space-y-6 text-left">
       {/* Google Login Button */}
@@ -161,7 +264,22 @@ export function AuthForm() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            {!isSignUp && (
+              <button 
+                type="button" 
+                onClick={() => {
+                  setIsForgotPassword(true)
+                  setErrorMsg(null)
+                  setSuccessMsg(null)
+                }}
+                className="text-xs font-bold text-violet-600 hover:text-violet-700 hover:underline cursor-pointer focus:outline-none"
+              >
+                Forgot password?
+              </button>
+            )}
+          </div>
           <div className="relative">
             <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
             <Input 
