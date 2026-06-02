@@ -674,50 +674,57 @@ export function Feed({
           </div>
             
           {/* Action Bar */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#2D2B3B] transition-colors">
-            <div className="flex items-center gap-6">
-              <button onClick={() => toggleLike(post.id, post.user_has_liked || false)} className={`flex items-center gap-2 text-[15px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${post.user_has_liked ? 'text-red-500 dark:text-red-500' : 'text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400'}`}>
-                <Heart className={`w-5 h-5 transition-transform duration-300 ${post.user_has_liked ? 'fill-current scale-110' : ''}`} /> 
-                <span className="w-4 text-left">{(post as any).likes_count}</span>
-              </button>
-              
-              <div className="w-px h-5 bg-gray-200 dark:bg-gray-800"></div>
-              
-              <button onClick={() => toggleComments(post.id)} className="flex items-center gap-2 text-[15px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-all duration-200 hover:scale-105 active:scale-95">
-                <MessageCircle className="w-5 h-5" /> 
-                <span className="w-4 text-left">{(post as any).comments_count}</span>
-              </button>
-            </div>
+          <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#2D2B3B] transition-colors px-1">
+            {/* Like */}
+            <button 
+              onClick={() => toggleLike(post.id, post.user_has_liked || false)} 
+              className={`flex items-center gap-2 text-[14px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
+                post.user_has_liked ? 'text-red-500 dark:text-red-500' : 'text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400'
+              }`}
+            >
+              <Heart className={`w-[19px] h-[19px] transition-transform duration-300 ${post.user_has_liked ? 'fill-current scale-110' : ''}`} /> 
+              <span>{(post as any).likes_count}</span>
+            </button>
             
-            <div className="flex items-center gap-6">
-              <button onClick={() => toggleBookmark(post.id, post.user_has_bookmarked || false)} className={`flex items-center gap-2 text-[15px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${post.user_has_bookmarked ? 'text-violet-600 dark:text-violet-500' : 'text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400'}`}>
-                <Bookmark className={`w-5 h-5 transition-transform duration-300 ${post.user_has_bookmarked ? 'fill-current scale-110' : ''}`} />
-                <span className="w-4 text-left">{(post as any).bookmarks_count || 0}</span>
-              </button>
-              
-              <div className="w-px h-5 bg-gray-200 dark:bg-gray-800"></div>
+            {/* Comment */}
+            <button 
+              onClick={() => toggleComments(post.id)} 
+              className="flex items-center gap-2 text-[14px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-all duration-200 hover:scale-105 active:scale-95"
+            >
+              <MessageCircle className="w-[19px] h-[19px]" /> 
+              <span>{(post as any).comments_count}</span>
+            </button>
 
+            {/* Save/Bookmark */}
+            <button 
+              onClick={() => toggleBookmark(post.id, post.user_has_bookmarked || false)} 
+              className={`flex items-center gap-2 text-[14px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
+                post.user_has_bookmarked ? 'text-violet-600 dark:text-violet-500' : 'text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400'
+              }`}
+            >
+              <Bookmark className={`w-[19px] h-[19px] transition-transform duration-300 ${post.user_has_bookmarked ? 'fill-current scale-110' : ''}`} />
+              <span>{(post as any).bookmarks_count || 0}</span>
+            </button>
+
+            {/* Share */}
+            <button 
+              onClick={() => handleSharePost(post)} 
+              className="flex items-center gap-2 text-[14px] font-semibold text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-200 hover:scale-105 active:scale-95"
+              title="Share post"
+            >
+              <Share2 className="w-[19px] h-[19px]" />
+            </button>
+
+            {/* Delete */}
+            {post.user_id === currentUserId && (
               <button 
-                onClick={() => handleSharePost(post)} 
-                className="flex items-center gap-2 text-[15px] font-semibold text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-200 hover:scale-105 active:scale-95"
-                title="Share post"
+                onClick={() => setPostToDelete(post.id)} 
+                className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition-all duration-200 hover:scale-110 active:scale-95"
+                title="Delete post"
               >
-                <Share2 className="w-5 h-5" />
+                <Trash2 className="w-[19px] h-[19px]" />
               </button>
-
-              {post.user_id === currentUserId && (
-                <>
-                  <div className="w-px h-5 bg-gray-200 dark:bg-gray-800"></div>
-                  <button 
-                    onClick={() => setPostToDelete(post.id)} 
-                    className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition-all duration-200 hover:scale-110 active:scale-95"
-                    title="Delete post"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </>
-              )}
-            </div>
+            )}
           </div>
 
             {/* Comments Section */}

@@ -271,6 +271,7 @@ function MessagesContent() {
     setIsUploading(true)
     const tempUrl = URL.createObjectURL(file)
 
+    // Optimistic UI update using local blob so it shows instantly for the sender
     const optimisticMessage: Message = {
       id: Math.random().toString(),
       sender_id: currentUser.id,
@@ -283,13 +284,35 @@ function MessagesContent() {
     setLatestMessages(prev => ({ ...prev, [selectedUser.id]: optimisticMessage }))
     scrollToBottom()
 
-    await supabase.from('messages').insert({
-      sender_id: currentUser.id,
-      receiver_id: selectedUser.id,
-      content: `[IMAGE]: ${tempUrl}`
-    })
-    
-    setIsUploading(false)
+    try {
+      // Upload file to Supabase Storage inside the public 'post_images' bucket
+      const fileExt = file.name.split('.').pop()
+      const fileName = `chat-${currentUser.id}-${Math.random()}.${fileExt}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('post_images')
+        .upload(fileName, file)
+      
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage
+        .from('post_images')
+        .getPublicUrl(fileName)
+      
+      const publicUrl = data.publicUrl
+
+      // Insert message with real public url in content
+      await supabase.from('messages').insert({
+        sender_id: currentUser.id,
+        receiver_id: selectedUser.id,
+        content: `[IMAGE]: ${publicUrl}`
+      })
+    } catch (err) {
+      console.error("Failed to upload and send message image:", err)
+      alert("Failed to send image.")
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const filteredUsers = users.filter(u => {
@@ -487,7 +510,13 @@ function MessagesContent() {
                             : 'bg-white border border-gray-100 text-gray-800 rounded-[20px] rounded-bl-sm'
                         }`}>
                           {msg.content.startsWith('[IMAGE]: ') ? (
-                            <img src={msg.content.replace('[IMAGE]: ', '')} alt="attachment" className="rounded-xl max-h-64 object-cover" />
+                            <img 
+                              src={msg.content.replace('[IMAGE]: ', '')} 
+                              alt="attachment" 
+                              onClick={() => window.open(msg.content.replace('[IMAGE]: ', ''), '_blank')}
+                              className="rounded-xl max-h-64 object-cover cursor-pointer hover:opacity-95 transition-opacity" 
+                              title="Click to open image"
+                            />
                           ) : (
                             msg.content
                           )}
