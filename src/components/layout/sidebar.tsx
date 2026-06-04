@@ -11,6 +11,7 @@ import { VerifiedBadge } from "@/components/ui/verified-badge"
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [profileState, setProfileState] = useState(profile)
   const [unreadCount, setUnreadCount] = useState(0)
   const [activeDays, setActiveDays] = useState([false, false, false, false, false, false, false])
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
@@ -24,12 +25,17 @@ export function Sidebar({ profile }: { profile?: any }) {
   const [isSendingContact, setIsSendingContact] = useState(false)
   const [contactSent, setContactSent] = useState(false)
 
+  // Sync state if initial props change
+  useEffect(() => {
+    setProfileState(profile)
+  }, [profile])
+
   // Prefill user profile name if loaded
   useEffect(() => {
-    if (profile?.full_name) {
-      setContactName(profile.full_name)
+    if (profileState?.full_name) {
+      setContactName(profileState.full_name)
     }
-  }, [profile])
+  }, [profileState])
 
   const confirmLogout = async () => {
     await supabase.auth.signOut()
@@ -72,13 +78,13 @@ export function Sidebar({ profile }: { profile?: any }) {
   }
 
   useEffect(() => {
-    if (!profile?.id) return
+    if (!profileState?.id) return
 
     const fetchUnread = async () => {
       const { count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', profile.id)
+        .eq('user_id', profileState.id)
         .eq('is_read', false)
       setUnreadCount(count || 0)
     }
@@ -95,7 +101,7 @@ export function Sidebar({ profile }: { profile?: any }) {
       const { data: posts } = await supabase
         .from('posts')
         .select('created_at')
-        .eq('user_id', profile.id)
+        .eq('user_id', profileState.id)
         .gte('created_at', startOfWeek.toISOString())
       
       const newActiveDays = [false, false, false, false, false, false, false]
@@ -114,19 +120,37 @@ export function Sidebar({ profile }: { profile?: any }) {
     fetchActiveDays()
 
     const channel = supabase
-      .channel('sidebar-notifications')
+      .channel(`sidebar-updates:${profileState.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => {
         fetchUnread()
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications' }, () => {
         fetchUnread()
       })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'posts',
+        filter: `user_id=eq.${profileState.id}`
+      }, () => {
+        fetchActiveDays()
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${profileState.id}`
+      }, (payload) => {
+        if (payload.new) {
+          setProfileState(payload.new)
+        }
+      })
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [profile?.id])
+  }, [profileState?.id])
 
   useEffect(() => {
     if (pathname === '/notifications') {
@@ -146,15 +170,15 @@ export function Sidebar({ profile }: { profile?: any }) {
 
   const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
   
-  let displayStreak = profile?.consistency_score || 0
-  if (profile?.last_post_date) {
+  let displayStreak = profileState?.consistency_score || 0
+  if (profileState?.last_post_date) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
     
-    const lastPost = new Date(profile.last_post_date)
+    const lastPost = new Date(profileState.last_post_date)
     lastPost.setHours(0, 0, 0, 0)
     
     // If the last post is older than yesterday, the streak is broken today
@@ -248,14 +272,14 @@ export function Sidebar({ profile }: { profile?: any }) {
         <div className="flex items-center gap-2">
           <Link href="/profile" className="flex-1 flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-colors border border-gray-100 dark:border-[#2D2B3B] shadow-sm min-w-0">
             <img 
-              src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.full_name || 'User'}&background=7C3AED&color=fff`} 
+              src={profileState?.avatar_url || `https://ui-avatars.com/api/?name=${profileState?.full_name || 'User'}&background=7C3AED&color=fff`} 
               alt="Profile" 
               className="w-10 h-10 rounded-full object-cover shrink-0"
             />
             <div className="flex flex-col overflow-hidden min-w-0">
               <span className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5 min-w-0">
-                <span className="truncate">{profile?.full_name ? profile.full_name.split(' ')[0] : 'User'}</span>
-                <VerifiedBadge level={profile?.badge_level} />
+                <span className="truncate">{profileState?.full_name ? profileState.full_name.split(' ')[0] : 'User'}</span>
+                <VerifiedBadge level={profileState?.badge_level} />
               </span>
               <span className="text-xs font-medium text-violet-600 dark:text-violet-400 truncate">View profile</span>
             </div>

@@ -56,16 +56,6 @@ export function ProfileDashboard({
         table: 'posts',
         filter: `user_id=eq.${profile.id}`
       }, async () => {
-        // Re-fetch profile to get updated streak & last post date
-        const { data: updatedProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', profile.id)
-          .single()
-        if (updatedProfile) {
-          setProfileState(updatedProfile)
-        }
-        
         // Re-fetch total posts count
         const { count } = await supabase
           .from('posts')
@@ -73,6 +63,16 @@ export function ProfileDashboard({
           .eq('user_id', profile.id)
         if (count !== null) {
           setPostsCountState(count)
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${profile.id}`
+      }, (payload) => {
+        if (payload.new) {
+          setProfileState(payload.new)
         }
       })
       .on('postgres_changes', {
