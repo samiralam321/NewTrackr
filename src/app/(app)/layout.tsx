@@ -3,6 +3,7 @@ import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav"
 import { MobilePostDrawer } from "@/components/layout/mobile-post-drawer"
 import { createClient } from "@/lib/supabase/server"
 import { PresenceProvider } from "@/components/providers/presence-provider"
+import { CongratulationsModal } from "@/components/ui/congratulations-modal"
 
 export default async function AppLayout({
   children,
@@ -24,6 +25,7 @@ export default async function AppLayout({
         </div>
         <MobileBottomNav profile={profile} />
         <MobilePostDrawer />
+        <CongratulationsModal />
       </PresenceProvider>
     </div>
   )

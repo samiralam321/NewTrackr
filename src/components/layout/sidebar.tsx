@@ -6,6 +6,7 @@ import { Home, Compass, Trophy, Medal, Bookmark, Mail, Bell, CheckCircle2, LogOu
 import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { VerifiedBadge } from "@/components/ui/verified-badge"
 
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
@@ -251,8 +252,11 @@ export function Sidebar({ profile }: { profile?: any }) {
               alt="Profile" 
               className="w-10 h-10 rounded-full object-cover shrink-0"
             />
-            <div className="flex flex-col overflow-hidden">
-              <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">{profile?.full_name ? profile.full_name.split(' ')[0] : 'User'}</span>
+            <div className="flex flex-col overflow-hidden min-w-0">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5 min-w-0">
+                <span className="truncate">{profile?.full_name ? profile.full_name.split(' ')[0] : 'User'}</span>
+                <VerifiedBadge level={profile?.badge_level} />
+              </span>
               <span className="text-xs font-medium text-violet-600 dark:text-violet-400 truncate">View profile</span>
             </div>
           </Link>

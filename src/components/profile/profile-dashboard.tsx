@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Flame, Star, BookOpen, Share2, Puzzle, Trophy, MapPin, Calendar, Edit2, Users, Compass, FileText, MessageCircle, Bookmark, Heart, Award, ChevronLeft } from "lucide-react"
+import { Flame, Star, BookOpen, Share2, Puzzle, Trophy, MapPin, Calendar, Edit2, Users, Compass, FileText, MessageCircle, Bookmark, Heart, Award, ChevronLeft, Lock } from "lucide-react"
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog"
 import Link from "next/link"
 import { FollowButton } from "@/components/profile/follow-button"
@@ -10,6 +10,8 @@ import { FollowListDialog } from "@/components/profile/follow-list-dialog"
 import { ProfileMenu } from "@/components/profile/profile-menu"
 import { createClient } from "@/lib/supabase/client"
 import { usePresence } from "@/components/providers/presence-provider"
+import { VerifiedBadge } from "@/components/ui/verified-badge"
+import { motion } from "framer-motion"
 
 export function ProfileDashboard({ 
   profile, 
@@ -127,6 +129,40 @@ export function ProfileDashboard({
     }
   }
 
+  // Verification Progress calculation
+  const currentBadgeLevel = profileState?.badge_level || 0
+  let nextTierName = ""
+  let nextTierTarget = 0
+  let nextTierBadgeLevel = 0
+  let progressPercentage = 0
+  let progressText = ""
+
+  if (currentBadgeLevel === 0) {
+    nextTierName = "Blue Tick"
+    nextTierTarget = 5
+    nextTierBadgeLevel = 1
+    progressPercentage = Math.min(100, Math.max(0, (displayStreak / 5) * 100))
+    progressText = `${displayStreak} / 5 Days`
+  } else if (currentBadgeLevel === 1) {
+    nextTierName = "Golden Tick"
+    nextTierTarget = 30
+    nextTierBadgeLevel = 2
+    progressPercentage = Math.min(100, Math.max(0, (displayStreak / 30) * 100))
+    progressText = `${displayStreak} / 30 Days`
+  } else if (currentBadgeLevel === 2) {
+    nextTierName = "Diamond Tick"
+    nextTierTarget = 100
+    nextTierBadgeLevel = 3
+    progressPercentage = Math.min(100, Math.max(0, (displayStreak / 100) * 100))
+    progressText = `${displayStreak} / 100 Days`
+  } else {
+    nextTierName = "Max Tier Achieved!"
+    nextTierTarget = 100
+    nextTierBadgeLevel = 3
+    progressPercentage = 100
+    progressText = `${displayStreak} Days`
+  }
+
   // Badges Logic
   const badges = [
     { id: 'first_post', name: 'First Post', active: postsCountState > 0, icon: Star, color: 'text-violet-500 bg-violet-50 font-bold' },
@@ -206,6 +242,9 @@ export function ProfileDashboard({
             <div className="mt-4">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 {profileState?.full_name || 'Anonymous User'}
+                {profileState?.badge_level > 0 && (
+                  <VerifiedBadge level={profileState.badge_level} size="md" />
+                )}
               </h1>
               
               <p className="text-[15px] text-gray-600 dark:text-gray-300 font-medium mt-1.5 flex items-center gap-2">
@@ -385,6 +424,82 @@ export function ProfileDashboard({
                     <span className={`text-[11px] font-bold ${i === todayIndex ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>{day}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Verification Progress Card */}
+            <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/5 shadow-md rounded-3xl p-6 relative overflow-hidden transition-all duration-300 hover:shadow-lg">
+              {/* Background gradient glow */}
+              <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />
+              
+              <h2 className="text-[15px] font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                <Award className="w-4 h-4 text-violet-500" /> Verification Progress
+              </h2>
+
+              <div className="space-y-4">
+                {/* Current Badge Status */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Current Badge</span>
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                      {currentBadgeLevel === 0 && "None"}
+                      {currentBadgeLevel === 1 && "Verified Member"}
+                      {currentBadgeLevel === 2 && "Elite Member"}
+                      {currentBadgeLevel === 3 && "Legend Member"}
+                    </span>
+                  </div>
+                  <div>
+                    {currentBadgeLevel > 0 ? (
+                      <VerifiedBadge level={currentBadgeLevel} size="md" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-gray-600">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Progress Details */}
+                {currentBadgeLevel < 3 ? (
+                  <div>
+                    <div className="flex items-center justify-between text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      <span>Next Level: {nextTierName}</span>
+                      <span>{progressText}</span>
+                    </div>
+                    
+                    {/* Progress Bar Container */}
+                    <div className="w-full h-2.5 bg-gray-200/50 dark:bg-white/10 rounded-full overflow-hidden relative">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPercentage}%` }}
+                        transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                        className={`h-full rounded-full ${
+                          nextTierBadgeLevel === 1 
+                            ? "bg-gradient-to-r from-blue-400 to-blue-600 shadow-[0_0_8px_rgba(59,130,246,0.3)]" 
+                            : nextTierBadgeLevel === 2 
+                            ? "bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 shadow-[0_0_8px_rgba(234,179,8,0.3)]"
+                            : "bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_12px_rgba(99,102,241,0.4)]"
+                        }`}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">Target Streak:</span>
+                        <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300">{nextTierTarget} Days</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mr-1.5">Preview:</span>
+                        <VerifiedBadge level={nextTierBadgeLevel} size="sm" />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-4 text-center">
+                    <p className="text-xs font-bold text-violet-600 dark:text-violet-400">🏆 Maximum Badge Tier Reached!</p>
+                    <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mt-1">You are a Trackr Legend! Keep maintaining your amazing streak of {displayStreak} days!</p>
+                  </div>
+                )}
               </div>
             </div>
 

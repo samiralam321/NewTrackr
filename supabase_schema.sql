@@ -9,6 +9,8 @@ create table public.profiles (
   resume_name text,
   consistency_score integer default 0,
   last_post_date date,
+  badge_level integer default 0,
+  badge_earned_at timestamp with time zone,
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
@@ -178,7 +180,7 @@ create table public.notifications (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null, -- Receiver
   actor_id uuid references public.profiles(id) on delete cascade not null, -- Who did it
-  type text check (type in ('like', 'comment', 'follow', 'mention')),
+  type text check (type in ('like', 'comment', 'follow', 'mention', 'badge')),
   post_id uuid references public.posts(id) on delete cascade,
   is_read boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now())

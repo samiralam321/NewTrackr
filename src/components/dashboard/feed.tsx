@@ -5,6 +5,7 @@ import { Bookmark, Heart, MessageCircle, Send, Trash2, MoreVertical, Edit2, Pin,
 import { createClient } from "@/lib/supabase/client"
 import { Post, Comment } from "@/lib/supabase/types"
 import Link from "next/link"
+import { VerifiedBadge } from "@/components/ui/verified-badge"
 
 export function Feed({ 
   userIdFilter,
@@ -506,8 +507,16 @@ export function Feed({
               <Link href={`/profile/${post.user_id}`} className="flex items-center gap-3 group">
               <img src={post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${post.profiles?.full_name || 'User'}&background=7C3AED&color=fff`} className="w-12 h-12 rounded-full object-cover border border-gray-100 dark:border-gray-800 group-hover:opacity-90 transition-opacity" alt="" />
               <div>
-                <h3 className="text-[15px] font-bold text-gray-900 dark:text-white group-hover:underline transition-colors">{post.profiles?.full_name || 'Anonymous User'}</h3>
-                <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">{post.profiles?.college || 'Trackr Member'}</p>
+                <h3 className="text-[15px] font-bold text-gray-900 dark:text-white group-hover:underline transition-colors flex items-center gap-1.5">
+                  <span>{post.profiles?.full_name || 'Anonymous User'}</span>
+                  <VerifiedBadge level={post.profiles?.badge_level} />
+                </h3>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
+                  {post.profiles?.badge_level === 3 ? 'Trackr Legend Member' :
+                   post.profiles?.badge_level === 2 ? 'Trackr Elite Member' :
+                   post.profiles?.badge_level === 1 ? 'Trackr Verified Member' :
+                   post.profiles?.college || 'Trackr Member'}
+                </p>
               </div>
             </Link>
             
@@ -815,7 +824,10 @@ export function Feed({
                       <div key={comment.id} className="flex gap-3">
                         <img src={comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${comment.profiles?.full_name || 'User'}&background=7C3AED&color=fff`} className="w-6 h-6 rounded-full object-cover shrink-0" alt="" />
                         <div className="bg-gray-50 dark:bg-[#1A1A24] rounded-2xl rounded-tl-none px-4 py-2 flex-1 transition-colors">
-                          <p className="text-xs font-semibold text-gray-900 dark:text-white mb-0.5">{comment.profiles?.full_name}</p>
+                          <p className="text-xs font-semibold text-gray-900 dark:text-white mb-0.5 flex items-center gap-1">
+                            <span>{comment.profiles?.full_name}</span>
+                            <VerifiedBadge level={comment.profiles?.badge_level} />
+                          </p>
                           <p className="text-sm text-gray-700 dark:text-gray-300">{comment.content}</p>
                         </div>
                       </div>

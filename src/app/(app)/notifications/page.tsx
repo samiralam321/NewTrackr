@@ -4,12 +4,13 @@ import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Bell, Heart, MessageCircle, UserPlus, AtSign, ChevronLeft } from "lucide-react"
 import Link from "next/link"
+import { VerifiedBadge } from "@/components/ui/verified-badge"
 
 type Notification = {
   id: string
   user_id: string
   actor_id: string
-  type: 'like' | 'comment' | 'follow' | 'mention'
+  type: 'like' | 'comment' | 'follow' | 'mention' | 'badge'
   post_id?: string
   is_read: boolean
   created_at: string
@@ -47,7 +48,7 @@ export default function NotificationsPage() {
       .from('notifications')
       .select(`
         *,
-        actor:profiles!notifications_actor_id_fkey(full_name, avatar_url)
+        actor:profiles!notifications_actor_id_fkey(full_name, avatar_url, badge_level)
       `)
       .eq('user_id', userData.user.id)
       .order('created_at', { ascending: false })
@@ -64,8 +65,13 @@ export default function NotificationsPage() {
     setLoading(false)
   }
 
-  const getIcon = (type: string) => {
-    switch (type) {
+  const getIcon = (n: Notification) => {
+    if (n.type === 'badge' as any) {
+      const lvl = n.post_id === '00000000-0000-0000-0000-000000000003' ? 3 :
+                  n.post_id === '00000000-0000-0000-0000-000000000002' ? 2 : 1
+      return <VerifiedBadge level={lvl} size="md" />
+    }
+    switch (n.type) {
       case 'like': return <Heart className="w-5 h-5 text-red-500 fill-current" />
       case 'comment': return <MessageCircle className="w-5 h-5 text-blue-500 fill-current" />
       case 'follow': return <UserPlus className="w-5 h-5 text-emerald-500" />
@@ -74,12 +80,53 @@ export default function NotificationsPage() {
     }
   }
 
-  const getMessage = (type: string, actorName: string) => {
-    switch (type) {
-      case 'like': return <span><span className="font-semibold text-gray-900">{actorName}</span> liked your post</span>
-      case 'comment': return <span><span className="font-semibold text-gray-900">{actorName}</span> commented on your post</span>
-      case 'follow': return <span><span className="font-semibold text-gray-900">{actorName}</span> started following you</span>
-      case 'mention': return <span><span className="font-semibold text-gray-900">{actorName}</span> mentioned you</span>
+  const getMessage = (n: Notification) => {
+    const actorName = n.actor?.full_name || 'Someone'
+    if (n.type === 'badge' as any) {
+      if (n.post_id === '00000000-0000-0000-0000-000000000001') {
+        return <span>🎉 You earned the <span className="font-extrabold text-blue-600 dark:text-blue-400">Blue Tick</span> Verification Badge!</span>
+      }
+      if (n.post_id === '00000000-0000-0000-0000-000000000002') {
+        return <span>🏆 You earned the <span className="font-extrabold text-amber-500">Golden Tick</span> Verification Badge!</span>
+      }
+      if (n.post_id === '00000000-0000-0000-0000-000000000003') {
+        return <span>💎 You earned the <span className="font-extrabold text-cyan-500">Diamond Tick</span> Verification Badge!</span>
+      }
+      return <span>You earned a verification badge!</span>
+    }
+    switch (n.type) {
+      case 'like':
+        return (
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
+            <VerifiedBadge level={(n.actor as any)?.badge_level} />
+            <span>liked your post</span>
+          </span>
+        )
+      case 'comment':
+        return (
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
+            <VerifiedBadge level={(n.actor as any)?.badge_level} />
+            <span>commented on your post</span>
+          </span>
+        )
+      case 'follow':
+        return (
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
+            <VerifiedBadge level={(n.actor as any)?.badge_level} />
+            <span>started following you</span>
+          </span>
+        )
+      case 'mention':
+        return (
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
+            <VerifiedBadge level={(n.actor as any)?.badge_level} />
+            <span>mentioned you</span>
+          </span>
+        )
       default: return <span>New notification from {actorName}</span>
     }
   }
@@ -112,7 +159,7 @@ export default function NotificationsPage() {
                 className={`p-5 border-b border-gray-50 dark:border-[#2D2B3B] flex gap-4 transition-colors hover:bg-gray-50 dark:hover:bg-[#1A1A24] ${!notification.is_read ? 'bg-[#FCFBFF] dark:bg-violet-900/10' : ''} ${idx === notifications.length - 1 ? 'border-b-0' : ''}`}
               >
                 <div className="mt-1 flex-shrink-0">
-                  {getIcon(notification.type)}
+                  {getIcon(notification)}
                 </div>
                 <div className="flex-1">
                   <Link href={`/profile/${notification.actor_id}`} className="flex items-center gap-2 mb-1.5">
@@ -122,7 +169,7 @@ export default function NotificationsPage() {
                       className="w-6 h-6 rounded-full object-cover"
                     />
                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {getMessage(notification.type, notification.actor?.full_name || 'Someone')}
+                      {getMessage(notification)}
                     </p>
                   </Link>
                   <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">

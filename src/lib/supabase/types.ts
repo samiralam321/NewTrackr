@@ -5,6 +5,9 @@ export type Profile = {
   bio: string | null
   college: string | null
   consistency_score: number
+  last_post_date: string | null
+  badge_level: number | null
+  badge_earned_at: string | null
   updated_at: string
 }
 
