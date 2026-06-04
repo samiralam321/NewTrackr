@@ -12,9 +12,6 @@ export function MobilePostDrawer() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [content, setContent] = useState("")
-  const [tags, setTags] = useState<string[]>(["#DSA", "#Coding"])
-  const [newTag, setNewTag] = useState("")
-  const [isAddingTag, setIsAddingTag] = useState(false)
   const [progressType, setProgressType] = useState<'Learned' | 'Built' | 'Practiced' | 'Other'>('Learned')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -25,13 +22,6 @@ export function MobilePostDrawer() {
   const supabase = createClient()
   const router = useRouter()
 
-  const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim().startsWith('#') ? newTag.trim() : `#${newTag.trim()}`])
-    }
-    setNewTag("")
-    setIsAddingTag(false)
-  }
 
   const toggleBold = () => {
     document.execCommand('bold', false)
@@ -49,19 +39,7 @@ export function MobilePostDrawer() {
     }
   }
 
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(t => t !== tagToRemove))
-  }
 
-  const extractHashtags = (html: string): string[] => {
-    if (typeof window === 'undefined') return []
-    const tempDiv = document.createElement("div")
-    tempDiv.innerHTML = html
-    const text = tempDiv.innerText || tempDiv.textContent || ""
-    const regex = /#([A-Za-z0-9_]+)/g
-    const matches = text.match(regex) || []
-    return Array.from(new Set(matches.map(m => m.trim())))
-  }
 
   const handlePost = async () => {
     if (!content.trim()) return
@@ -89,13 +67,10 @@ export function MobilePostDrawer() {
         imageUrl = publicUrl.publicUrl
       }
 
-      const contentHashtags = extractHashtags(content)
-      const finalTags = Array.from(new Set([...tags, ...contentHashtags]))
-
       const { error } = await supabase.from('posts').insert({
         user_id: userData.user.id,
         content,
-        tags: finalTags,
+        tags: [],
         type: progressType,
         image_url: imageUrl
       })
@@ -122,7 +97,6 @@ export function MobilePostDrawer() {
 
       // Reset form
       setContent("")
-      setTags(["#DSA", "#Coding"])
       setImageFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
       
@@ -239,33 +213,7 @@ export function MobilePostDrawer() {
 
             {/* Options Card */}
             <div className="bg-white rounded-3xl p-5 shadow-sm border border-violet-50 flex flex-col gap-6">
-              {/* Tags */}
-              <div>
-                <label className="text-sm font-semibold text-gray-900 block mb-3">Add tags</label>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <span key={tag} className="px-3 py-1.5 bg-[#E6F8F1] text-emerald-600 rounded-lg text-xs font-medium flex items-center gap-1 group">
-                    {tag}
-                    <button onClick={() => removeTag(tag)} className="opacity-100"><X className="w-3 h-3" /></button>
-                  </span>
-                ))}
-                {isAddingTag ? (
-                  <input 
-                    autoFocus
-                    type="text" 
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onBlur={handleAddTag}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
-                    className="px-3 py-1.5 w-24 border border-violet-200 focus:outline-none focus:ring-1 focus:ring-violet-500 rounded-lg text-xs font-medium"
-                  />
-                ) : (
-                  <button onClick={() => setIsAddingTag(true)} className="px-3 py-1.5 border border-gray-200 text-gray-400 hover:bg-gray-50 rounded-lg text-xs font-medium flex items-center justify-center">
-                    <Plus className="w-3 h-3" /> Add
-                  </button>
-                )}
-              </div>
-            </div>
+
 
             {/* Type of progress */}
             <div>

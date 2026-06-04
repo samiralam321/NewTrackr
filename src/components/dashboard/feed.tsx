@@ -18,8 +18,7 @@ export function Feed({
   collegeOnlyFilter,
   isJourneyMode,
   highlightsOnlyFilter,
-  currentUserIdProp,
-  hashtagFilter
+  currentUserIdProp
 }: { 
   userIdFilter?: string,
   savedOnlyFilter?: boolean,
@@ -29,8 +28,7 @@ export function Feed({
   collegeOnlyFilter?: boolean,
   isJourneyMode?: boolean,
   highlightsOnlyFilter?: boolean,
-  currentUserIdProp?: string,
-  hashtagFilter?: string
+  currentUserIdProp?: string
 }) {
   const [posts, setPosts] = useState<Post[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -104,7 +102,7 @@ export function Feed({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [expandedComments, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter, hashtagFilter])
+  }, [expandedComments, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter])
 
   const fetchPosts = async (showLoading = true) => {
     if (showLoading) setIsLoading(true)
@@ -127,11 +125,6 @@ export function Feed({
       .order('created_at', { ascending: false })
       
     if (userIdFilter) query = query.eq('user_id', userIdFilter)
-
-    if (hashtagFilter) {
-      const normalizedTag = hashtagFilter.startsWith('#') ? hashtagFilter : `#${hashtagFilter}`
-      query = query.or(`content.ilike.%${normalizedTag}%,tags.cs.{${normalizedTag}}`)
-    }
 
     if (followingOnlyFilter && currentUid) {
       const { data: followData } = await supabase
@@ -327,28 +320,16 @@ export function Feed({
   }
 
   // Advanced Action Handlers
-  const extractHashtags = (html: string): string[] => {
-    if (typeof window === 'undefined') return []
-    const tempDiv = document.createElement("div")
-    tempDiv.innerHTML = html
-    const text = tempDiv.innerText || tempDiv.textContent || ""
-    const regex = /#([A-Za-z0-9_]+)/g
-    const matches = text.match(regex) || []
-    return Array.from(new Set(matches.map(m => m.trim())))
-  }
-
   const handleEditSave = async (postId: string) => {
     const textContent = editContent.replace(/<[^>]*>/g, '').trim()
     if (!textContent) return
 
-    const contentHashtags = extractHashtags(editContent)
     const { error } = await supabase.from('posts').update({ 
-      content: editContent,
-      tags: contentHashtags
+      content: editContent
     }).eq('id', postId)
 
     if (!error) {
-      setPosts(posts.map(p => p.id === postId ? { ...p, content: editContent, tags: contentHashtags } : p))
+      setPosts(posts.map(p => p.id === postId ? { ...p, content: editContent } : p))
       setEditingPostId(null)
     }
   }
@@ -691,11 +672,6 @@ export function Feed({
 
           {/* Tags Section */}
           <div className="mb-6 flex flex-wrap gap-2">
-            {post.tags?.map(tag => (
-              <span key={tag} className="text-[13px] font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 px-3.5 py-1.5 rounded-full hover:bg-violet-100 dark:hover:bg-violet-500/20 cursor-pointer transition-colors">
-                {tag}
-              </span>
-            ))}
             {post.type && (
                <span className="text-[13px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3.5 py-1.5 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/20 cursor-pointer transition-colors">
                  {post.type}

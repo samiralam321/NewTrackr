@@ -1,7 +1,6 @@
 'use client'
 
 import React from "react"
-import Link from "next/link"
 
 type RichTextRendererProps = {
   content: string
@@ -15,27 +14,6 @@ export function RichTextRenderer({ content }: RichTextRendererProps) {
     ? content.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     : content
 
-  const parseHashtags = (text: string, keyPrefix: any): React.ReactNode[] => {
-    const hashtagRegex = /(#[A-Za-z0-9_]+)/g
-    const parts = text.split(hashtagRegex)
-
-    return parts.map((part, idx) => {
-      if (part.startsWith("#")) {
-        return (
-          <Link
-            key={`${keyPrefix}-${idx}`}
-            href={`/explore?tag=${encodeURIComponent(part)}`}
-            className="font-bold text-violet-600 dark:text-violet-400 hover:underline inline-block"
-            onClick={(e) => e.stopPropagation()} // Prevent card click propagation
-          >
-            {part}
-          </Link>
-        )
-      }
-      return part
-    })
-  }
-
   const htmlToReact = (html: string): React.ReactNode[] => {
     try {
       const parser = new DOMParser()
@@ -44,7 +22,7 @@ export function RichTextRenderer({ content }: RichTextRendererProps) {
       const parseNodes = (nodes: NodeList): React.ReactNode[] => {
         return Array.from(nodes).map((node, index) => {
           if (node.nodeType === Node.TEXT_NODE) {
-            return parseHashtags(node.textContent || "", index)
+            return node.textContent || ""
           }
 
           if (node.nodeType === Node.ELEMENT_NODE) {
@@ -56,20 +34,6 @@ export function RichTextRenderer({ content }: RichTextRendererProps) {
                 <strong key={index} className="font-extrabold text-gray-900 dark:text-white">
                   {parseNodes(el.childNodes)}
                 </strong>
-              )
-            }
-
-            if (el.classList.contains("hashtag-span") || tagName === "a") {
-              const text = el.textContent || ""
-              return (
-                <Link
-                  key={index}
-                  href={`/explore?tag=${encodeURIComponent(text)}`}
-                  className="font-bold text-violet-600 dark:text-violet-400 hover:underline inline-block"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {text}
-                </Link>
               )
             }
 

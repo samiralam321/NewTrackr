@@ -169,7 +169,7 @@ export function ProfileDashboard({
     { id: 'streak_starter', name: 'Streak Starter', active: displayStreak > 0, icon: Flame, color: 'text-orange-500 bg-orange-50' },
     { id: 'active_learner', name: 'Active Learner', active: postsCountState >= 10, icon: BookOpen, color: 'text-emerald-500 bg-emerald-50' },
     { id: 'sharer', name: 'Sharer', active: (followersCountState || 0) > 0, icon: Share2, color: 'text-blue-500 bg-blue-50' },
-    { id: 'problem_solver', name: 'Problem Solver', active: (posts || []).some(p => p.tags?.includes('#DSA') || p.tags?.includes('#Algorithms') || p.tags?.includes('DSA')), icon: Puzzle, color: 'text-fuchsia-500 bg-fuchsia-50' },
+    { id: 'problem_solver', name: 'Problem Solver', active: (posts || []).some(p => p.tags?.includes('#DSA') || p.tags?.includes('#Algorithms') || p.tags?.includes('DSA') || p.content?.toLowerCase().includes('dsa') || p.content?.toLowerCase().includes('algorithm')), icon: Puzzle, color: 'text-fuchsia-500 bg-fuchsia-50' },
     { id: 'top_contributor', name: 'Top Contributor', active: postsCountState >= 50, icon: Trophy, color: 'text-amber-500 bg-amber-50' }
   ]
 

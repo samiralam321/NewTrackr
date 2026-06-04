@@ -10,9 +10,6 @@ import { updateUserStreakAndBadge } from "@/lib/utils/streak"
 
 export function RightSidebar() {
   const [content, setContent] = useState("")
-  const [tags, setTags] = useState<string[]>(["#DSA", "#Coding"])
-  const [newTag, setNewTag] = useState("")
-  const [isAddingTag, setIsAddingTag] = useState(false)
   const [hours, setHours] = useState("")
   const [mins, setMins] = useState("")
   const [progressType, setProgressType] = useState<'Learned' | 'Built' | 'Practiced' | 'Other'>('Learned')
@@ -25,13 +22,6 @@ export function RightSidebar() {
   const supabase = createClient()
   const router = useRouter()
 
-  const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim().startsWith('#') ? newTag.trim() : `#${newTag.trim()}`])
-    }
-    setNewTag("")
-    setIsAddingTag(false)
-  }
 
   const toggleBold = () => {
     document.execCommand('bold', false)
@@ -49,19 +39,7 @@ export function RightSidebar() {
     }
   }
 
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(t => t !== tagToRemove))
-  }
 
-  const extractHashtags = (html: string): string[] => {
-    if (typeof window === 'undefined') return []
-    const tempDiv = document.createElement("div")
-    tempDiv.innerHTML = html
-    const text = tempDiv.innerText || tempDiv.textContent || ""
-    const regex = /#([A-Za-z0-9_]+)/g
-    const matches = text.match(regex) || []
-    return Array.from(new Set(matches.map(m => m.trim())))
-  }
 
   const handlePost = async () => {
     const textContent = content.replace(/<[^>]*>/g, '').trim()
@@ -91,13 +69,11 @@ export function RightSidebar() {
       }
 
       const timeSpent = (parseInt(hours || "0") * 60) + parseInt(mins || "0")
-      const contentHashtags = extractHashtags(content)
-      const finalTags = Array.from(new Set([...tags, ...contentHashtags]))
 
       const { error } = await supabase.from('posts').insert({
         user_id: userData.user.id,
         content,
-        tags: finalTags,
+        tags: [],
         time_spent: timeSpent > 0 ? timeSpent : null,
         type: progressType,
         image_url: imageUrl
@@ -125,7 +101,6 @@ export function RightSidebar() {
 
       // Reset form
       setContent("")
-      setTags(["#DSA", "#Coding"])
       setHours("")
       setMins("")
       setImageFile(null)
@@ -228,33 +203,7 @@ export function RightSidebar() {
           </div>
         </div>
 
-        {/* Tags */}
-        <div>
-          <label className="text-sm font-semibold text-gray-900 dark:text-white block mb-3">Add tags</label>
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <span key={tag} className="px-3 py-1.5 bg-[#E6F8F1] text-emerald-600 rounded-lg text-xs font-medium flex items-center gap-1 group">
-                {tag}
-                <button onClick={() => removeTag(tag)} className="opacity-0 group-hover:opacity-100"><X className="w-3 h-3" /></button>
-              </span>
-            ))}
-            {isAddingTag ? (
-              <input 
-                autoFocus
-                type="text" 
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onBlur={handleAddTag}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
-                className="px-3 py-1.5 w-20 border border-violet-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-violet-500 rounded-lg text-xs font-medium dark:text-gray-100"
-              />
-            ) : (
-              <button onClick={() => setIsAddingTag(true)} className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg text-xs font-medium flex items-center justify-center">
-                <Plus className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-        </div>
+
 
 
 
