@@ -114,6 +114,10 @@ export function Sidebar({ profile }: { profile?: any }) {
     if (!profileState?.id) return
 
     const fetchUnread = async () => {
+      if (pathname === '/notifications') {
+        setUnreadCount(0)
+        return
+      }
       const { count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
@@ -183,13 +187,7 @@ export function Sidebar({ profile }: { profile?: any }) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [profileState?.id])
-
-  useEffect(() => {
-    if (pathname === '/notifications') {
-      setUnreadCount(0)
-    }
-  }, [pathname])
+  }, [profileState?.id, pathname])
 
   const navItems = [
     { name: 'Home', href: '/dashboard', icon: Home },
