@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Post, Comment } from "@/lib/supabase/types"
 import Link from "next/link"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
+import { RichTextRenderer } from "@/components/ui/rich-text-renderer"
 
 export function Feed({ 
   userIdFilter,
@@ -16,7 +17,8 @@ export function Feed({
   collegeOnlyFilter,
   isJourneyMode,
   highlightsOnlyFilter,
-  currentUserIdProp
+  currentUserIdProp,
+  hashtagFilter
 }: { 
   userIdFilter?: string,
   savedOnlyFilter?: boolean,
@@ -26,7 +28,8 @@ export function Feed({
   collegeOnlyFilter?: boolean,
   isJourneyMode?: boolean,
   highlightsOnlyFilter?: boolean,
-  currentUserIdProp?: string
+  currentUserIdProp?: string,
+  hashtagFilter?: string
 }) {
   const [posts, setPosts] = useState<Post[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -100,7 +103,7 @@ export function Feed({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [expandedComments, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter])
+  }, [expandedComments, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter, hashtagFilter])
 
   const fetchPosts = async (showLoading = true) => {
     if (showLoading) setIsLoading(true)
@@ -123,6 +126,11 @@ export function Feed({
       .order('created_at', { ascending: false })
       
     if (userIdFilter) query = query.eq('user_id', userIdFilter)
+
+    if (hashtagFilter) {
+      const normalizedTag = hashtagFilter.startsWith('#') ? hashtagFilter : `#${hashtagFilter}`
+      query = query.or(`content.ilike.%${normalizedTag}%,tags.cs.{${normalizedTag}}`)
+    }
 
     if (followingOnlyFilter && currentUid) {
       const { data: followData } = await supabase
@@ -651,7 +659,7 @@ export function Feed({
               </div>
             ) : (
               <p className="text-[16px] text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap max-w-3xl">
-                {post.content}
+                <RichTextRenderer content={post.content} />
               </p>
             )}
           </div>
@@ -828,7 +836,9 @@ export function Feed({
                             <span>{comment.profiles?.full_name}</span>
                             <VerifiedBadge level={comment.profiles?.badge_level} />
                           </p>
-                          <p className="text-sm text-gray-700 dark:text-gray-300">{comment.content}</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            <RichTextRenderer content={comment.content} />
+                          </p>
                         </div>
                       </div>
                     ))

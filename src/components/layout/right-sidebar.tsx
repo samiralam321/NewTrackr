@@ -19,10 +19,10 @@ export function RightSidebar() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [showEmojis, setShowEmojis] = useState(false)
-  
   const commonEmojis = ["😂", "👍", "🔥", "🚀", "❤️", "💯", "✨", "🙏", "💡", "💻"]
   
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const supabase = createClient()
   const router = useRouter()
 
@@ -32,6 +32,52 @@ export function RightSidebar() {
     }
     setNewTag("")
     setIsAddingTag(false)
+  }
+
+  const toggleBold = () => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const text = textarea.value
+
+    const selectedText = text.substring(start, end)
+    let newText = ""
+    let newStart = start
+    let newEnd = end
+
+    if (start === end) {
+      newText = text.substring(0, start) + "****" + text.substring(end)
+      newStart = start + 2
+      newEnd = start + 2
+    } else {
+      if (selectedText.startsWith("**") && selectedText.endsWith("**")) {
+        const unwrapped = selectedText.slice(2, -2)
+        newText = text.substring(0, start) + unwrapped + text.substring(end)
+        newStart = start
+        newEnd = start + unwrapped.length
+      } else {
+        const wrapped = `**${selectedText}**`
+        newText = text.substring(0, start) + wrapped + text.substring(end)
+        newStart = start
+        newEnd = start + wrapped.length
+      }
+    }
+
+    setContent(newText)
+
+    setTimeout(() => {
+      textarea.focus()
+      textarea.setSelectionRange(newStart, newEnd)
+    }, 0)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault()
+      toggleBold()
+    }
   }
 
   const removeTag = (tagToRemove: string) => {
@@ -127,8 +173,10 @@ export function RightSidebar() {
         {/* Textarea */}
         <div className="relative">
           <Textarea 
+            ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="What did you work on today?&#10;Drop your progress 👇"
             className="min-h-[160px] resize-none border-gray-200 dark:border-[#2D2B3B] bg-white dark:bg-[#1A1A24] dark:text-white dark:placeholder-gray-500 focus-visible:ring-violet-500 rounded-2xl p-4 text-sm pb-12 transition-colors duration-300"
           />
@@ -150,7 +198,7 @@ export function RightSidebar() {
                 <ImageIcon className="w-4 h-4" />
               </Button>
               <div className="relative">
-                <Button 
+                 <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={() => setShowEmojis(!showEmojis)}
@@ -176,6 +224,15 @@ export function RightSidebar() {
                   </div>
                 )}
               </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleBold}
+                className="h-8 w-8 rounded-full text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 hover:text-violet-700 dark:hover:text-violet-300 font-extrabold text-sm active:scale-90 transition-all duration-200"
+                title="Bold Text"
+              >
+                B
+              </Button>
               
               {imageFile && (
                 <div className="ml-2 bg-violet-50 dark:bg-violet-900/30 px-2 py-1 rounded-md text-[11px] font-semibold text-violet-600 dark:text-violet-400 border border-violet-100 dark:border-violet-800 flex items-center gap-1">

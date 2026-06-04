@@ -20,8 +20,10 @@ export function MobilePostDrawer() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [showEmojis, setShowEmojis] = useState(false)
   const quickEmojis = ["🚀", "🔥", "💡", "💻", "🐛", "✅", "🎉", "👀", "🙌", "🧠"]
+  const [toolbarPos, setToolbarPos] = useState<{ top: number, left: number } | null>(null)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const supabase = createClient()
   const router = useRouter()
 
@@ -31,6 +33,124 @@ export function MobilePostDrawer() {
     }
     setNewTag("")
     setIsAddingTag(false)
+  }
+
+  const toggleBold = () => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const text = textarea.value
+
+    const selectedText = text.substring(start, end)
+    let newText = ""
+    let newStart = start
+    let newEnd = end
+
+    if (start === end) {
+      newText = text.substring(0, start) + "****" + text.substring(end)
+      newStart = start + 2
+      newEnd = start + 2
+    } else {
+      if (selectedText.startsWith("**") && selectedText.endsWith("**")) {
+        const unwrapped = selectedText.slice(2, -2)
+        newText = text.substring(0, start) + unwrapped + text.substring(end)
+        newStart = start
+        newEnd = start + unwrapped.length
+      } else {
+        const wrapped = `**${selectedText}**`
+        newText = text.substring(0, start) + wrapped + text.substring(end)
+        newStart = start
+        newEnd = start + wrapped.length
+      }
+    }
+
+    setContent(newText)
+    setToolbarPos(null)
+
+    setTimeout(() => {
+      textarea.focus()
+      textarea.setSelectionRange(newStart, newEnd)
+    }, 0)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault()
+      toggleBold()
+    }
+  }
+
+  const getTextareaSelectionCoords = (textarea: HTMLTextAreaElement) => {
+    const { selectionStart, selectionEnd } = textarea
+    
+    const div = document.createElement('div')
+    const style = window.getComputedStyle(textarea)
+    
+    const properties = [
+      'direction', 'boxSizing', 'width', 'height', 'overflowX', 'overflowY',
+      'borderWidth', 'borderStyle', 'borderColor',
+      'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+      'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'fontVariant',
+      'textTransform', 'wordSpacing', 'letterSpacing', 'lineHeight',
+      'textIndent', 'whiteSpace', 'wordBreak', 'wordWrap'
+    ]
+    
+    properties.forEach(prop => {
+      div.style[prop as any] = style[prop as any]
+    })
+    
+    div.style.position = 'absolute'
+    div.style.visibility = 'hidden'
+    div.style.whiteSpace = 'pre-wrap'
+    div.style.wordWrap = 'break-word'
+    
+    document.body.appendChild(div)
+    
+    const text = textarea.value
+    const midPoint = Math.floor((selectionStart + selectionEnd) / 2)
+    const textBefore = text.substring(0, midPoint)
+    
+    const span = document.createElement('span')
+    span.textContent = text.charAt(midPoint) || '.'
+    
+    div.textContent = textBefore
+    div.appendChild(span)
+    
+    const textareaRect = textarea.getBoundingClientRect()
+    const spanRect = span.getBoundingClientRect()
+    
+    const top = span.offsetTop - textarea.scrollTop + textareaRect.top - 48
+    const left = span.offsetLeft + textareaRect.left + (spanRect.width / 2) - 40
+    
+    document.body.removeChild(div)
+    
+    const clampedTop = Math.max(textareaRect.top - 40, Math.min(textareaRect.bottom - 20, top))
+    const clampedLeft = Math.max(textareaRect.left + 10, Math.min(textareaRect.right - 90, left))
+    
+    return { top: clampedTop, left: clampedLeft }
+  }
+
+  const handleTextareaSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    
+    if (start !== end) {
+      const coords = getTextareaSelectionCoords(textarea)
+      setToolbarPos(coords)
+    } else {
+      setToolbarPos(null)
+    }
+  }
+
+  const handleTextareaScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget
+    if (textarea.selectionStart !== textarea.selectionEnd) {
+      const coords = getTextareaSelectionCoords(textarea)
+      setToolbarPos(coords)
+    }
   }
 
   const removeTag = (tagToRemove: string) => {
@@ -143,8 +263,12 @@ export function MobilePostDrawer() {
             {/* Textarea Card */}
             <div className="relative bg-white rounded-3xl p-1 shadow-sm border border-violet-50">
               <Textarea 
+                ref={textareaRef}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onSelect={handleTextareaSelect}
+                onKeyDown={handleKeyDown}
+                onScroll={handleTextareaScroll}
                 placeholder="What did you work on today?&#10;Drop your progress 👇"
                 className="min-h-[180px] text-base resize-none border-none shadow-none focus-visible:ring-0 p-4 placeholder:text-gray-400 pb-14 bg-transparent"
                 autoFocus
@@ -179,6 +303,15 @@ export function MobilePostDrawer() {
                   className={`h-10 w-10 rounded-full text-violet-600 hover:bg-violet-100 transition-colors ${showEmojis ? 'bg-violet-100' : 'bg-violet-50'}`}
                 >
                   <Smile className="w-5 h-5" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleBold}
+                  className="h-10 w-10 rounded-full text-violet-600 bg-violet-50 hover:bg-violet-100 font-extrabold text-base transition-all duration-200 active:scale-90"
+                  title="Bold Text"
+                >
+                  B
                 </Button>
                 {/* Emoji Picker Overlay */}
                 {showEmojis && (
@@ -250,6 +383,43 @@ export function MobilePostDrawer() {
             </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Mobile Selection Floating Toolbar */}
+      {toolbarPos && (
+        <div 
+          style={{ 
+            position: 'fixed',
+            top: `${toolbarPos.top}px`, 
+            left: `${toolbarPos.left}px` 
+          }}
+          className="bg-gray-900/95 dark:bg-[#1A1A24]/95 text-white flex items-center gap-1.5 p-1.5 px-2.5 rounded-2xl shadow-2xl border border-white/10 dark:border-gray-800 backdrop-blur-md z-[9999] animate-in fade-in zoom-in-95 duration-150 pointer-events-auto"
+        >
+          <button 
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleBold();
+            }}
+            className="h-8 px-2.5 rounded-xl hover:bg-white/10 active:bg-white/20 font-extrabold text-sm flex-shrink-0 flex items-center justify-center text-violet-400"
+          >
+            B
+          </button>
+          <div className="w-[1px] h-4 bg-white/20" />
+          <button 
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowEmojis(prev => !prev);
+              setToolbarPos(null);
+            }}
+            className="h-8 px-2 rounded-xl hover:bg-white/10 active:bg-white/20 text-sm flex-shrink-0 flex items-center justify-center text-violet-400"
+          >
+            😊
+          </button>
         </div>
       )}
     </>
