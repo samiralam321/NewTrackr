@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { X, Image as ImageIcon, Smile, Plus, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -22,7 +22,6 @@ export function RightSidebar() {
   const commonEmojis = ["😂", "👍", "🔥", "🚀", "❤️", "💯", "✨", "🙏", "💡", "💻"]
   
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const supabase = createClient()
   const router = useRouter()
 
@@ -35,45 +34,15 @@ export function RightSidebar() {
   }
 
   const toggleBold = () => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const text = textarea.value
-
-    const selectedText = text.substring(start, end)
-    let newText = ""
-    let newStart = start
-    let newEnd = end
-
-    if (start === end) {
-      newText = text.substring(0, start) + "****" + text.substring(end)
-      newStart = start + 2
-      newEnd = start + 2
-    } else {
-      if (selectedText.startsWith("**") && selectedText.endsWith("**")) {
-        const unwrapped = selectedText.slice(2, -2)
-        newText = text.substring(0, start) + unwrapped + text.substring(end)
-        newStart = start
-        newEnd = start + unwrapped.length
-      } else {
-        const wrapped = `**${selectedText}**`
-        newText = text.substring(0, start) + wrapped + text.substring(end)
-        newStart = start
-        newEnd = start + wrapped.length
-      }
+    document.execCommand('bold', false)
+    const editor = document.querySelector('.desktop-rich-editor') as HTMLElement
+    if (editor) {
+      setContent(editor.innerHTML)
+      editor.focus()
     }
-
-    setContent(newText)
-
-    setTimeout(() => {
-      textarea.focus()
-      textarea.setSelectionRange(newStart, newEnd)
-    }, 0)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
       e.preventDefault()
       toggleBold()
@@ -84,8 +53,19 @@ export function RightSidebar() {
     setTags(tags.filter(t => t !== tagToRemove))
   }
 
+  const extractHashtags = (html: string): string[] => {
+    if (typeof window === 'undefined') return []
+    const tempDiv = document.createElement("div")
+    tempDiv.innerHTML = html
+    const text = tempDiv.innerText || tempDiv.textContent || ""
+    const regex = /#([A-Za-z0-9_]+)/g
+    const matches = text.match(regex) || []
+    return Array.from(new Set(matches.map(m => m.trim())))
+  }
+
   const handlePost = async () => {
-    if (!content.trim()) return
+    const textContent = content.replace(/<[^>]*>/g, '').trim()
+    if (!textContent && !imageFile) return
 
     setIsSubmitting(true)
     try {
@@ -111,11 +91,13 @@ export function RightSidebar() {
       }
 
       const timeSpent = (parseInt(hours || "0") * 60) + parseInt(mins || "0")
+      const contentHashtags = extractHashtags(content)
+      const finalTags = Array.from(new Set([...tags, ...contentHashtags]))
 
       const { error } = await supabase.from('posts').insert({
         user_id: userData.user.id,
         content,
-        tags,
+        tags: finalTags,
         time_spent: timeSpent > 0 ? timeSpent : null,
         type: progressType,
         image_url: imageUrl
@@ -172,13 +154,12 @@ export function RightSidebar() {
       <div className="flex-1 flex flex-col gap-6">
         {/* Textarea */}
         <div className="relative">
-          <Textarea 
-            ref={textareaRef}
+          <RichTextEditor 
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={setContent}
             onKeyDown={handleKeyDown}
             placeholder="What did you work on today?&#10;Drop your progress 👇"
-            className="min-h-[160px] resize-none border-gray-200 dark:border-[#2D2B3B] bg-white dark:bg-[#1A1A24] dark:text-white dark:placeholder-gray-500 focus-visible:ring-violet-500 rounded-2xl p-4 text-sm pb-12 transition-colors duration-300"
+            className="min-h-[160px] border border-gray-200 dark:border-[#2D2B3B] bg-white dark:bg-[#1A1A24] dark:text-white dark:placeholder-gray-500 focus-visible:ring-violet-500 rounded-2xl p-4 text-sm pb-12 transition-colors duration-300 desktop-rich-editor"
           />
           <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center text-gray-400">
             <div className="flex items-center gap-1">

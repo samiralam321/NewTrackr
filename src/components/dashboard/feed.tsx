@@ -7,6 +7,7 @@ import { Post, Comment } from "@/lib/supabase/types"
 import Link from "next/link"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { RichTextRenderer } from "@/components/ui/rich-text-renderer"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 
 export function Feed({ 
   userIdFilter,
@@ -326,11 +327,28 @@ export function Feed({
   }
 
   // Advanced Action Handlers
+  const extractHashtags = (html: string): string[] => {
+    if (typeof window === 'undefined') return []
+    const tempDiv = document.createElement("div")
+    tempDiv.innerHTML = html
+    const text = tempDiv.innerText || tempDiv.textContent || ""
+    const regex = /#([A-Za-z0-9_]+)/g
+    const matches = text.match(regex) || []
+    return Array.from(new Set(matches.map(m => m.trim())))
+  }
+
   const handleEditSave = async (postId: string) => {
-    if (!editContent.trim()) return
-    const { error } = await supabase.from('posts').update({ content: editContent }).eq('id', postId)
+    const textContent = editContent.replace(/<[^>]*>/g, '').trim()
+    if (!textContent) return
+
+    const contentHashtags = extractHashtags(editContent)
+    const { error } = await supabase.from('posts').update({ 
+      content: editContent,
+      tags: contentHashtags
+    }).eq('id', postId)
+
     if (!error) {
-      setPosts(posts.map(p => p.id === postId ? { ...p, content: editContent } : p))
+      setPosts(posts.map(p => p.id === postId ? { ...p, content: editContent, tags: contentHashtags } : p))
       setEditingPostId(null)
     }
   }
@@ -646,11 +664,11 @@ export function Feed({
           <div className="mb-5">
             {editingPostId === post.id ? (
               <div className="flex flex-col gap-3">
-                <textarea 
+                <RichTextEditor 
                   value={editContent} 
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="w-full p-4 text-[15px] bg-gray-50 dark:bg-[#1A1A24] border border-gray-200 dark:border-[#2D2B3B] rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 min-h-[100px] resize-y text-gray-900 dark:text-white"
-                  autoFocus
+                  onChange={setEditContent}
+                  placeholder="Edit your progress..."
+                  className="w-full p-4 text-[15px] bg-gray-50 dark:bg-[#1A1A24] border border-gray-200 dark:border-[#2D2B3B] rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 min-h-[100px] text-gray-900 dark:text-white feed-edit-rich-editor"
                 />
                 <div className="flex justify-end gap-2">
                   <button onClick={() => setEditingPostId(null)} className="px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Cancel</button>
