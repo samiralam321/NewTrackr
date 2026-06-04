@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { ProfileDashboard } from "@/components/profile/profile-dashboard"
 
+export const dynamic = 'force-dynamic'
+
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params
   const supabase = await createClient()

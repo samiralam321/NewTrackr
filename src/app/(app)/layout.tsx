@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server"
 import { PresenceProvider } from "@/components/providers/presence-provider"
 import { CongratulationsModal } from "@/components/ui/congratulations-modal"
 
+export const dynamic = 'force-dynamic'
+
 export default async function AppLayout({
   children,
 }: {

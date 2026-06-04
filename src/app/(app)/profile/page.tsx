@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { ProfileDashboard } from "@/components/profile/profile-dashboard"
 
+export const dynamic = 'force-dynamic'
+
 export default async function ProfilePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

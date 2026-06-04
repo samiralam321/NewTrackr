@@ -25,9 +25,24 @@ export function Sidebar({ profile }: { profile?: any }) {
   const [isSendingContact, setIsSendingContact] = useState(false)
   const [contactSent, setContactSent] = useState(false)
 
-  // Sync state if initial props change
+  // Sync state if initial props change (prevent stale server refreshes from overwriting local state)
   useEffect(() => {
-    setProfileState(profile)
+    setProfileState((prev: any) => {
+      if (prev && prev.id === profile?.id) {
+        const serverScore = profile?.consistency_score || 0
+        const localScore = prev.consistency_score || 0
+        if (serverScore >= localScore) {
+          return profile
+        }
+        return {
+          ...profile,
+          consistency_score: prev.consistency_score,
+          last_post_date: prev.last_post_date,
+          badge_level: prev.badge_level
+        }
+      }
+      return profile
+    })
   }, [profile])
 
   // Listen for custom profile-updated event (handles local updates from posts & profile edits)
@@ -196,7 +211,11 @@ export function Sidebar({ profile }: { profile?: any }) {
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
     
-    const lastPost = new Date(profileState.last_post_date)
+    // Parse YYYY-MM-DD in local time to avoid timezone offsets shifting the day
+    const parts = String(profileState.last_post_date).split('-')
+    const lastPost = parts.length === 3 
+      ? new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]))
+      : new Date(profileState.last_post_date)
     lastPost.setHours(0, 0, 0, 0)
     
     // If the last post is older than yesterday, the streak is broken today
