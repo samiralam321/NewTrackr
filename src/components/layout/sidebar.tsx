@@ -30,6 +30,24 @@ export function Sidebar({ profile }: { profile?: any }) {
     setProfileState(profile)
   }, [profile])
 
+  // Listen for custom profile-updated event (handles local updates from posts & profile edits)
+  useEffect(() => {
+    const handleProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent
+      if (customEvent.detail) {
+        setProfileState((prev: any) => ({
+          ...prev,
+          ...customEvent.detail
+        }))
+      }
+    }
+
+    window.addEventListener('profile-updated', handleProfileUpdate)
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdate)
+    }
+  }, [])
+
   // Prefill user profile name if loaded
   useEffect(() => {
     if (profileState?.full_name) {

@@ -46,6 +46,24 @@ export function ProfileDashboard({
     setFollowingCountState(followingCount || 0)
   }, [profile, posts, followersCount, followingCount])
 
+  // Listen for custom profile-updated event (handles local updates from posts & profile edits)
+  useEffect(() => {
+    const handleProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent
+      if (customEvent.detail) {
+        setProfileState((prev: any) => ({
+          ...prev,
+          ...customEvent.detail
+        }))
+      }
+    }
+
+    window.addEventListener('profile-updated', handleProfileUpdate)
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdate)
+    }
+  }, [])
+
   // Real-time Postgres subscriptions for Streaks, Posts Count, and Followers/Following Count
   useEffect(() => {
     const channel = supabase

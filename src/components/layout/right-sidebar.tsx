@@ -84,16 +84,29 @@ export function RightSidebar() {
       // Update streak and handle badge achievements
       try {
         const result = await updateUserStreakAndBadge(supabase, userData.user.id)
-        if (result && 'isNewBadgeEarned' in result && result.isNewBadgeEarned) {
-          // Dispatch custom event for immediate celebration modal
+        if (result) {
+          // Dispatch custom event to notify all components about profile update
           window.dispatchEvent(
-            new CustomEvent('badge-earned', {
+            new CustomEvent('profile-updated', {
               detail: {
-                level: result.badgeLevel,
-                streak: result.streak,
-              },
+                consistency_score: result.streak,
+                badge_level: result.badgeLevel,
+                last_post_date: new Date().toISOString().split('T')[0]
+              }
             })
           )
+
+          if ('isNewBadgeEarned' in result && result.isNewBadgeEarned) {
+            // Dispatch custom event for immediate celebration modal
+            window.dispatchEvent(
+              new CustomEvent('badge-earned', {
+                detail: {
+                  level: result.badgeLevel,
+                  streak: result.streak,
+                },
+              })
+            )
+          }
         }
       } catch (streakErr) {
         console.error("Error updating streak/badge on desktop post:", streakErr)

@@ -105,6 +105,19 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
 
       if (error) throw error
 
+      window.dispatchEvent(
+        new CustomEvent('profile-updated', {
+          detail: {
+            full_name: fullName,
+            bio,
+            college,
+            avatar_url: avatarUrl,
+            resume_url: finalResumeUrl,
+            resume_name: finalResumeName
+          }
+        })
+      )
+
       setOpen(false)
       router.refresh()
     } catch (error) {
