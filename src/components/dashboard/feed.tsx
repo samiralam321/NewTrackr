@@ -8,6 +8,7 @@ import Link from "next/link"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { RichTextRenderer } from "@/components/ui/rich-text-renderer"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
+import { getBadgeLevel } from "@/lib/utils/streak"
 
 export function Feed({ 
   userIdFilter,
@@ -516,12 +517,12 @@ export function Feed({
               <div>
                 <h3 className="text-[15px] font-bold text-gray-900 dark:text-white group-hover:underline transition-colors flex items-center gap-1.5">
                   <span>{post.profiles?.full_name || 'Anonymous User'}</span>
-                  <VerifiedBadge level={post.profiles?.badge_level} />
+                  <VerifiedBadge level={getBadgeLevel(post.profiles?.consistency_score)} />
                 </h3>
                 <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
-                  {post.profiles?.badge_level === 3 ? 'Trackr Legend Member' :
-                   post.profiles?.badge_level === 2 ? 'Trackr Elite Member' :
-                   post.profiles?.badge_level === 1 ? 'Trackr Verified Member' :
+                  {getBadgeLevel(post.profiles?.consistency_score) === 3 ? 'Trackr Legend Member' :
+                   getBadgeLevel(post.profiles?.consistency_score) === 2 ? 'Trackr Elite Member' :
+                   getBadgeLevel(post.profiles?.consistency_score) === 1 ? 'Trackr Verified Member' :
                    post.profiles?.college || 'Trackr Member'}
                 </p>
               </div>
@@ -828,7 +829,7 @@ export function Feed({
                         <div className="bg-gray-50 dark:bg-[#1A1A24] rounded-2xl rounded-tl-none px-4 py-2 flex-1 transition-colors">
                           <p className="text-xs font-semibold text-gray-900 dark:text-white mb-0.5 flex items-center gap-1">
                             <span>{comment.profiles?.full_name}</span>
-                            <VerifiedBadge level={comment.profiles?.badge_level} />
+                            <VerifiedBadge level={getBadgeLevel(comment.profiles?.consistency_score)} />
                           </p>
                           <p className="text-sm text-gray-700 dark:text-gray-300">
                             <RichTextRenderer content={comment.content} />

@@ -1,66 +1,53 @@
+export function getBadgeLevel(consistencyScore: number | null | undefined): number {
+  const score = consistencyScore || 0
+  if (score >= 100) return 3
+  if (score >= 30) return 2
+  if (score >= 5) return 1
+  return 0
+}
+
 export async function updateUserStreakAndBadge(supabase: any, userId: string) {
   // Fetch user profile
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('consistency_score, last_post_date, badge_level')
+    .select('consistency_score, last_post_date')
     .eq('id', userId)
     .single()
 
   if (error || !profile) return { error }
 
-  // 1. Get today's local date in YYYY-MM-DD
-  const today = new Date()
-  const yyyy = today.getFullYear()
-  const mm = String(today.getMonth() + 1).padStart(2, '0')
-  const dd = String(today.getDate()).padStart(2, '0')
-  const todayStr = `${yyyy}-${mm}-${dd}`
+  // 1. Standardize on UTC date string calculation (LeetCode DCC 24-hour UTC window)
+  const todayStr = new Date().toISOString().split('T')[0]
 
   let newStreak = profile.consistency_score || 0
   const lastPostDateStr = profile.last_post_date
 
   if (!lastPostDateStr) {
     newStreak = 1
-  } else if (lastPostDateStr !== todayStr) {
-    // Check if it was yesterday
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const y_yyyy = yesterday.getFullYear()
-    const y_mm = String(yesterday.getMonth() + 1).padStart(2, '0')
-    const y_dd = String(yesterday.getDate()).padStart(2, '0')
-    const yesterdayStr = `${y_yyyy}-${y_mm}-${y_dd}`
+  } else {
+    const [currY, currM, currD] = todayStr.split('-').map(Number)
+    const [lastY, lastM, lastD] = String(lastPostDateStr).split('-').map(Number)
+    const current = Date.UTC(currY, currM - 1, currD)
+    const last = Date.UTC(lastY, lastM - 1, lastD)
+    const diffDays = Math.round((current - last) / (1000 * 60 * 60 * 24))
 
-    if (lastPostDateStr === yesterdayStr) {
+    if (diffDays === 1) {
       newStreak += 1
-    } else {
+    } else if (diffDays > 1) {
       newStreak = 1 // Reset streak if they missed a day
     }
+    // If diffDays <= 0, they already posted today on this UTC date, maintain streak
   }
 
   // Calculate badge level based on new streak
-  let newBadgeLevel = 0
-  if (newStreak >= 100) {
-    newBadgeLevel = 3
-  } else if (newStreak >= 30) {
-    newBadgeLevel = 2
-  } else if (newStreak >= 5) {
-    newBadgeLevel = 1
-  }
-
-  const oldBadgeLevel = profile.badge_level || 0
+  const newBadgeLevel = getBadgeLevel(newStreak)
+  const oldBadgeLevel = getBadgeLevel(profile.consistency_score)
   const isNewBadgeEarned = newBadgeLevel > oldBadgeLevel
 
-  // Update profile
+  // Update profile (badge_level is calculated dynamically, so we only save consistency_score & last_post_date)
   const updateData: any = {
     consistency_score: newStreak,
     last_post_date: todayStr
-  }
-
-  if (isNewBadgeEarned) {
-    updateData.badge_level = newBadgeLevel
-    updateData.badge_earned_at = new Date().toISOString()
-  } else if (newBadgeLevel < oldBadgeLevel) {
-    // If streak drops, badge level is updated to match new streak
-    updateData.badge_level = newBadgeLevel
   }
 
   const { error: updateError } = await supabase
@@ -70,23 +57,19 @@ export async function updateUserStreakAndBadge(supabase: any, userId: string) {
 
   if (updateError) return { error: updateError }
 
-  // Create notification if a new badge was earned
+  // Create notification if a new badge was earned (use post_id: null to avoid FK constraint errors)
   if (isNewBadgeEarned) {
-    const dummyPostIdMap = {
-      1: '00000000-0000-0000-0000-000000000001',
-      2: '00000000-0000-0000-0000-000000000002',
-      3: '00000000-0000-0000-0000-000000000003'
+    try {
+      await supabase.from('notifications').insert({
+        user_id: userId,
+        actor_id: userId,
+        type: 'badge',
+        post_id: null,
+        is_read: false
+      })
+    } catch (notifErr) {
+      console.warn("Could not insert badge notification:", notifErr)
     }
-    const dummyPostId = dummyPostIdMap[newBadgeLevel as 1 | 2 | 3]
-
-    // Insert badge notification
-    await supabase.from('notifications').insert({
-      user_id: userId,
-      actor_id: userId,
-      type: 'badge',
-      post_id: dummyPostId,
-      is_read: false
-    })
   }
 
   return {

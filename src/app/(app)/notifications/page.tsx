@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Bell, Heart, MessageCircle, UserPlus, AtSign, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
+import { getBadgeLevel } from "@/lib/utils/streak"
 
 type Notification = {
   id: string
@@ -48,7 +49,7 @@ export default function NotificationsPage() {
       .from('notifications')
       .select(`
         *,
-        actor:profiles!notifications_actor_id_fkey(full_name, avatar_url, badge_level)
+        actor:profiles!notifications_actor_id_fkey(full_name, avatar_url, consistency_score)
       `)
       .eq('user_id', userData.user.id)
       .order('created_at', { ascending: false })
@@ -99,7 +100,7 @@ export default function NotificationsPage() {
         return (
           <span className="inline-flex items-center gap-1.5 flex-wrap">
             <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
-            <VerifiedBadge level={(n.actor as any)?.badge_level} />
+            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score)} />
             <span>liked your post</span>
           </span>
         )
@@ -107,7 +108,7 @@ export default function NotificationsPage() {
         return (
           <span className="inline-flex items-center gap-1.5 flex-wrap">
             <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
-            <VerifiedBadge level={(n.actor as any)?.badge_level} />
+            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score)} />
             <span>commented on your post</span>
           </span>
         )
@@ -115,7 +116,7 @@ export default function NotificationsPage() {
         return (
           <span className="inline-flex items-center gap-1.5 flex-wrap">
             <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
-            <VerifiedBadge level={(n.actor as any)?.badge_level} />
+            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score)} />
             <span>started following you</span>
           </span>
         )
@@ -123,7 +124,7 @@ export default function NotificationsPage() {
         return (
           <span className="inline-flex items-center gap-1.5 flex-wrap">
             <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
-            <VerifiedBadge level={(n.actor as any)?.badge_level} />
+            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score)} />
             <span>mentioned you</span>
           </span>
         )

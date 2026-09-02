@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Trophy, Star, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
+import { getBadgeLevel } from "@/lib/utils/streak"
 
 export function LeaderboardClient({ dates, defaultDate }: { dates: string[], defaultDate: string }) {
   const [activeDate, setActiveDate] = useState(defaultDate)
@@ -21,7 +22,7 @@ export function LeaderboardClient({ dates, defaultDate }: { dates: string[], def
         score,
         accuracy,
         time_taken,
-        profiles ( id, full_name, avatar_url, challenge_rank, badge_level )
+        profiles ( id, full_name, avatar_url, challenge_rank, consistency_score )
       `)
       .eq('challenge_date', date)
       .order('score', { ascending: false })
@@ -109,7 +110,7 @@ export function LeaderboardClient({ dates, defaultDate }: { dates: string[], def
                 <Link href={`/profile/${attempt.profiles?.id}`} className="inline-flex items-center gap-2 hover:underline decoration-violet-500 decoration-2 underline-offset-2">
                   <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5 transition-colors hover:text-violet-600 dark:hover:text-violet-400">
                     <span>{attempt.profiles?.full_name}</span>
-                    <VerifiedBadge level={attempt.profiles?.badge_level} />
+                    <VerifiedBadge level={getBadgeLevel(attempt.profiles?.consistency_score)} />
                     {index === 0 && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
                   </h4>
                 </Link>

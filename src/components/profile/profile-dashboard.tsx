@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client"
 import { usePresence } from "@/components/providers/presence-provider"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { motion } from "framer-motion"
+import { getBadgeLevel } from "@/lib/utils/streak"
 
 export function ProfileDashboard({ 
   profile, 
@@ -145,29 +146,23 @@ export function ProfileDashboard({
     }
   }, [profile.id])
 
-  // Main Streak Logic (Synchronized with sidebar)
+  // Main Streak Logic (Synchronized with sidebar & LeetCode DCC UTC logic)
   let displayStreak = profileState?.consistency_score || 0
   if (profileState?.last_post_date) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const todayStr = new Date().toISOString().split('T')[0]
+    const [currY, currM, currD] = todayStr.split('-').map(Number)
+    const [lastY, lastM, lastD] = String(profileState.last_post_date).split('-').map(Number)
+    const current = Date.UTC(currY, currM - 1, currD)
+    const last = Date.UTC(lastY, lastM - 1, lastD)
+    const diffDays = Math.round((current - last) / (1000 * 60 * 60 * 24))
     
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-    
-    // Parse YYYY-MM-DD in local time to avoid timezone offsets shifting the day
-    const parts = String(profileState.last_post_date).split('-')
-    const lastPost = parts.length === 3 
-      ? new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]))
-      : new Date(profileState.last_post_date)
-    lastPost.setHours(0, 0, 0, 0)
-    
-    if (lastPost < yesterday) {
+    if (diffDays > 1) {
       displayStreak = 0
     }
   }
 
   // Verification Progress calculation
-  const currentBadgeLevel = profileState?.badge_level || 0
+  const currentBadgeLevel = getBadgeLevel(profileState?.consistency_score)
   let nextTierName = ""
   let nextTierTarget = 0
   let nextTierBadgeLevel = 0
@@ -279,8 +274,8 @@ export function ProfileDashboard({
             <div className="mt-4">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 {profileState?.full_name || 'Anonymous User'}
-                {profileState?.badge_level > 0 && (
-                  <VerifiedBadge level={profileState.badge_level} size="md" />
+                {getBadgeLevel(profileState?.consistency_score) > 0 && (
+                  <VerifiedBadge level={getBadgeLevel(profileState?.consistency_score)} size="md" />
                 )}
               </h1>
               
