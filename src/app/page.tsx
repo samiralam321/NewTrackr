@@ -1,13 +1,14 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { InstallButton } from "@/components/pwa/InstallPWA"
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-white overflow-x-hidden">
       {/* Navigation */}
-      <header className="flex h-20 items-center justify-between px-8 max-w-7xl mx-auto w-full">
+      <header className="flex h-20 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto w-full">
         <div className="flex items-center gap-1 md:gap-2">
-          <img src="/logo.png" alt="Trackr Logo" className="w-12 h-12 object-contain drop-shadow-sm scale-[1.3] origin-center" />
+          <img src="/logo.png" alt="Trackr Logo" className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm scale-[1.3] origin-center" />
           <span className="text-xl font-bold text-gray-900 ml-1">Trackr</span>
         </div>
         
@@ -19,9 +20,10 @@ export default function LandingPage() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-4">
+          <InstallButton className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-200 bg-violet-50 hover:bg-violet-100 active:scale-95 text-violet-700 text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer" />
           <Link href="/auth" className="text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900">Log in</Link>
           <Link href="/auth">
-            <Button className="bg-violet-600 hover:bg-violet-700 text-white rounded-full px-4 sm:px-6 h-8 sm:h-10 text-xs sm:text-sm">Get Started</Button>
+            <Button className="bg-violet-600 hover:bg-violet-700 text-white rounded-full px-3 sm:px-6 h-8 sm:h-10 text-xs sm:text-sm">Get Started</Button>
           </Link>
         </div>
       </header>
