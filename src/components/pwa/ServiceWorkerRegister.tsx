@@ -38,12 +38,8 @@ export function ServiceWorkerRegister() {
       }
     }
 
-    if (document.readyState === 'complete') {
-      registerSW()
-    } else {
-      window.addEventListener('load', registerSW)
-      return () => window.removeEventListener('load', registerSW)
-    }
+    // Register immediately on mount in the client
+    registerSW()
   }, [])
 
   const handleUpdate = () => {

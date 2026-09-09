@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
+import { InstallButton } from "@/components/pwa/InstallPWA"
 
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
@@ -262,6 +263,9 @@ export function Sidebar({ profile }: { profile?: any }) {
           </div>
           Contact
         </button>
+
+        {/* PWA Install Button */}
+        <InstallButton />
       </nav>
 
       {/* Streak Widget */}

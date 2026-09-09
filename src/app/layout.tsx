@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: [
       { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
@@ -62,6 +62,23 @@ export default function RootLayout({
       className={`${inter.variable} font-sans h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.__deferredPrompt = null;
+              window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                window.__deferredPrompt = e;
+                if (window.__onBeforeInstallPrompt) {
+                  window.__onBeforeInstallPrompt(e);
+                }
+              });
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} antialiased min-h-full flex flex-col`}>
         <ThemeProvider>
           {children}
