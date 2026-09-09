@@ -49,7 +49,7 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
   ]
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-100 flex items-center justify-around px-4 z-50 safe-area-pb shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[calc(4rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 dark:bg-[#0B0A10]/95 backdrop-blur-md border-t border-gray-100 dark:border-[#2D2B3B] flex items-center justify-around px-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
       {navItems.map((item) => {
         const isActive = pathname === item.href
         return (

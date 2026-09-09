@@ -9,7 +9,7 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS challenge_rank text default
 -- 2. Questions Table
 CREATE TABLE IF NOT EXISTS public.questions (
   id uuid default gen_random_uuid() primary key,
-  topic text check (topic in ('DSA', 'OOPS', 'OS', 'DBMS', 'Aptitude', 'AI')),
+  topic text check (topic in ('DSA', 'OOPS', 'OS', 'DBMS', 'Aptitude', 'AI', 'CN')),
   difficulty text check (difficulty in ('Medium', 'Hard')),
   question text not null,
   options jsonb not null, -- Array of strings
