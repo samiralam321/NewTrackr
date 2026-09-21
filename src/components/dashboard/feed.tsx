@@ -464,13 +464,13 @@ export function Feed({
   }
 
   return (
-    <div className={`space-y-6 ${isJourneyMode ? 'pl-2' : ''}`}>
+    <div className={`space-y-3.5 md:space-y-6 pb-28 md:pb-8 ${isJourneyMode ? 'pl-2' : ''}`}>
       {isLoading ? (
-        <div className="space-y-6">
+        <div className="space-y-3.5 md:space-y-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-5 md:p-6 shadow-sm animate-pulse">
+            <div key={i} className="bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm animate-pulse">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-[#1A1A24]"></div>
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-200 dark:bg-[#1A1A24]"></div>
                 <div className="flex-1">
                   <div className="h-4 bg-gray-200 dark:bg-[#1A1A24] rounded w-1/4 mb-2"></div>
                   <div className="h-3 bg-gray-200 dark:bg-[#1A1A24] rounded w-1/3"></div>
@@ -507,29 +507,33 @@ export function Feed({
               </>
             )}
 
-            <article className={`bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 dark:hover:border-violet-900/50 group/card ${isJourneyMode ? 'relative z-10' : ''}`}>
+            <article className={`bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-3.5 sm:p-5 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 dark:hover:border-violet-900/50 group/card ${isJourneyMode ? 'relative z-10' : ''}`}>
           
           {/* Top Section */}
           {!isJourneyMode && (
-            <div className="flex items-center justify-between mb-5">
-              <Link href={`/profile/${post.user_id}`} className="flex items-center gap-3 group">
-              <img src={post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${post.profiles?.full_name || 'User'}&background=7C3AED&color=fff`} className="w-12 h-12 rounded-full object-cover border border-gray-100 dark:border-gray-800 group-hover:opacity-90 transition-opacity" alt="" />
-              <div>
-                <h3 className="text-[15px] font-bold text-gray-900 dark:text-white group-hover:underline transition-colors flex items-center gap-1.5">
-                  <span>{post.profiles?.full_name || 'Anonymous User'}</span>
+            <div className="flex items-center justify-between mb-3.5 md:mb-5">
+              <Link href={`/profile/${post.user_id}`} className="flex items-center gap-2.5 md:gap-3 group min-w-0">
+              <img src={post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${post.profiles?.full_name || 'User'}&background=7C3AED&color=fff`} className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover border border-gray-100 dark:border-gray-800 group-hover:opacity-90 transition-opacity shrink-0" alt="" />
+              <div className="min-w-0">
+                <h3 className="text-[14px] md:text-[15px] font-bold text-gray-900 dark:text-white group-hover:underline transition-colors flex items-center gap-1.5 truncate">
+                  <span className="truncate">{post.profiles?.full_name || 'Anonymous User'}</span>
                   <VerifiedBadge level={getBadgeLevel(post.profiles?.consistency_score)} />
                 </h3>
-                <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
-                  {getBadgeLevel(post.profiles?.consistency_score) === 3 ? 'Trackr Legend Member' :
-                   getBadgeLevel(post.profiles?.consistency_score) === 2 ? 'Trackr Elite Member' :
-                   getBadgeLevel(post.profiles?.consistency_score) === 1 ? 'Trackr Verified Member' :
-                   post.profiles?.college || 'Trackr Member'}
+                <p className="text-[11.5px] md:text-[13px] text-gray-500 dark:text-gray-400 font-medium truncate flex items-center gap-1">
+                  <span className="truncate">
+                    {getBadgeLevel(post.profiles?.consistency_score) === 3 ? 'Trackr Legend' :
+                     getBadgeLevel(post.profiles?.consistency_score) === 2 ? 'Trackr Elite' :
+                     getBadgeLevel(post.profiles?.consistency_score) === 1 ? 'Trackr Verified' :
+                     post.profiles?.college || 'Trackr Member'}
+                  </span>
+                  <span className="md:hidden text-gray-300 dark:text-gray-600">•</span>
+                  <span className="md:hidden text-gray-400 dark:text-gray-500 shrink-0">{getTimeAgo(post.created_at)}</span>
                 </p>
               </div>
             </Link>
             
-            <div className="flex items-center gap-3 text-gray-400 dark:text-gray-500">
-              <div className="shrink-0 whitespace-nowrap flex items-center gap-1.5 text-orange-500 font-bold text-[13px] bg-orange-50 dark:bg-orange-500/10 px-3 py-1 rounded-full transition-colors">
+            <div className="flex items-center gap-2 md:gap-3 text-gray-400 dark:text-gray-500 shrink-0">
+              <div className="whitespace-nowrap flex items-center gap-1 text-orange-500 font-bold text-[12px] md:text-[13px] bg-orange-50 dark:bg-orange-500/10 border border-orange-100/50 dark:border-orange-500/20 px-2 py-0.5 md:px-3 md:py-1 rounded-full transition-colors">
                 🔥 {post.profiles?.consistency_score || 0}
               </div>
               <div className="hidden sm:block w-px h-4 bg-gray-200 dark:bg-gray-800"></div>
@@ -547,9 +551,9 @@ export function Feed({
               <div className="relative post-menu-container">
                 <button 
                   onClick={() => setOpenMenuId(openMenuId === post.id ? null : post.id)} 
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-[#1A1A24] rounded-full transition-colors"
+                  className="p-1.5 hover:bg-gray-100 dark:hover:bg-[#1A1A24] rounded-full transition-colors"
                 >
-                  <MoreVertical className="w-5 h-5 text-gray-500" />
+                  <MoreVertical className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
                 </button>
                 
                 {openMenuId === post.id && (
@@ -641,9 +645,34 @@ export function Feed({
               </div>
              </div>
           )}
+
+          {/* Progress Category & Time Chip (Prominently placed above content for strong hierarchy) */}
+          {(post.type || post.time_spent) && (
+            <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
+              {post.type && (
+                <span className={`text-[12px] font-semibold px-2.5 py-0.5 rounded-md inline-flex items-center gap-1 transition-colors ${
+                  post.type === 'Learned' ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/50 dark:border-violet-800/40' :
+                  post.type === 'Built' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40' :
+                  post.type === 'Practiced' ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/40' :
+                  'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40'
+                }`}>
+                  {post.type === 'Learned' && '💡'}
+                  {post.type === 'Built' && '🚀'}
+                  {post.type === 'Practiced' && '🎯'}
+                  {post.type === 'Other' && '📝'}
+                  <span>{post.type}</span>
+                </span>
+              )}
+              {post.time_spent && (
+                <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-[#1A1A24] px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                  ⏱️ {Math.floor(post.time_spent/60)}h {post.time_spent%60}m
+                </span>
+              )}
+            </div>
+          )}
           
           {/* Content Section */}
-          <div className="mb-5">
+          <div className="mb-3.5 md:mb-5">
             {editingPostId === post.id ? (
               <div className="flex flex-col gap-3">
                 <RichTextEditor 
@@ -658,32 +687,18 @@ export function Feed({
                 </div>
               </div>
             ) : (
-              <p className="text-[16px] text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap max-w-3xl">
+              <p className="text-[14.5px] md:text-[16px] text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap max-w-3xl">
                 <RichTextRenderer content={post.content} />
               </p>
             )}
           </div>
           
-          {/* Image Preview */}
+          {/* Image Preview - Aspect ratio constrained for Android & desktop */}
           {post.image_url && (
-            <div className="mb-5 w-full max-w-lg h-48 sm:h-64 bg-gray-100 dark:bg-[#1A1A24] rounded-2xl overflow-hidden border border-gray-100 dark:border-[#2D2B3B] cursor-pointer hover:opacity-95 transition-all shadow-sm" onClick={() => window.open(post.image_url!, '_blank')}>
+            <div className="mb-3.5 md:mb-5 w-full max-w-lg aspect-[16/10] max-h-72 sm:max-h-80 bg-gray-100 dark:bg-[#1A1A24] rounded-xl overflow-hidden border border-gray-100 dark:border-[#2D2B3B] cursor-pointer hover:opacity-95 transition-all shadow-sm" onClick={() => window.open(post.image_url!, '_blank')}>
                <img src={post.image_url} alt="Post attachment" className="w-full h-full object-cover" />
             </div>
           )}
-
-          {/* Tags Section */}
-          <div className="mb-6 flex flex-wrap gap-2">
-            {post.type && (
-               <span className="text-[13px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3.5 py-1.5 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/20 cursor-pointer transition-colors">
-                 {post.type}
-               </span>
-            )}
-            {post.time_spent && (
-               <span className="text-[13px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3.5 py-1.5 rounded-full transition-colors">
-                 ⏱️ {Math.floor(post.time_spent/60)}h {post.time_spent%60}m
-               </span>
-            )}
-          </div>
             
           {/* Action Bar */}
           {/* Desktop Action Bar */}
@@ -757,56 +772,56 @@ export function Feed({
             </div>
           </div>
 
-          {/* Mobile Action Bar */}
-          <div className="flex md:hidden items-center justify-between pt-4 border-t border-gray-100 dark:border-[#2D2B3B] transition-colors px-1">
+          {/* Mobile Action Bar - Clean Android Material 3 Touch Targets */}
+          <div className="flex md:hidden items-center justify-between pt-2.5 border-t border-gray-100 dark:border-[#2D2B3B] transition-colors -mx-1 px-1">
             {/* Like */}
             <button 
               onClick={() => toggleLike(post.id, post.user_has_liked || false)} 
-              className={`flex items-center gap-2 text-[14px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
-                post.user_has_liked ? 'text-red-500 dark:text-red-500' : 'text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400'
+              className={`h-9 px-2.5 rounded-full flex items-center gap-1.5 text-[13px] font-semibold transition-all duration-150 active:scale-90 ${
+                post.user_has_liked ? 'text-red-500 bg-red-50/70 dark:bg-red-950/30' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A24]'
               }`}
             >
-              <Heart className={`w-[19px] h-[19px] transition-transform duration-300 ${post.user_has_liked ? 'fill-current scale-110' : ''}`} /> 
+              <Heart className={`w-4 h-4 transition-transform ${post.user_has_liked ? 'fill-current' : ''}`} /> 
               <span>{(post as any).likes_count}</span>
             </button>
             
             {/* Comment */}
             <button 
               onClick={() => toggleComments(post.id)} 
-              className="flex items-center gap-2 text-[14px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-all duration-200 hover:scale-105 active:scale-95"
+              className="h-9 px-2.5 rounded-full flex items-center gap-1.5 text-[13px] font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-all duration-150 active:scale-90"
             >
-              <MessageCircle className="w-[19px] h-[19px]" /> 
+              <MessageCircle className="w-4 h-4" /> 
               <span>{(post as any).comments_count}</span>
             </button>
 
             {/* Save/Bookmark */}
             <button 
               onClick={() => toggleBookmark(post.id, post.user_has_bookmarked || false)} 
-              className={`flex items-center gap-2 text-[14px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
-                post.user_has_bookmarked ? 'text-violet-600 dark:text-violet-500' : 'text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400'
+              className={`h-9 px-2.5 rounded-full flex items-center gap-1.5 text-[13px] font-semibold transition-all duration-150 active:scale-90 ${
+                post.user_has_bookmarked ? 'text-violet-600 bg-violet-50/70 dark:bg-violet-950/30' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A24]'
               }`}
             >
-              <Bookmark className={`w-[19px] h-[19px] transition-transform duration-300 ${post.user_has_bookmarked ? 'fill-current scale-110' : ''}`} />
+              <Bookmark className={`w-4 h-4 transition-transform ${post.user_has_bookmarked ? 'fill-current' : ''}`} />
               <span>{(post as any).bookmarks_count || 0}</span>
             </button>
 
             {/* Share */}
             <button 
               onClick={() => handleSharePost(post)} 
-              className="flex items-center gap-2 text-[14px] font-semibold text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-200 hover:scale-105 active:scale-95"
+              className="h-9 w-9 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-all duration-150 active:scale-90"
               title="Share post"
             >
-              <Share2 className="w-[19px] h-[19px]" />
+              <Share2 className="w-4 h-4" />
             </button>
 
             {/* Delete */}
             {post.user_id === currentUserId && (
               <button 
                 onClick={() => setPostToDelete(post.id)} 
-                className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition-all duration-200 hover:scale-110 active:scale-95"
+                className="h-9 w-9 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-150 active:scale-90"
                 title="Delete post"
               >
-                <Trash2 className="w-[19px] h-[19px]" />
+                <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>

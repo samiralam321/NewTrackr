@@ -36,48 +36,48 @@ export function DashboardTabs({ currentUserId }: { currentUserId?: string }) {
         </button>
       </div>
 
-      {/* Mobile Version - distributed evenly, clean underlines, no settings icon */}
-      <div className="flex md:hidden items-center justify-between border-b border-gray-100 dark:border-[#2D2B3B] mb-6">
-        <div className="flex-1 flex items-center justify-around py-1">
+      {/* Mobile Version - distributed evenly, clean Material 3 style underlines */}
+      <div className="flex md:hidden items-center justify-between border-b border-gray-100 dark:border-[#2D2B3B] mb-3.5">
+        <div className="flex-1 flex items-center justify-around py-0.5">
           <button 
             onClick={() => setActiveTab('for-you')}
-            className={`relative py-3 px-3 text-[14px] sm:text-base font-bold transition-all duration-300 flex-1 text-center ${
+            className={`relative py-2.5 px-2 text-[14px] transition-all duration-200 flex-1 text-center font-medium ${
               activeTab === 'for-you' 
-                ? 'text-violet-600 dark:text-violet-400 font-extrabold' 
+                ? 'text-violet-600 dark:text-violet-400 font-bold' 
                 : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
             }`}
           >
             For you
             {activeTab === 'for-you' && (
-              <span className="absolute bottom-0 left-1/6 right-1/6 h-[3px] bg-violet-600 dark:bg-violet-400 rounded-full animate-in fade-in slide-in-from-left-2 duration-200"></span>
+              <span className="absolute bottom-0 left-4 right-4 h-[2.5px] bg-violet-600 dark:bg-violet-400 rounded-full animate-in fade-in zoom-in-95 duration-150"></span>
             )}
           </button>
           
           <button 
             onClick={() => setActiveTab('following')}
-            className={`relative py-3 px-3 text-[14px] sm:text-base font-bold transition-all duration-300 flex-1 text-center ${
+            className={`relative py-2.5 px-2 text-[14px] transition-all duration-200 flex-1 text-center font-medium ${
               activeTab === 'following' 
-                ? 'text-violet-600 dark:text-violet-400 font-extrabold' 
+                ? 'text-violet-600 dark:text-violet-400 font-bold' 
                 : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
             }`}
           >
             Following
             {activeTab === 'following' && (
-              <span className="absolute bottom-0 left-1/6 right-1/6 h-[3px] bg-violet-600 dark:bg-violet-400 rounded-full animate-in fade-in slide-in-from-left-2 duration-200"></span>
+              <span className="absolute bottom-0 left-4 right-4 h-[2.5px] bg-violet-600 dark:bg-violet-400 rounded-full animate-in fade-in zoom-in-95 duration-150"></span>
             )}
           </button>
           
           <button 
             onClick={() => setActiveTab('college')}
-            className={`relative py-3 px-3 text-[14px] sm:text-base font-bold transition-all duration-300 flex-1 text-center ${
+            className={`relative py-2.5 px-2 text-[14px] transition-all duration-200 flex-1 text-center font-medium ${
               activeTab === 'college' 
-                ? 'text-violet-600 dark:text-violet-400 font-extrabold' 
+                ? 'text-violet-600 dark:text-violet-400 font-bold' 
                 : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
             }`}
           >
             College
             {activeTab === 'college' && (
-              <span className="absolute bottom-0 left-1/6 right-1/6 h-[3px] bg-violet-600 dark:bg-violet-400 rounded-full animate-in fade-in slide-in-from-left-2 duration-200"></span>
+              <span className="absolute bottom-0 left-4 right-4 h-[2.5px] bg-violet-600 dark:bg-violet-400 rounded-full animate-in fade-in zoom-in-95 duration-150"></span>
             )}
           </button>
         </div>
