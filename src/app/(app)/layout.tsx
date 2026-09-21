@@ -26,7 +26,7 @@ export default async function AppLayout({
           {children}
         </div>
         <MobileBottomNav profile={profile} />
-        <MobilePostDrawer />
+        <MobilePostDrawer profile={profile} />
         <CongratulationsModal />
       </PresenceProvider>
     </div>

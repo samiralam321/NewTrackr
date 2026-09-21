@@ -3,16 +3,17 @@
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
-import { X, Image as ImageIcon, Plus, Loader2, PenLine, Smile } from "lucide-react"
+import { X, Image as ImageIcon, Loader2, PenLine, Smile, ChevronDown, Check } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter, usePathname } from "next/navigation"
 import { updateUserStreakAndBadge } from "@/lib/utils/streak"
 
-export function MobilePostDrawer() {
+export function MobilePostDrawer({ profile }: { profile?: any }) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [content, setContent] = useState("")
   const [progressType, setProgressType] = useState<'Learned' | 'Built' | 'Practiced' | 'Other'>('Learned')
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [showEmojis, setShowEmojis] = useState(false)
@@ -21,7 +22,6 @@ export function MobilePostDrawer() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
   const router = useRouter()
-
 
   const toggleBold = () => {
     document.execCommand('bold', false)
@@ -38,8 +38,6 @@ export function MobilePostDrawer() {
       toggleBold()
     }
   }
-
-
 
   const handlePost = async () => {
     if (!content.trim()) return
@@ -81,7 +79,6 @@ export function MobilePostDrawer() {
       try {
         const result = await updateUserStreakAndBadge(supabase, userData.user.id)
         if (result) {
-          // Dispatch custom event to notify all components about profile update
           window.dispatchEvent(
             new CustomEvent('profile-updated', {
               detail: {
@@ -93,7 +90,6 @@ export function MobilePostDrawer() {
           )
 
           if ('isNewBadgeEarned' in result && result.isNewBadgeEarned) {
-            // Dispatch custom event for immediate celebration modal
             window.dispatchEvent(
               new CustomEvent('badge-earned', {
                 detail: {
@@ -128,101 +124,145 @@ export function MobilePostDrawer() {
     return null;
   }
 
+  const charLimit = 500
+  const charPercentage = Math.min(100, Math.round((content.length / charLimit) * 100))
+
   return (
     <>
-      {/* Floating Action Button (FAB) - Material You Squircle */}
+      {/* Floating Action Button (FAB) - Circular Twitter/X Style */}
       <button 
         onClick={() => setIsOpen(true)}
-        className="md:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-4 w-13 h-13 bg-gradient-to-tr from-violet-600 to-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30 hover:scale-105 active:scale-95 transition-all duration-200 z-40"
-        aria-label="Create new progress post"
+        className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] right-4 w-14 h-14 bg-violet-600 hover:bg-violet-700 text-white rounded-full flex items-center justify-center shadow-lg shadow-violet-500/35 active:scale-95 transition-all duration-200 z-40"
+        aria-label="New post"
       >
-        <PenLine className="w-5 h-5" />
+        <PenLine className="w-6 h-6 stroke-[2.2]" />
       </button>
 
-      {/* Full Screen Native Android Composer */}
+      {/* Full Screen Twitter/X Style Native Android Composer */}
       {isOpen && (
-        <div className="md:hidden fixed inset-0 z-[100] bg-white dark:bg-[#0B0A10] flex flex-col animate-in slide-in-from-bottom duration-250">
-          {/* Top App Bar */}
-          <div className="flex items-center justify-between px-3 h-14 border-b border-gray-100 dark:border-[#2D2B3B] bg-white/95 dark:bg-[#0B0A10]/95 backdrop-blur-md shrink-0">
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setIsOpen(false)} 
-                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1A1A24] active:scale-95 transition-transform"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <h2 className="text-[15px] font-bold text-gray-900 dark:text-white">Share Progress</h2>
-            </div>
+        <div className="md:hidden fixed inset-0 z-[100] bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom duration-200">
+          
+          {/* Top Bar (Twitter/X style: Cancel/Close on left, Post pill on right) */}
+          <div className="flex items-center justify-between px-4 h-13 border-b border-gray-100 dark:border-neutral-900 bg-white dark:bg-black shrink-0">
+            <button 
+              onClick={() => setIsOpen(false)} 
+              className="w-9 h-9 -ml-1.5 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 active:scale-90 transition-all"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5 stroke-[2.2]" />
+            </button>
             
             <Button 
               onClick={handlePost}
               disabled={isSubmitting || !content.trim()}
-              className="h-8 px-4 bg-violet-600 hover:bg-violet-700 text-white rounded-full text-xs font-bold disabled:opacity-40 shadow-sm active:scale-95 transition-all"
+              className={`h-8 px-4.5 rounded-full text-[13px] font-bold transition-all shadow-none ${
+                content.trim() 
+                  ? 'bg-violet-600 hover:bg-violet-700 text-white active:scale-95' 
+                  : 'bg-violet-600/40 text-white/60 cursor-not-allowed'
+              }`}
             >
               {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Post'}
             </Button>
           </div>
 
-          {/* Category Chips Bar */}
-          <div className="px-4 py-2 border-b border-gray-100/80 dark:border-[#2D2B3B]/60 bg-gray-50/50 dark:bg-[#12111A] shrink-0">
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 shrink-0">Type:</span>
-              {(['Learned', 'Built', 'Practiced', 'Other'] as const).map((type) => {
-                const isSelected = progressType === type
-                const icon = type === 'Learned' ? '💡' : type === 'Built' ? '🚀' : type === 'Practiced' ? '🎯' : '📝'
-                return (
+          {/* Main Writing Canvas (Avatar on Left, Content & Selector on Right) */}
+          <div className="flex-1 overflow-y-auto px-4 pt-3 pb-4 flex gap-3">
+            {/* User Avatar */}
+            <img 
+              src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.full_name || 'User'}&background=7C3AED&color=fff`} 
+              alt="Profile" 
+              className="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-black/5 dark:ring-white/10 mt-0.5" 
+            />
+
+            {/* Composer Content Area */}
+            <div className="flex-1 min-w-0 flex flex-col">
+              
+              {/* Category Selector Pill (Twitter/X Audience Selector style) */}
+              <div className="relative mb-2 inline-block self-start">
+                <button 
+                  type="button"
+                  onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 border border-violet-200/60 dark:border-violet-800/40 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors active:scale-95"
+                >
+                  <span>
+                    {progressType === 'Learned' && '💡 Learned'}
+                    {progressType === 'Built' && '🚀 Built'}
+                    {progressType === 'Practiced' && '🎯 Practiced'}
+                    {progressType === 'Other' && '📝 Other'}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isCategoryOpen && (
+                  <div className="absolute top-8 left-0 z-50 w-56 bg-white dark:bg-[#1A1A24] rounded-2xl shadow-xl border border-gray-100 dark:border-[#2D2B3B] p-1.5 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">Type of Progress</div>
+                    {[
+                      { id: 'Learned', icon: '💡', title: 'Learned', desc: 'New skill, topic, or concept' },
+                      { id: 'Built', icon: '🚀', title: 'Built', desc: 'Feature, project, or tool' },
+                      { id: 'Practiced', icon: '🎯', title: 'Practiced', desc: 'LeetCode, DSA, problems' },
+                      { id: 'Other', icon: '📝', title: 'Other', desc: 'General progress update' },
+                    ].map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => {
+                          setProgressType(cat.id as any)
+                          setIsCategoryOpen(false)
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-colors ${
+                          progressType === cat.id 
+                            ? 'bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 font-semibold' 
+                            : 'hover:bg-gray-50 dark:hover:bg-[#2D2B3B] text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        <span className="text-base">{cat.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-bold leading-tight">{cat.title}</div>
+                          <div className="text-[10px] text-gray-400 leading-tight">{cat.desc}</div>
+                        </div>
+                        {progressType === cat.id && <Check className="w-3.5 h-3.5 text-violet-600 shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Seamless Rich Text Editor */}
+              <RichTextEditor 
+                value={content}
+                onChange={setContent}
+                onKeyDown={handleKeyDown}
+                placeholder="What did you accomplish today?"
+                className="w-full text-[17px] leading-relaxed placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent mobile-rich-editor text-gray-900 dark:text-white border-none p-0 focus-visible:ring-0 min-h-[160px]"
+              />
+
+              {/* Attached Image Preview Card */}
+              {imageFile && (
+                <div className="relative mt-3 rounded-2xl overflow-hidden border border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900 max-h-60">
+                  <img 
+                    src={URL.createObjectURL(imageFile)} 
+                    alt="Attachment preview" 
+                    className="w-full h-52 object-cover" 
+                  />
                   <button 
-                    key={type}
-                    onClick={() => setProgressType(type)}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition-all flex items-center gap-1.5 active:scale-95 ${
-                      isSelected 
-                        ? 'bg-violet-600 text-white shadow-xs' 
-                        : 'bg-white dark:bg-[#1A1A24] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#2D2B3B]'
-                    }`}
+                    onClick={() => {
+                      setImageFile(null)
+                      if (fileInputRef.current) fileInputRef.current.value = ''
+                    }} 
+                    className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center transition-all active:scale-90 shadow-md backdrop-blur-xs"
+                    aria-label="Remove image"
                   >
-                    <span>{icon}</span>
-                    <span>{type}</span>
+                    <X className="w-4 h-4" />
                   </button>
-                )
-              })}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Body Editor Area */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col">
-            <RichTextEditor 
-              value={content}
-              onChange={setContent}
-              onKeyDown={handleKeyDown}
-              placeholder="What did you work on today?&#10;• What did you learn, build, or practice?&#10;• Drop your progress here..."
-              className="w-full flex-1 min-h-[220px] text-[15px] focus-visible:ring-0 placeholder:text-gray-400 bg-transparent mobile-rich-editor text-gray-900 dark:text-white"
-            />
-
-            {/* Attached Image Preview */}
-            {imageFile && (
-              <div className="relative mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-[#2D2B3B] bg-gray-50 dark:bg-[#1A1A24] max-h-48 flex items-center justify-center group">
-                <img 
-                  src={URL.createObjectURL(imageFile)} 
-                  alt="Attachment preview" 
-                  className="w-full h-48 object-cover" 
-                />
-                <button 
-                  onClick={() => {
-                    setImageFile(null)
-                    if (fileInputRef.current) fileInputRef.current.value = ''
-                  }} 
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Bottom Docked Toolbar (Material 3 style) */}
-          <div className="relative border-t border-gray-100 dark:border-[#2D2B3B] bg-white dark:bg-[#0B0A10] px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-1">
+          {/* Bottom Docked Toolbar (Twitter/X Style) */}
+          <div className="relative border-t border-gray-100 dark:border-neutral-900 bg-white dark:bg-black px-4 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-1 -ml-2">
               <input 
                 type="file" 
                 ref={fileInputRef} 
@@ -233,33 +273,60 @@ export function MobilePostDrawer() {
               <button 
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1A1A24] active:scale-90 transition-all ${imageFile ? 'text-violet-600 bg-violet-50 dark:bg-violet-950/40' : ''}`}
-                title="Add Image"
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 active:scale-90 transition-all ${imageFile ? 'bg-violet-100 dark:bg-violet-950/60' : ''}`}
+                title="Add Photo"
+                aria-label="Add photo"
               >
-                <ImageIcon className="w-5 h-5" />
+                <ImageIcon className="w-5 h-5 stroke-[2.2]" />
               </button>
+              
               <button 
                 type="button"
                 onClick={() => setShowEmojis(!showEmojis)}
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1A1A24] active:scale-90 transition-all ${showEmojis ? 'text-violet-600 bg-violet-50 dark:bg-violet-950/40' : ''}`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 active:scale-90 transition-all ${showEmojis ? 'bg-violet-100 dark:bg-violet-950/60' : ''}`}
                 title="Insert Emoji"
+                aria-label="Insert emoji"
               >
-                <Smile className="w-5 h-5" />
+                <Smile className="w-5 h-5 stroke-[2.2]" />
               </button>
+
               <button 
                 type="button"
                 onClick={toggleBold}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1A1A24] font-black text-sm active:scale-90 transition-all"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 font-black text-sm active:scale-90 transition-all"
                 title="Bold Text"
+                aria-label="Bold text"
               >
                 B
               </button>
             </div>
 
-            {/* Quick Helper Badge */}
-            <span className="text-[11px] font-medium text-gray-400 pr-1">
-              {content.length > 0 ? `${content.length} chars` : 'Markdown supported'}
-            </span>
+            {/* Right side: Twitter/X Circular Progress Ring */}
+            <div className="flex items-center gap-2.5">
+              {content.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                    {content.length}
+                  </span>
+                  <svg className="w-5 h-5 -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className="text-gray-200 dark:text-neutral-800 stroke-current"
+                      strokeWidth="3.5"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      className={`${charPercentage >= 90 ? 'text-amber-500' : 'text-violet-600'} stroke-current transition-all duration-150`}
+                      strokeDasharray={`${charPercentage}, 100`}
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                </div>
+              )}
+            </div>
 
             {/* Emoji Picker Overlay */}
             {showEmojis && (
