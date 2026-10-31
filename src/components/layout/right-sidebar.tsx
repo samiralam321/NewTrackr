@@ -10,13 +10,8 @@ import {
   Loader2, 
   TrendingUp, 
   Flame, 
-  Sparkles, 
   Trophy, 
-  Code2, 
   ChevronRight, 
-  UserPlus, 
-  Send, 
-  Check 
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -140,31 +135,35 @@ export function RightSidebar() {
   }
 
   return (
-    <aside className="hidden xl:flex w-[340px] h-screen sticky top-0 border-l border-gray-100 dark:border-[#2D2B3B] bg-[#FCFBFE] dark:bg-[#0B0A10] flex-col p-5 overflow-y-auto space-y-6 transition-colors duration-300 scrollbar-hide">
+    <aside className="hidden xl:flex w-[340px] h-screen sticky top-0 border-l border-gray-100 dark:border-[#2D2B3B] bg-[#FCFBFE] dark:bg-[#0B0A10] flex-col p-5 overflow-y-auto space-y-5 transition-colors duration-300 scrollbar-hide">
       
-      {/* 1. Quick Progress Composer (Compact & Expandable) */}
-      <div className="bg-white dark:bg-[#12111A] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 shadow-xs">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">
-            <Sparkles className="w-3.5 h-3.5" /> Quick Share
-          </div>
-          <div className="flex items-center gap-1">
-            {(['Learned', 'Built', 'Practiced'] as const).map((type) => (
+      {/* Enhanced Progress Message Composer (Clean single-surface design) */}
+      <div className="bg-white dark:bg-[#12111A] border border-gray-100 dark:border-[#22212E] rounded-2xl p-3.5 shadow-xs hover:border-violet-200 dark:hover:border-violet-950/70 focus-within:ring-2 focus-within:ring-violet-500/15 focus-within:border-violet-500/40 transition-all duration-200">
+        
+        {/* Category Pills Header */}
+        <div className="flex items-center gap-1.5 pb-2.5 mb-2 border-b border-gray-100 dark:border-[#22212E]">
+          {(['Learned', 'Built', 'Practiced'] as const).map((type) => {
+            const icons = { Learned: '💡', Built: '🚀', Practiced: '🎯' }
+            const isSelected = progressType === type
+            return (
               <button
                 key={type}
+                type="button"
                 onClick={() => setProgressType(type)}
-                className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full transition-colors ${
-                  progressType === type
-                    ? "bg-violet-600 text-white"
-                    : "bg-gray-100 dark:bg-[#1E1D2A] text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                className={`text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 transition-all active:scale-95 ${
+                  isSelected
+                    ? "bg-violet-600 text-white shadow-xs shadow-violet-500/30"
+                    : "bg-gray-100/80 dark:bg-[#1E1D2A] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
-                {type}
+                <span>{icons[type]}</span>
+                <span>{type}</span>
               </button>
-            ))}
-          </div>
+            )
+          })}
         </div>
 
+        {/* Seamless Message Writing Canvas */}
         <div className="relative">
           <RichTextEditor
             value={content}
@@ -173,22 +172,36 @@ export function RightSidebar() {
               if (!isComposerExpanded && val.trim().length > 0) setIsComposerExpanded(true)
             }}
             placeholder="Share what you accomplished today..."
-            className={`w-full bg-gray-50/70 dark:bg-[#1A1A24] border border-gray-200/70 dark:border-[#2D2B3B] rounded-xl text-xs p-3 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-white outline-none focus-visible:ring-1 focus-visible:ring-violet-500 ${
-              isComposerExpanded ? "min-h-[110px]" : "min-h-[64px]"
+            className={`w-full bg-transparent text-xs p-1 outline-none text-gray-900 dark:text-white leading-relaxed ${
+              isComposerExpanded ? "min-h-[95px]" : "min-h-[58px]"
             }`}
-            placeholderClassName="text-xs p-3"
+            placeholderClassName="text-xs p-1 leading-relaxed"
           />
 
+          {/* Attached Image Preview */}
           {imageFile && (
-            <div className="mt-2 flex items-center justify-between bg-violet-50 dark:bg-violet-950/40 border border-violet-100 dark:border-violet-900/40 px-2.5 py-1.5 rounded-lg text-xs font-medium text-violet-700 dark:text-violet-300">
-              <span className="truncate max-w-[200px]">{imageFile.name}</span>
-              <button onClick={() => setImageFile(null)} className="text-gray-400 hover:text-red-500">
+            <div className="relative mt-2 rounded-xl overflow-hidden border border-gray-200 dark:border-[#2D2B3B] max-h-36">
+              <img
+                src={URL.createObjectURL(imageFile)}
+                alt="Attachment"
+                className="w-full h-32 object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setImageFile(null)
+                  if (fileInputRef.current) fileInputRef.current.value = ''
+                }}
+                className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center transition-all shadow-sm"
+                aria-label="Remove image"
+              >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
 
-          <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-gray-50 dark:border-[#2D2B3B]">
+          {/* Action Toolbar */}
+          <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-gray-100 dark:border-[#22212E]">
             <div className="flex items-center gap-1">
               <input 
                 type="file" 
@@ -200,30 +213,39 @@ export function RightSidebar() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors"
-                title="Attach image"
+                className={`w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors ${
+                  imageFile ? 'text-violet-600 bg-violet-50 dark:bg-violet-950/40' : ''
+                }`}
+                title="Attach photo"
+                aria-label="Attach photo"
               >
-                <ImageIcon className="w-3.5 h-3.5" />
+                <ImageIcon className="w-4 h-4 stroke-[2]" />
               </button>
+
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setShowEmojis(!showEmojis)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors"
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors ${
+                    showEmojis ? 'text-violet-600 bg-violet-50 dark:bg-violet-950/40' : ''
+                  }`}
                   title="Emoji"
+                  aria-label="Insert emoji"
                 >
-                  <Smile className="w-3.5 h-3.5" />
+                  <Smile className="w-4 h-4 stroke-[2]" />
                 </button>
+
                 {showEmojis && (
-                  <div className="absolute top-8 left-0 z-50 bg-white dark:bg-[#1A1A24] border border-gray-100 dark:border-[#2D2B3B] p-2 rounded-xl shadow-xl flex gap-1.5">
+                  <div className="absolute bottom-9 left-0 z-50 bg-white dark:bg-[#1A1A24] border border-gray-100 dark:border-[#2D2B3B] p-2 rounded-xl shadow-xl grid grid-cols-4 gap-1 animate-in fade-in zoom-in-95 duration-150">
                     {commonEmojis.map((emoji) => (
                       <button
                         key={emoji}
+                        type="button"
                         onClick={() => {
                           setContent((prev) => prev + emoji)
                           setShowEmojis(false)
                         }}
-                        className="hover:scale-110 transition-transform text-sm p-1"
+                        className="w-7 h-7 hover:bg-gray-100 dark:hover:bg-[#2D2B3B] rounded-lg transition-transform active:scale-90 flex items-center justify-center text-sm"
                       >
                         {emoji}
                       </button>
@@ -233,70 +255,65 @@ export function RightSidebar() {
               </div>
             </div>
 
-            <Button
-              size="sm"
-              onClick={handlePost}
-              disabled={isSubmitting || !content.trim()}
-              className="h-7 px-3.5 bg-violet-600 hover:bg-violet-700 text-white rounded-full text-xs font-bold shadow-xs active:scale-95 transition-all"
-            >
-              {isSubmitting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Post"}
-            </Button>
+            <div className="flex items-center gap-2">
+              {content.trim().length > 0 && (
+                <span className="text-[10px] text-gray-400 font-medium">
+                  {content.replace(/<[^>]*>/g, '').length}
+                </span>
+              )}
+
+              <Button
+                size="sm"
+                onClick={handlePost}
+                disabled={isSubmitting || (!content.trim() && !imageFile)}
+                className="h-7 px-3.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white rounded-full text-xs font-semibold shadow-xs active:scale-95 transition-all"
+              >
+                {isSubmitting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Post"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 2. Popular Tech Challenges Arena Card */}
-      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl p-4 text-white shadow-md shadow-violet-500/15 relative overflow-hidden group">
-        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:scale-125 transition-transform" />
-        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-violet-200 mb-1">
-          <Code2 className="w-4 h-4 text-violet-200" /> Interview Arena
-        </div>
-        <h3 className="text-sm font-bold leading-snug">Daily Tech Practice</h3>
-        <p className="text-xs text-violet-100/90 mt-1 leading-relaxed">
-          Solve 280+ curated technical questions across DSA, OS, DBMS & System Design.
-        </p>
-        <Link 
-          href="/challenges"
-          className="mt-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-violet-700 hover:bg-violet-50 px-3.5 py-1.5 rounded-full shadow-sm transition-all active:scale-95"
-        >
-          <span>Start Challenge</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-        </Link>
-      </div>
-
-      {/* 3. Trending Discussions & Topics */}
-      <div className="bg-white dark:bg-[#12111A] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 shadow-xs">
+      {/* Trending Discussions & Topics */}
+      <div className="bg-white dark:bg-[#12111A] border border-gray-100 dark:border-[#22212E] rounded-2xl p-4 shadow-xs">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
             <TrendingUp className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" /> Trending Discussions
           </div>
         </div>
-        <div className="space-y-2.5">
+        <div className="space-y-1.5">
           {trendingTags.map((item) => (
             <div 
               key={item.tag}
-              className="flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#1A1A24] p-1.5 -mx-1.5 rounded-xl cursor-pointer transition-colors"
+              className="flex items-center justify-between hover:bg-gray-50/80 dark:hover:bg-[#1A1926] p-2 -mx-1 rounded-xl cursor-pointer transition-colors group"
             >
-              <div className="flex items-center gap-2">
-                <span className="text-sm">{item.icon}</span>
-                <div>
-                  <div className="text-xs font-bold text-gray-800 dark:text-gray-200 leading-tight">#{item.tag}</div>
-                  <div className="text-[11px] text-gray-400 leading-tight mt-0.5">{item.count}</div>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-gray-50 dark:bg-[#1B1A26] flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform">
+                  {item.icon}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors truncate">
+                    #{item.tag}
+                  </div>
+                  <div className="text-[10.5px] text-gray-400 leading-tight">
+                    {item.count}
+                  </div>
                 </div>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600" />
+              <ChevronRight className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all" />
             </div>
           ))}
         </div>
       </div>
 
-      {/* 4. Top Consistent Students Leaderboard Snapshot */}
-      <div className="bg-white dark:bg-[#12111A] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 shadow-xs">
+      {/* Top Consistent Students Leaderboard Snapshot */}
+      <div className="bg-white dark:bg-[#12111A] border border-gray-100 dark:border-[#22212E] rounded-2xl p-4 shadow-xs">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
             <Trophy className="w-3.5 h-3.5 text-amber-500" /> Top Streaks
           </div>
-          <Link href="/leaderboard" className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline">
+          <Link href="/leaderboard" className="text-[11px] font-semibold text-violet-600 dark:text-violet-400 hover:underline">
             View all
           </Link>
         </div>
@@ -308,14 +325,14 @@ export function RightSidebar() {
             ))}
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {topStudents.map((student, idx) => (
               <Link
                 key={student.id}
                 href={`/profile/${student.id}`}
-                className="flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#1A1A24] p-1.5 -mx-1.5 rounded-xl transition-colors group"
+                className="flex items-center justify-between hover:bg-gray-50/80 dark:hover:bg-[#1A1926] p-1.5 -mx-1 rounded-xl transition-colors group"
               >
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <div className="relative shrink-0">
                     <img
                       src={student.avatar_url || `https://ui-avatars.com/api/?name=${student.full_name || 'User'}&background=7C3AED&color=fff`}
