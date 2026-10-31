@@ -1,9 +1,9 @@
 // Trackr PWA Service Worker
-// Version: 1.0.0
-const CACHE_NAME = 'trackr-static-v1'
+// Version: 2.3.0 - Instant Network-First & Dynamic Cache Busting
+const CACHE_NAME = 'trackr-v2.3'
 const OFFLINE_URL = '/offline'
 
-// Safe, non-sensitive static assets to precache on install
+// Precache essential offline fallback assets
 const PRECACHE_ASSETS = [
   OFFLINE_URL,
   '/icon-192x192.png',
@@ -14,25 +14,24 @@ const PRECACHE_ASSETS = [
   '/manifest.json'
 ]
 
-// 1. Install Event: Cache offline fallback and shell assets
+// 1. Install Event: Skip waiting immediately to activate latest build
 self.addEventListener('install', (event) => {
+  self.skipWaiting()
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS)
-    }).then(() => {
-      // Allow new service worker to wait until user confirms update or activates
-      return self.skipWaiting()
     })
   )
 })
 
-// 2. Activate Event: Clean up stale caches
+// 2. Activate Event: Purge all stale caches and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[SW] Wiping obsolete cache:', key)
             return caches.delete(key)
           }
         })
@@ -43,18 +42,17 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-// 3. Fetch Event: Strict, secure caching rules
+// 3. Fetch Event: Network-First strategy to ensure mobile devices always get latest UI
 self.addEventListener('fetch', (event) => {
   const request = event.request
   const url = new URL(request.url)
 
-  // RULE 1: Never intercept non-GET requests (mutations, posts, uploads, comments)
+  // RULE 1: Never intercept non-GET requests (mutations, uploads, posts)
   if (request.method !== 'GET') {
     return
   }
 
-  // RULE 2: STRICT BYPASS for Supabase auth, APIs, webhooks, and authenticated calls
-  // Absolutely no caching of tokens, user sessions, or database API queries
+  // RULE 2: STRICT BYPASS for API, Auth, and Supabase database requests
   if (
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/auth/') ||
@@ -64,24 +62,28 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // RULE 3: Navigation requests (HTML page visits) -> Network-first with /offline fallback
+  // RULE 3: Navigation requests (HTML page visits) -> Network-first with offline fallback
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => {
-        return caches.match(OFFLINE_URL).then((cachedOffline) => {
-          if (cachedOffline) return cachedOffline
-          // Fallback response if cache is missing
-          return new Response(
-            '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline - Trackr</title><style>body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;background:#0B0A10;color:#fff;text-align:center;padding:20px}button{background:#7C3AED;color:#fff;border:none;padding:12px 24px;border-radius:12px;font-weight:bold;cursor:pointer;margin-top:16px}</style></head><body><h1>You are offline</h1><p>Please check your internet connection and try again.</p><button onclick="window.location.reload()">Retry</button></body></html>',
-            { headers: { 'Content-Type': 'text/html' } }
-          )
+      fetch(request)
+        .then((response) => {
+          return response
         })
-      })
+        .catch(() => {
+          return caches.match(OFFLINE_URL).then((cachedOffline) => {
+            if (cachedOffline) return cachedOffline
+            return new Response(
+              '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline - Trackr</title><style>body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;background:#0B0A10;color:#fff;text-align:center;padding:20px}button{background:#7C3AED;color:#fff;border:none;padding:12px 24px;border-radius:12px;font-weight:bold;cursor:pointer;margin-top:16px}</style></head><body><h1>You are offline</h1><p>Please check your internet connection and try again.</p><button onclick="window.location.reload()">Retry</button></body></html>',
+              { headers: { 'Content-Type': 'text/html' } }
+            )
+          })
+        })
     )
     return
   }
 
-  // RULE 4: Static assets (Next.js immutable bundles, icons, images) -> Stale-While-Revalidate
+  // RULE 4: Next.js Static Assets & Chunks -> Network-First with Cache Fallback
+  // Guarantees mobile devices always fetch the newly deployed bundle on reload
   const isStaticAsset =
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/icon-') ||
@@ -94,35 +96,23 @@ self.addEventListener('fetch', (event) => {
 
   if (isStaticAsset) {
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          // Fetch updated version in background to refresh cache
-          fetch(request).then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse))
-            }
-          }).catch(() => {})
-          return cachedResponse
-        }
-
-        // Not in cache, fetch from network and cache
-        return fetch(request).then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-            return networkResponse
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
           }
-          const responseToCache = networkResponse.clone()
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache)
-          })
           return networkResponse
         })
-      })
+        .catch(() => {
+          return caches.match(request)
+        })
     )
     return
   }
 })
 
-// 4. Message Event: Safe update trigger
+// 4. Message Event: Instant trigger to force update
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting()
