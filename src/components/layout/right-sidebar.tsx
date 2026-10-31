@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { 
   X, 
   Image as ImageIcon, 
@@ -27,6 +26,7 @@ export function RightSidebar() {
 
   const commonEmojis = ["🔥", "🚀", "💡", "💻", "✅", "🎉", "🧠", "✨", "🎯", "⚡", "📚", "🙌"]
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
@@ -47,7 +47,7 @@ export function RightSidebar() {
     }
   }, [showEmojis])
 
-  // Clear feedback after 3 seconds
+  // Clear feedback after 3.5 seconds
   useEffect(() => {
     if (feedback) {
       const timer = setTimeout(() => setFeedback(null), 3500)
@@ -55,12 +55,68 @@ export function RightSidebar() {
     }
   }, [feedback])
 
+  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value)
+
+    // Auto-expand naturally with typing up to 200px max height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`
+    }
+  }
+
   const toggleBold = () => {
-    document.execCommand('bold', false)
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selectedText = content.substring(start, end)
+
+    if (selectedText) {
+      const isAlreadyBold = selectedText.startsWith('**') && selectedText.endsWith('**')
+      const replacement = isAlreadyBold ? selectedText.slice(2, -2) : `**${selectedText}**`
+      const newContent = content.substring(0, start) + replacement + content.substring(end)
+      setContent(newContent)
+      setTimeout(() => {
+        textarea.focus()
+        textarea.setSelectionRange(start, start + replacement.length)
+      }, 0)
+    } else {
+      const replacement = '**bold**'
+      const newContent = content.substring(0, start) + replacement + content.substring(end)
+      setContent(newContent)
+      setTimeout(() => {
+        textarea.focus()
+        textarea.setSelectionRange(start + 2, start + 6)
+      }, 0)
+    }
+  }
+
+  const insertEmoji = (emoji: string) => {
+    const textarea = textareaRef.current
+    if (!textarea) {
+      setContent(prev => prev + emoji)
+      setShowEmojis(false)
+      return
+    }
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const newContent = content.substring(0, start) + emoji + content.substring(end)
+    setContent(newContent)
+    setShowEmojis(false)
+    
+    setTimeout(() => {
+      textarea.focus()
+      textarea.setSelectionRange(start + emoji.length, start + emoji.length)
+      textarea.style.height = 'auto'
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`
+    }, 0)
   }
 
   const handlePost = async () => {
-    const textContent = content.replace(/<[^>]*>/g, '').trim()
+    const textContent = content.trim()
     if (!textContent && !imageFile) return
     if (isSubmitting) return
 
@@ -91,7 +147,7 @@ export function RightSidebar() {
 
       const { error } = await supabase.from('posts').insert({
         user_id: userData.user.id,
-        content,
+        content: textContent,
         tags: [],
         type: progressType,
         image_url: imageUrl
@@ -121,6 +177,9 @@ export function RightSidebar() {
       setContent("")
       setImageFile(null)
       setShowEmojis(false)
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+      }
       if (fileInputRef.current) fileInputRef.current.value = ''
       
       setFeedback({ type: 'success', message: 'Progress posted successfully!' })
@@ -133,7 +192,7 @@ export function RightSidebar() {
     }
   }
 
-  const charCount = content.replace(/<[^>]*>/g, '').length
+  const charCount = content.length
   const isPostValid = (charCount > 0 || imageFile !== null) && !isSubmitting
 
   const categories = [
@@ -144,7 +203,7 @@ export function RightSidebar() {
   ] as const
 
   return (
-    <aside className="hidden xl:flex w-[320px] h-screen sticky top-0 border-l border-gray-100 dark:border-[#2D2B3B] bg-[#FCFBFE] dark:bg-[#0B0A10] flex-col p-4 shrink-0 transition-colors duration-300">
+    <aside className="hidden xl:flex w-[340px] h-screen sticky top-0 border-l border-gray-100 dark:border-[#2D2B3B] bg-[#FCFBFE] dark:bg-[#0B0A10] flex-col pt-8 px-4 pb-4 shrink-0 transition-colors duration-300">
       
       {/* Focused Share Your Progress Composer Card */}
       <div className="bg-white dark:bg-[#12111A] border border-gray-200/80 dark:border-[#242332] rounded-2xl p-4 shadow-xs flex flex-col transition-all">
@@ -160,8 +219,8 @@ export function RightSidebar() {
           </p>
         </div>
 
-        {/* Progress Type Selector */}
-        <div className="flex items-center gap-1.5 pb-3 border-b border-gray-100 dark:border-[#22212E] mb-3">
+        {/* Progress Type Selector (Grid with 4 visible items, zero clipping) */}
+        <div className="grid grid-cols-4 gap-1.5 pb-3 border-b border-gray-100 dark:border-[#22212E] mb-3">
           {categories.map((cat) => {
             const isSelected = progressType === cat.id
             return (
@@ -169,27 +228,28 @@ export function RightSidebar() {
                 key={cat.id}
                 type="button"
                 onClick={() => setProgressType(cat.id as any)}
-                className={`text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 transition-all active:scale-95 ${
+                className={`text-[11px] font-semibold py-1.5 px-1 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95 text-center ${
                   isSelected
                     ? "bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800/60 shadow-xs"
-                    : "bg-gray-100/70 dark:bg-[#1A1926] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-transparent"
+                    : "bg-gray-100/70 dark:bg-[#1A1926] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-transparent"
                 }`}
               >
                 <span>{cat.icon}</span>
-                <span>{cat.label}</span>
+                <span className="truncate">{cat.label}</span>
               </button>
             )
           })}
         </div>
 
-        {/* Text Input Area (Clean, comfortable, expanding, no forced min-160px) */}
+        {/* Text Input Area (Clean auto-expanding textarea, comfortable padding, no blank space) */}
         <div className="relative flex flex-col">
-          <RichTextEditor
+          <textarea
+            ref={textareaRef}
+            rows={2}
             value={content}
-            onChange={setContent}
+            onChange={handleTextareaInput}
             placeholder="What did you work on today? Share a breakthrough, win, or challenge..."
-            className="w-full bg-transparent text-xs p-1 min-h-[90px] max-h-[220px] outline-none text-gray-900 dark:text-gray-100 leading-relaxed overflow-y-auto"
-            placeholderClassName="text-xs p-1 leading-relaxed text-gray-400 dark:text-gray-500"
+            className="w-full bg-transparent text-[13px] px-3 py-2 outline-none text-gray-900 dark:text-gray-100 leading-relaxed resize-none min-h-[68px] max-h-[200px] overflow-y-auto placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-xl"
           />
 
           {/* Attached Image Preview */}
@@ -214,10 +274,10 @@ export function RightSidebar() {
             </div>
           )}
 
-          {/* Toolbar and Post Action */}
-          <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-gray-100 dark:border-[#22212E] relative">
+          {/* Dedicated Toolbar Row */}
+          <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-gray-100 dark:border-[#22212E] relative">
             
-            {/* Toolbar Buttons */}
+            {/* Toolbar Buttons: Image, Emoji, Formatting */}
             <div className="flex items-center gap-1">
               <input 
                 type="file" 
@@ -241,8 +301,8 @@ export function RightSidebar() {
               <button
                 type="button"
                 onClick={toggleBold}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors"
-                title="Bold text"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/40 font-bold text-xs transition-colors"
+                title="Bold formatting (**text**)"
                 aria-label="Bold text"
               >
                 <Bold className="w-3.5 h-3.5 stroke-[2.2]" />
@@ -261,17 +321,14 @@ export function RightSidebar() {
                   <Smile className="w-4 h-4 stroke-[2]" />
                 </button>
 
-                {/* Popover correctly positioned OVERLAY above button (never inside text area) */}
+                {/* Popover overlay directly above button */}
                 {showEmojis && (
                   <div className="absolute bottom-full mb-2 left-0 z-50 bg-white dark:bg-[#1A1926] border border-gray-200 dark:border-[#2D2B3B] p-2 rounded-2xl shadow-xl grid grid-cols-4 gap-1.5 w-44 animate-in fade-in zoom-in-95 duration-150">
                     {commonEmojis.map((emoji) => (
                       <button
                         key={emoji}
                         type="button"
-                        onClick={() => {
-                          setContent((prev) => prev + emoji)
-                          setShowEmojis(false)
-                        }}
+                        onClick={() => insertEmoji(emoji)}
                         className="w-8 h-8 hover:bg-gray-100 dark:hover:bg-[#252436] rounded-lg transition-transform active:scale-90 flex items-center justify-center text-base"
                       >
                         {emoji}
@@ -294,7 +351,11 @@ export function RightSidebar() {
                 size="sm"
                 onClick={handlePost}
                 disabled={!isPostValid}
-                className="h-7 px-3.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white rounded-full text-xs font-semibold shadow-xs active:scale-95 transition-all"
+                className={`h-7 px-3.5 rounded-full text-xs font-semibold shadow-xs transition-all ${
+                  isPostValid
+                    ? 'bg-violet-600 hover:bg-violet-700 text-white cursor-pointer active:scale-95'
+                    : 'bg-violet-600/30 text-white/50 cursor-not-allowed'
+                }`}
               >
                 {isSubmitting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Post"}
               </Button>
@@ -304,7 +365,7 @@ export function RightSidebar() {
 
         {/* Feedback message banner */}
         {feedback && (
-          <div className={`mt-3 p-2 rounded-xl text-xs flex items-center gap-1.5 animate-in fade-in duration-150 ${
+          <div className={`mt-2.5 p-2 rounded-xl text-xs flex items-center gap-1.5 animate-in fade-in duration-150 ${
             feedback.type === 'success' 
               ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40' 
               : 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 border border-red-200/50 dark:border-red-800/40'
