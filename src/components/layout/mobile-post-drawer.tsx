@@ -317,8 +317,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
                 onChange={setContent}
                 onKeyDown={handleKeyDown}
                 placeholder="What did you work on today? Share a breakthrough, win, or challenge..."
-                className="w-full text-[16px] leading-relaxed placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent mobile-rich-editor text-gray-900 dark:text-white border-none p-1 focus-visible:ring-0 min-h-[140px]"
-                placeholderClassName="text-[16px] leading-relaxed p-1"
+                className="w-full text-[16px] leading-relaxed bg-transparent mobile-rich-editor text-gray-900 dark:text-white border-none p-1 focus-visible:ring-0 min-h-[140px]"
               />
 
               {/* Attached Image Preview Card */}

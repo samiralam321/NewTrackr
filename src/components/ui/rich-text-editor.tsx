@@ -35,7 +35,11 @@ export function RichTextEditor({
     const editor = editorRef.current
     if (editor) {
       const text = (editor.innerText || "").replace(/[\r\n\t]/g, "").trim()
-      setIsEmpty(text === "" && editor.querySelectorAll('img').length === 0)
+      const empty = text === "" && editor.querySelectorAll('img').length === 0
+      if (empty && editor.innerHTML !== "" && editor.innerHTML !== "<br>") {
+        editor.innerHTML = ""
+      }
+      setIsEmpty(empty)
     }
   }
 
@@ -69,17 +73,9 @@ export function RichTextEditor({
         onInput={handleInput}
         onPaste={handlePaste}
         onKeyDown={onKeyDown}
-        className={`w-full ${defaultMinHeight} resize-none outline-none overflow-y-auto text-gray-900 dark:text-white ${className}`}
+        className={`w-full ${defaultMinHeight} resize-none outline-none overflow-y-auto text-gray-900 dark:text-white empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:dark:text-gray-500 empty:before:pointer-events-none empty:before:select-none empty:before:cursor-text ${className}`}
         style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
       />
-      {isEmpty && (
-        <div 
-          className={`absolute top-0 left-0 right-0 pointer-events-none select-none text-gray-400 dark:text-gray-500 overflow-hidden ${placeholderClassName || className.replace(/text-gray-\d+/g, '').replace(/dark:text-\w+/g, '')}`}
-          style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
-        >
-          {placeholder}
-        </div>
-      )}
     </div>
   )
 }
