@@ -3,11 +3,10 @@
 import { useState } from "react"
 import { Feed } from "@/components/dashboard/feed"
 import { motion } from "framer-motion"
-import { Flame, Sparkles, Compass, SlidersHorizontal, Users, GraduationCap, Globe } from "lucide-react"
+import { Globe, Users, GraduationCap } from "lucide-react"
 
 export function DashboardTabs({ currentUserId }: { currentUserId?: string }) {
   const [activeTab, setActiveTab] = useState<"for-you" | "following" | "college">("for-you")
-  const [sortBy, setSortBy] = useState<"popular" | "new" | "relevant">("popular")
 
   const tabs = [
     { id: "for-you", label: "For You", icon: Globe },
@@ -15,18 +14,10 @@ export function DashboardTabs({ currentUserId }: { currentUserId?: string }) {
     { id: "college", label: "College", icon: GraduationCap },
   ] as const
 
-  const sortOptions = [
-    { id: "popular", label: "Popular", icon: Flame },
-    { id: "new", label: "New", icon: Sparkles },
-    { id: "relevant", label: "Relevant", icon: Compass },
-  ] as const
-
   return (
     <div className="w-full">
-      {/* Desktop Header with Fluid Sliding Pill Tabs & Sorting */}
-      <div className="hidden md:flex items-center justify-between border-b border-gray-100 dark:border-[#2D2B3B] pb-4 mb-6">
-        
-        {/* Animated Sliding Pill Tabs */}
+      {/* Desktop Header with Fluid Sliding Pill Tabs */}
+      <div className="hidden md:flex items-center border-b border-gray-100 dark:border-[#2D2B3B] pb-3 mb-5">
         <div className="flex items-center gap-1.5 p-1 bg-gray-100/80 dark:bg-[#15141D] rounded-full border border-gray-200/50 dark:border-[#2D2B3B]/60 shadow-inner">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id
@@ -50,31 +41,6 @@ export function DashboardTabs({ currentUserId }: { currentUserId?: string }) {
                 )}
                 <Icon className={`w-4 h-4 relative z-10 ${isActive ? "text-white" : "text-gray-400"}`} />
                 <span className="relative z-10">{tab.label}</span>
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Reddit-style Feed Sort Filter */}
-        <div className="flex items-center gap-1 bg-gray-50 dark:bg-[#12111A] p-1 rounded-full border border-gray-100 dark:border-[#2D2B3B]">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 px-2.5 flex items-center gap-1">
-            <SlidersHorizontal className="w-3 h-3" /> Sort:
-          </span>
-          {sortOptions.map((opt) => {
-            const isSelected = sortBy === opt.id
-            const Icon = opt.icon
-            return (
-              <button
-                key={opt.id}
-                onClick={() => setSortBy(opt.id)}
-                className={`px-3 py-1 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 ${
-                  isSelected
-                    ? "bg-white dark:bg-[#1E1D2A] text-violet-600 dark:text-violet-400 shadow-xs"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-violet-600 dark:text-violet-400" : ""}`} />
-                <span>{opt.label}</span>
               </button>
             )
           })}
@@ -112,13 +78,13 @@ export function DashboardTabs({ currentUserId }: { currentUserId?: string }) {
 
       {/* Feed Content with Preserved State and Instant Switching */}
       <div className={activeTab === "for-you" ? "block" : "hidden"}>
-        <Feed currentUserIdProp={currentUserId} sortBy={sortBy} />
+        <Feed currentUserIdProp={currentUserId} sortBy="popular" />
       </div>
       <div className={activeTab === "following" ? "block" : "hidden"}>
-        <Feed followingOnlyFilter={true} currentUserIdProp={currentUserId} sortBy={sortBy} />
+        <Feed followingOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="popular" />
       </div>
       <div className={activeTab === "college" ? "block" : "hidden"}>
-        <Feed collegeOnlyFilter={true} currentUserIdProp={currentUserId} sortBy={sortBy} />
+        <Feed collegeOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="popular" />
       </div>
     </div>
   )

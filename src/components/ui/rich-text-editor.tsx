@@ -7,6 +7,7 @@ type RichTextEditorProps = {
   onChange: (value: string) => void
   placeholder?: string
   className?: string
+  placeholderClassName?: string
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void
 }
 
@@ -17,7 +18,7 @@ export function RichTextEditor({
   className = "", 
   placeholderClassName = "",
   onKeyDown 
-}: RichTextEditorProps & { placeholderClassName?: string }) {
+}: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const [isEmpty, setIsEmpty] = useState(true)
 
@@ -52,6 +53,10 @@ export function RichTextEditor({
     document.execCommand("insertText", false, text)
   }
 
+  // If no min-height is passed in className, use a sensible default of min-h-[80px]
+  const hasMinHeight = className.includes('min-h-')
+  const defaultMinHeight = hasMinHeight ? '' : 'min-h-[80px]'
+
   return (
     <div 
       className="relative w-full cursor-text"
@@ -64,7 +69,7 @@ export function RichTextEditor({
         onInput={handleInput}
         onPaste={handlePaste}
         onKeyDown={onKeyDown}
-        className={`w-full min-h-[160px] resize-none outline-none overflow-y-auto text-gray-900 dark:text-white ${className}`}
+        className={`w-full ${defaultMinHeight} resize-none outline-none overflow-y-auto text-gray-900 dark:text-white ${className}`}
         style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
       />
       {isEmpty && (
