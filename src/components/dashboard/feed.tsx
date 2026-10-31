@@ -19,7 +19,8 @@ export function Feed({
   collegeOnlyFilter,
   isJourneyMode,
   highlightsOnlyFilter,
-  currentUserIdProp
+  currentUserIdProp,
+  sortBy = 'popular'
 }: { 
   userIdFilter?: string,
   savedOnlyFilter?: boolean,
@@ -29,7 +30,8 @@ export function Feed({
   collegeOnlyFilter?: boolean,
   isJourneyMode?: boolean,
   highlightsOnlyFilter?: boolean,
-  currentUserIdProp?: string
+  currentUserIdProp?: string,
+  sortBy?: 'popular' | 'new' | 'relevant'
 }) {
   const [posts, setPosts] = useState<Post[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -103,7 +105,7 @@ export function Feed({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [expandedComments, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter])
+  }, [expandedComments, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter, sortBy])
 
   const fetchPosts = async (showLoading = true) => {
     if (showLoading) setIsLoading(true)
@@ -201,6 +203,32 @@ export function Feed({
     if (highlightsOnlyFilter && formattedPosts.length > 0) {
       const topPost = formattedPosts.reduce((prev, current) => ((prev as any).likes_count > (current as any).likes_count) ? prev : current)
       formattedPosts = [topPost]
+    }
+
+    // Apply Reddit-style feed sorting (Popular, New, Relevant)
+    if (sortBy === 'popular') {
+      formattedPosts.sort((a, b) => {
+        if (a.id === activePinnedId) return -1
+        if (b.id === activePinnedId) return 1
+        const scoreA = ((a as any).likes_count || 0) * 2 + ((a as any).comments_count || 0) * 3
+        const scoreB = ((b as any).likes_count || 0) * 2 + ((b as any).comments_count || 0) * 3
+        if (scoreB !== scoreA) return scoreB - scoreA
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      })
+    } else if (sortBy === 'new') {
+      formattedPosts.sort((a, b) => {
+        if (a.id === activePinnedId) return -1
+        if (b.id === activePinnedId) return 1
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      })
+    } else if (sortBy === 'relevant') {
+      formattedPosts.sort((a, b) => {
+        if (a.id === activePinnedId) return -1
+        if (b.id === activePinnedId) return 1
+        const weightA = (a.type ? 2 : 0) + ((a.profiles?.consistency_score || 0) > 0 ? 3 : 0) + ((a as any).likes_count || 0)
+        const weightB = (b.type ? 2 : 0) + ((b.profiles?.consistency_score || 0) > 0 ? 3 : 0) + ((b as any).likes_count || 0)
+        return weightB - weightA
+      })
     }
 
     setPosts(formattedPosts)

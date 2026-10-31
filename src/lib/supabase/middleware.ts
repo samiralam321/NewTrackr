@@ -20,7 +20,12 @@ export async function updateSession(request: NextRequest) {
             request,
           })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, {
+              ...options,
+              maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
+              sameSite: 'lax',
+              path: '/',
+            })
           )
         },
       },

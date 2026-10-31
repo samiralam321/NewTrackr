@@ -142,30 +142,165 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
       {isOpen && (
         <div className="md:hidden fixed inset-0 z-[100] bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom duration-200">
           
-          {/* Top Bar (Twitter/X style: Cancel/Close on left, Post pill on right) */}
-          <div className="flex items-center justify-between px-4 h-13 border-b border-gray-100 dark:border-neutral-900 bg-white dark:bg-black shrink-0">
+          {/* Top Bar: Close on left, Character counter + Post pill on right */}
+          <div className="flex items-center justify-between px-3 h-14 border-b border-gray-100 dark:border-neutral-900 bg-white dark:bg-black shrink-0">
             <button 
               onClick={() => setIsOpen(false)} 
-              className="w-9 h-9 -ml-1.5 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 active:scale-90 transition-all"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 active:scale-90 transition-all"
               aria-label="Close"
             >
               <X className="w-5 h-5 stroke-[2.2]" />
             </button>
-            
-            <Button 
-              onClick={handlePost}
-              disabled={isSubmitting || !content.trim()}
-              className={`h-8 px-4.5 rounded-full text-[13px] font-bold transition-all shadow-none ${
-                content.trim() 
-                  ? 'bg-violet-600 hover:bg-violet-700 text-white active:scale-95' 
-                  : 'bg-violet-600/40 text-white/60 cursor-not-allowed'
-              }`}
-            >
-              {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Post'}
-            </Button>
+
+            <div className="flex items-center gap-3">
+              {content.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                    {content.length}
+                  </span>
+                  <svg className="w-4 h-4 -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className="text-gray-200 dark:text-neutral-800 stroke-current"
+                      strokeWidth="3.5"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      className={`${charPercentage >= 90 ? 'text-amber-500' : 'text-violet-600'} stroke-current transition-all duration-150`}
+                      strokeDasharray={`${charPercentage}, 100`}
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                </div>
+              )}
+              
+              <Button 
+                onClick={handlePost}
+                disabled={isSubmitting || !content.trim()}
+                className={`h-8 px-4 rounded-full text-[13px] font-bold transition-all shadow-none ${
+                  content.trim() 
+                    ? 'bg-violet-600 hover:bg-violet-700 text-white active:scale-95' 
+                    : 'bg-violet-600/40 text-white/60 cursor-not-allowed'
+                }`}
+              >
+                {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Post'}
+              </Button>
+            </div>
           </div>
 
-          {/* Main Writing Canvas (Avatar on Left, Content & Selector on Right) */}
+          {/* Top Quick Toolbar: Category Pill on Left, Gallery / Emoji / Bold on Right (Always on TOP, never hidden by keyboard) */}
+          <div className="relative flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-neutral-900 bg-gray-50/50 dark:bg-[#12111A] shrink-0">
+            {/* Category Selector Pill */}
+            <div className="relative inline-block">
+              <button 
+                type="button"
+                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 border border-violet-200/60 dark:border-violet-800/40 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors active:scale-95"
+              >
+                <span>
+                  {progressType === 'Learned' && '💡 Learned'}
+                  {progressType === 'Built' && '🚀 Built'}
+                  {progressType === 'Practiced' && '🎯 Practiced'}
+                  {progressType === 'Other' && '📝 Other'}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isCategoryOpen && (
+                <div className="absolute top-9 left-0 z-50 w-56 bg-white dark:bg-[#1A1A24] rounded-2xl shadow-xl border border-gray-100 dark:border-[#2D2B3B] p-1.5 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">Type of Progress</div>
+                  {[
+                    { id: 'Learned', icon: '💡', title: 'Learned', desc: 'New skill, topic, or concept' },
+                    { id: 'Built', icon: '🚀', title: 'Built', desc: 'Feature, project, or tool' },
+                    { id: 'Practiced', icon: '🎯', title: 'Practiced', desc: 'LeetCode, DSA, problems' },
+                    { id: 'Other', icon: '📝', title: 'Other', desc: 'General progress update' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => {
+                        setProgressType(cat.id as any)
+                        setIsCategoryOpen(false)
+                      }}
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-colors ${
+                        progressType === cat.id 
+                          ? 'bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 font-semibold' 
+                          : 'hover:bg-gray-50 dark:hover:bg-[#2D2B3B] text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <span className="text-base">{cat.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold leading-tight">{cat.title}</div>
+                        <div className="text-[10px] text-gray-400 leading-tight">{cat.desc}</div>
+                      </div>
+                      {progressType === cat.id && <Check className="w-3.5 h-3.5 text-violet-600 shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Gallery, Emoji, and Bold Actions */}
+            <div className="flex items-center gap-1">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)} 
+                accept="image/*" 
+                className="hidden" 
+              />
+              <button 
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-9 h-9 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-100/50 dark:hover:bg-violet-950/40 active:scale-90 transition-all ${imageFile ? 'bg-violet-100 dark:bg-violet-950/60 ring-1 ring-violet-500' : ''}`}
+                title="Add Photo"
+                aria-label="Add photo"
+              >
+                <ImageIcon className="w-4.5 h-4.5 stroke-[2.2]" />
+              </button>
+              
+              <button 
+                type="button"
+                onClick={() => setShowEmojis(!showEmojis)}
+                className={`w-9 h-9 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-100/50 dark:hover:bg-violet-950/40 active:scale-90 transition-all ${showEmojis ? 'bg-violet-100 dark:bg-violet-950/60 ring-1 ring-violet-500' : ''}`}
+                title="Insert Emoji"
+                aria-label="Insert emoji"
+              >
+                <Smile className="w-4.5 h-4.5 stroke-[2.2]" />
+              </button>
+
+              <button 
+                type="button"
+                onClick={toggleBold}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-100/50 dark:hover:bg-violet-950/40 font-black text-sm active:scale-90 transition-all"
+                title="Bold Text"
+                aria-label="Bold text"
+              >
+                B
+              </button>
+            </div>
+
+            {/* Emoji Picker Overlay */}
+            {showEmojis && (
+              <div className="absolute top-11 right-2 bg-white dark:bg-[#1A1A24] p-2.5 rounded-2xl border border-gray-100 dark:border-[#2D2B3B] shadow-2xl grid grid-cols-5 gap-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                {quickEmojis.map(emoji => (
+                  <button 
+                    key={emoji} 
+                    onClick={() => { setContent(prev => prev + emoji); setShowEmojis(false); }}
+                    className="w-10 h-10 text-xl hover:bg-gray-100 dark:hover:bg-[#2D2B3B] rounded-xl transition-transform active:scale-90 flex items-center justify-center"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Main Writing Canvas (Avatar on Left, Content on Right) */}
           <div className="flex-1 overflow-y-auto px-4 pt-3 pb-4 flex gap-3">
             {/* User Avatar */}
             <img 
@@ -176,58 +311,6 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
 
             {/* Composer Content Area */}
             <div className="flex-1 min-w-0 flex flex-col">
-              
-              {/* Category Selector Pill (Twitter/X Audience Selector style) */}
-              <div className="relative mb-2 inline-block self-start">
-                <button 
-                  type="button"
-                  onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 border border-violet-200/60 dark:border-violet-800/40 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors active:scale-95"
-                >
-                  <span>
-                    {progressType === 'Learned' && '💡 Learned'}
-                    {progressType === 'Built' && '🚀 Built'}
-                    {progressType === 'Practiced' && '🎯 Practiced'}
-                    {progressType === 'Other' && '📝 Other'}
-                  </span>
-                  <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
-                </button>
-
-                {/* Dropdown Menu */}
-                {isCategoryOpen && (
-                  <div className="absolute top-8 left-0 z-50 w-56 bg-white dark:bg-[#1A1A24] rounded-2xl shadow-xl border border-gray-100 dark:border-[#2D2B3B] p-1.5 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">Type of Progress</div>
-                    {[
-                      { id: 'Learned', icon: '💡', title: 'Learned', desc: 'New skill, topic, or concept' },
-                      { id: 'Built', icon: '🚀', title: 'Built', desc: 'Feature, project, or tool' },
-                      { id: 'Practiced', icon: '🎯', title: 'Practiced', desc: 'LeetCode, DSA, problems' },
-                      { id: 'Other', icon: '📝', title: 'Other', desc: 'General progress update' },
-                    ].map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => {
-                          setProgressType(cat.id as any)
-                          setIsCategoryOpen(false)
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-colors ${
-                          progressType === cat.id 
-                            ? 'bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 font-semibold' 
-                            : 'hover:bg-gray-50 dark:hover:bg-[#2D2B3B] text-gray-700 dark:text-gray-300'
-                        }`}
-                      >
-                        <span className="text-base">{cat.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold leading-tight">{cat.title}</div>
-                          <div className="text-[10px] text-gray-400 leading-tight">{cat.desc}</div>
-                        </div>
-                        {progressType === cat.id && <Check className="w-3.5 h-3.5 text-violet-600 shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* Seamless Rich Text Editor */}
               <RichTextEditor 
                 value={content}
@@ -235,6 +318,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
                 onKeyDown={handleKeyDown}
                 placeholder="What did you accomplish today?"
                 className="w-full text-[17px] leading-relaxed placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent mobile-rich-editor text-gray-900 dark:text-white border-none p-0 focus-visible:ring-0 min-h-[160px]"
+                placeholderClassName="text-[17px] leading-relaxed p-0"
               />
 
               {/* Attached Image Preview Card */}
@@ -258,90 +342,6 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Bottom Docked Toolbar (Twitter/X Style) */}
-          <div className="relative border-t border-gray-100 dark:border-neutral-900 bg-white dark:bg-black px-4 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-1 -ml-2">
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)} 
-                accept="image/*" 
-                className="hidden" 
-              />
-              <button 
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 active:scale-90 transition-all ${imageFile ? 'bg-violet-100 dark:bg-violet-950/60' : ''}`}
-                title="Add Photo"
-                aria-label="Add photo"
-              >
-                <ImageIcon className="w-5 h-5 stroke-[2.2]" />
-              </button>
-              
-              <button 
-                type="button"
-                onClick={() => setShowEmojis(!showEmojis)}
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 active:scale-90 transition-all ${showEmojis ? 'bg-violet-100 dark:bg-violet-950/60' : ''}`}
-                title="Insert Emoji"
-                aria-label="Insert emoji"
-              >
-                <Smile className="w-5 h-5 stroke-[2.2]" />
-              </button>
-
-              <button 
-                type="button"
-                onClick={toggleBold}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 font-black text-sm active:scale-90 transition-all"
-                title="Bold Text"
-                aria-label="Bold text"
-              >
-                B
-              </button>
-            </div>
-
-            {/* Right side: Twitter/X Circular Progress Ring */}
-            <div className="flex items-center gap-2.5">
-              {content.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
-                    {content.length}
-                  </span>
-                  <svg className="w-5 h-5 -rotate-90" viewBox="0 0 36 36">
-                    <path
-                      className="text-gray-200 dark:text-neutral-800 stroke-current"
-                      strokeWidth="3.5"
-                      fill="none"
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                    <path
-                      className={`${charPercentage >= 90 ? 'text-amber-500' : 'text-violet-600'} stroke-current transition-all duration-150`}
-                      strokeDasharray={`${charPercentage}, 100`}
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                      fill="none"
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                  </svg>
-                </div>
-              )}
-            </div>
-
-            {/* Emoji Picker Overlay */}
-            {showEmojis && (
-              <div className="absolute bottom-14 left-2 bg-white dark:bg-[#1A1A24] p-2.5 rounded-2xl border border-gray-100 dark:border-[#2D2B3B] shadow-xl grid grid-cols-5 gap-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-                {quickEmojis.map(emoji => (
-                  <button 
-                    key={emoji} 
-                    onClick={() => { setContent(prev => prev + emoji); setShowEmojis(false); }}
-                    className="w-10 h-10 text-xl hover:bg-gray-100 dark:hover:bg-[#2D2B3B] rounded-xl transition-transform active:scale-90 flex items-center justify-center"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}

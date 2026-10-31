@@ -46,13 +46,17 @@ export function AuthForm() {
 
     // 2. Set up listener to capture OAuth (Google) or Email auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if ((event as string) === 'PASSWORD_RECOVERY' || window.location.pathname.includes('/auth/reset-password')) {
+        return
+      }
+
       if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
         const cookieOptions = {
           maxAge: 30 * 24 * 60 * 60, // 30 days
           path: '/'
         }
         document.cookie = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL!.replace('https://', '').split('.')[0]}-auth-token=${encodeURIComponent(JSON.stringify(session))}; max-age=${cookieOptions.maxAge}; path=${cookieOptions.path}; SameSite=Lax`
-        
+
         window.location.href = '/dashboard'
       }
     })
@@ -93,7 +97,7 @@ export function AuthForm() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
-        redirectTo: `${location.origin}/auth/callback?type=recovery`,
+        redirectTo: `${location.origin}/auth/callback?next=/auth/reset-password`,
       })
       
       if (error) throw error

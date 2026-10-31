@@ -10,7 +10,14 @@ type RichTextEditorProps = {
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void
 }
 
-export function RichTextEditor({ value, onChange, placeholder, className, onKeyDown }: RichTextEditorProps) {
+export function RichTextEditor({ 
+  value, 
+  onChange, 
+  placeholder = "", 
+  className = "", 
+  placeholderClassName = "",
+  onKeyDown 
+}: RichTextEditorProps & { placeholderClassName?: string }) {
   const editorRef = useRef<HTMLDivElement>(null)
   const [isEmpty, setIsEmpty] = useState(true)
 
@@ -26,8 +33,8 @@ export function RichTextEditor({ value, onChange, placeholder, className, onKeyD
   const checkIsEmpty = () => {
     const editor = editorRef.current
     if (editor) {
-      const text = editor.innerText.trim()
-      setIsEmpty(text === "" && editor.querySelectorAll('img, br').length === 0)
+      const text = (editor.innerText || "").replace(/[\r\n\t]/g, "").trim()
+      setIsEmpty(text === "" && editor.querySelectorAll('img').length === 0)
     }
   }
 
@@ -46,10 +53,14 @@ export function RichTextEditor({ value, onChange, placeholder, className, onKeyD
   }
 
   return (
-    <div className="relative w-full">
+    <div 
+      className="relative w-full cursor-text"
+      onClick={() => editorRef.current?.focus()}
+    >
       <div
         ref={editorRef}
         contentEditable
+        data-placeholder={placeholder}
         onInput={handleInput}
         onPaste={handlePaste}
         onKeyDown={onKeyDown}
@@ -57,8 +68,11 @@ export function RichTextEditor({ value, onChange, placeholder, className, onKeyD
         style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
       />
       {isEmpty && (
-        <div className="absolute top-4 left-4 text-gray-400 dark:text-gray-500 pointer-events-none select-none font-normal text-sm leading-relaxed">
-          {placeholder?.split('\n').map((line, i) => <div key={i}>{line}</div>)}
+        <div 
+          className={`absolute top-0 left-0 right-0 pointer-events-none select-none text-gray-400 dark:text-gray-500 overflow-hidden ${placeholderClassName || className.replace(/text-gray-\d+/g, '').replace(/dark:text-\w+/g, '')}`}
+          style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+        >
+          {placeholder}
         </div>
       )}
     </div>
