@@ -75,8 +75,10 @@ export function ProfileDashboard({
     }
 
     window.addEventListener('profile-updated', handleProfileUpdate)
+    window.addEventListener('post-created', () => setPostsCountState(prev => prev + 1))
     return () => {
       window.removeEventListener('profile-updated', handleProfileUpdate)
+      window.removeEventListener('post-created', () => setPostsCountState(prev => prev + 1))
     }
   }, [])
 
@@ -417,16 +419,16 @@ export function ProfileDashboard({
               </div>
               
               <div className={`space-y-0 mt-0 ${activeTab === 'posts' ? 'block' : 'hidden'}`}>
-                <Feed userIdFilter={profileState.id} currentUserIdProp={currentUserId} />
+                <Feed userIdFilter={profileState.id} currentUserIdProp={currentUserId} sortBy="new" />
               </div>
               <div className={`space-y-0 mt-0 ${activeTab === 'likes' ? 'block' : 'hidden'}`}>
-                <Feed likedByFilter={profileState.id} currentUserIdProp={currentUserId} />
+                <Feed likedByFilter={profileState.id} currentUserIdProp={currentUserId} sortBy="new" />
               </div>
               <div className={`space-y-0 mt-0 ${activeTab === 'replies' ? 'block' : 'hidden'}`}>
-                <Feed commentedByFilter={profileState.id} currentUserIdProp={currentUserId} />
+                <Feed commentedByFilter={profileState.id} currentUserIdProp={currentUserId} sortBy="new" />
               </div>
               <div className={`space-y-0 mt-0 ${activeTab === 'highlights' ? 'block' : 'hidden'}`}>
-                <Feed userIdFilter={profileState.id} highlightsOnlyFilter={true} currentUserIdProp={currentUserId} />
+                <Feed userIdFilter={profileState.id} highlightsOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
               </div>
             </div>
 

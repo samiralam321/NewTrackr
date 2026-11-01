@@ -65,13 +65,32 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
         imageUrl = publicUrl.publicUrl
       }
 
-      const { error } = await supabase.from('posts').insert({
+      const { data: insertedPost, error } = await supabase.from('posts').insert({
         user_id: userData.user.id,
         content,
         tags: [],
         type: progressType,
         image_url: imageUrl
-      })
+      }).select(`
+        *,
+        profiles!posts_user_id_fkey(*),
+        likes(user_id),
+        comments(user_id, id),
+        bookmarks(user_id)
+      `).single()
+
+      if (insertedPost) {
+        const formattedNewPost = {
+          ...insertedPost,
+          user_has_liked: false,
+          user_has_bookmarked: false,
+          likes_count: 0,
+          comments_count: 0,
+          bookmarks_count: 0,
+          is_pinned: false
+        }
+        window.dispatchEvent(new CustomEvent('post-created', { detail: formattedNewPost }))
+      }
 
       if (error) throw error
 

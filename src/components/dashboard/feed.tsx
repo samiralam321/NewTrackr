@@ -20,7 +20,7 @@ export function Feed({
   isJourneyMode,
   highlightsOnlyFilter,
   currentUserIdProp,
-  sortBy = 'popular'
+  sortBy = 'new'
 }: { 
   userIdFilter?: string,
   savedOnlyFilter?: boolean,
@@ -87,6 +87,21 @@ export function Feed({
   useEffect(() => {
     fetchPosts()
     
+    // Instant local optimistic update when a post is created from right sidebar or mobile drawer
+    const handlePostCreated = (e: Event) => {
+      const customEvent = e as CustomEvent
+      if (customEvent.detail) {
+        if (userIdFilter && customEvent.detail.user_id !== userIdFilter) return
+        setPosts(prev => {
+          if (prev.some(p => p.id === customEvent.detail.id)) return prev
+          return [customEvent.detail, ...prev]
+        })
+      }
+      fetchPosts(false)
+    }
+
+    window.addEventListener('post-created', handlePostCreated)
+    
     const uniqueChannelName = `schema-db-changes-${Math.random().toString(36).substring(7)}`
     
     const channel = supabase
@@ -103,6 +118,7 @@ export function Feed({
       .subscribe()
 
     return () => {
+      window.removeEventListener('post-created', handlePostCreated)
       supabase.removeChannel(channel)
     }
   }, [expandedComments, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter, sortBy])

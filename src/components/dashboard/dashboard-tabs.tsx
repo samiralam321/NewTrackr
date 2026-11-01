@@ -78,13 +78,13 @@ export function DashboardTabs({ currentUserId }: { currentUserId?: string }) {
 
       {/* Feed Content with Preserved State and Instant Switching */}
       <div className={activeTab === "for-you" ? "block" : "hidden"}>
-        <Feed currentUserIdProp={currentUserId} sortBy="popular" />
+        <Feed currentUserIdProp={currentUserId} sortBy="new" />
       </div>
       <div className={activeTab === "following" ? "block" : "hidden"}>
-        <Feed followingOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="popular" />
+        <Feed followingOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
       </div>
       <div className={activeTab === "college" ? "block" : "hidden"}>
-        <Feed collegeOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="popular" />
+        <Feed collegeOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
       </div>
     </div>
   )

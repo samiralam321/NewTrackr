@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 !.env.example
+
+# Ignore node_modules in any subfolder
+node_modules/
+cross-platform/node_modules/
