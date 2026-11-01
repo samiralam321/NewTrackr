@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
+import { useAppTheme } from '../store/themeStore'
 import { wsService } from '../services/websocket'
 import { api } from '../services/api'
 
@@ -18,6 +19,7 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const token = useAuthStore((state) => state.token)
+  const { colors, isDark } = useAppTheme()
 
   // Initialize active user profile on app startup
   useEffect(() => {
@@ -47,11 +49,11 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <StatusBar style="light" />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: '#07060A' },
+            contentStyle: { backgroundColor: colors.background },
           }}
         >
           <Stack.Screen name="(tabs)" />

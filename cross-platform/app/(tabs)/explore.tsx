@@ -16,9 +16,11 @@ import * as Haptics from 'expo-haptics'
 import { ResponsiveContainer } from '../../components/layout/ResponsiveContainer'
 import { api } from '../../services/api'
 import { Profile } from '../../types'
+import { useAppTheme } from '../../store/themeStore'
 
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState('')
+  const { colors, isDark } = useAppTheme()
 
   const {
     data: leaderboard = [],
@@ -39,36 +41,44 @@ export default function ExploreScreen() {
   const displayList: Profile[] = searchQuery.trim().length > 0 ? searchResults : leaderboard
 
   const getRankBadge = (index: number) => {
-    if (index === 0) return { icon: '🥇', bg: 'rgba(234, 179, 8, 0.15)', text: '#FBBF24' }
-    if (index === 1) return { icon: '🥈', bg: 'rgba(148, 163, 184, 0.15)', text: '#CBD5E1' }
-    if (index === 2) return { icon: '🥉', bg: 'rgba(249, 115, 22, 0.15)', text: '#FB923C' }
-    return { icon: `#${index + 1}`, bg: 'rgba(255, 255, 255, 0.05)', text: '#94A3B8' }
+    if (index === 0) return { icon: '🥇', bg: isDark ? 'rgba(234, 179, 8, 0.15)' : '#FEF9C3', text: '#CA8A04' }
+    if (index === 1) return { icon: '🥈', bg: isDark ? 'rgba(148, 163, 184, 0.15)' : '#F1F5F9', text: '#64748B' }
+    if (index === 2) return { icon: '🥉', bg: isDark ? 'rgba(249, 115, 22, 0.15)' : '#FFEDD5', text: '#EA580C' }
+    return { icon: `#${index + 1}`, bg: isDark ? 'rgba(255, 255, 255, 0.05)' : '#F8FAFC', text: colors.textMuted }
   }
 
   return (
     <ResponsiveContainer>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header Bar */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Explore Campus</Text>
-          <Text style={styles.headerSubtitle}>Discover top student builders and streaks</Text>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Explore Campus</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>Discover top student builders and streaks</Text>
 
           {/* Search Box */}
-          <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color="#94A3B8" />
+          <View
+            style={[
+              styles.searchBox,
+              {
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Ionicons name="search" size={18} color={colors.textMuted} />
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Search students by name or college..."
-              placeholderTextColor="#64748B"
-              style={styles.searchInput}
+              placeholderTextColor={colors.textMuted}
+              style={[styles.searchInput, { color: colors.textPrimary }]}
             />
             {searchQuery.length > 0 && (
               <Pressable
                 onPress={() => setSearchQuery('')}
                 hitSlop={6}
               >
-                <Ionicons name="close-circle" size={18} color="#94A3B8" />
+                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
               </Pressable>
             )}
           </View>
@@ -79,9 +89,9 @@ export default function ExploreScreen() {
           <Ionicons
             name={searchQuery.trim().length > 0 ? 'people' : 'trophy'}
             size={18}
-            color="#8B5CF6"
+            color={colors.primary}
           />
-          <Text style={styles.sectionTitle}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
             {searchQuery.trim().length > 0 ? 'Search Results' : 'Consistency Leaderboard'}
           </Text>
         </View>
@@ -94,8 +104,8 @@ export default function ExploreScreen() {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor="#8B5CF6"
-              colors={['#8B5CF6']}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           }
           contentContainerStyle={styles.listContent}
@@ -103,7 +113,15 @@ export default function ExploreScreen() {
           renderItem={({ item, index }) => {
             const rank = getRankBadge(index)
             return (
-              <View style={styles.studentCard}>
+              <View
+                style={[
+                  styles.studentCard,
+                  {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 {searchQuery.trim().length === 0 && (
                   <View style={[styles.rankPill, { backgroundColor: rank.bg }]}>
                     <Text style={[styles.rankText, { color: rank.text }]}>{rank.icon}</Text>
@@ -116,28 +134,32 @@ export default function ExploreScreen() {
                       item.avatar_url ||
                       `https://ui-avatars.com/api/?name=${encodeURIComponent(item.full_name || 'User')}&background=7C3AED&color=fff`,
                   }}
-                  style={styles.studentAvatar}
+                  style={[styles.studentAvatar, { borderColor: colors.border }]}
                 />
 
                 <View style={styles.studentInfo}>
-                  <Text style={styles.studentName} numberOfLines={1}>
+                  <Text style={[styles.studentName, { color: colors.textPrimary }]} numberOfLines={1}>
                     {item.full_name || 'Student'}
                   </Text>
-                  <Text style={styles.studentCollege} numberOfLines={1}>
+                  <Text style={[styles.studentCollege, { color: colors.textSecondary }]} numberOfLines={1}>
                     {item.college || 'Trackr Campus'}
                   </Text>
                 </View>
 
-                <View style={styles.streakBadge}>
-                  <Text style={styles.streakScore}>🔥 {item.consistency_score || item.streak || 0}</Text>
+                <View style={[styles.streakBadge, { backgroundColor: colors.streakBg, borderColor: colors.streakBorder }]}>
+                  <Text style={[styles.streakScore, { color: colors.streak }]}>
+                    🔥 {item.consistency_score || item.streak || 0}
+                  </Text>
                 </View>
               </View>
             )
           }}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={36} color="#64748B" />
-              <Text style={styles.emptyText}>No students found matching "{searchQuery}"</Text>
+              <Ionicons name="search-outline" size={36} color={colors.textMuted} />
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                No students found matching "{searchQuery}"
+              </Text>
             </View>
           }
         />
@@ -149,43 +171,35 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#07060A',
   },
   header: {
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
-    backgroundColor: '#0A0910',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#FFFFFF',
     letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: 12.5,
-    color: '#94A3B8',
     marginTop: 2,
     marginBottom: 12,
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   searchInput: {
     flex: 1,
     fontSize: 13.5,
-    color: '#FFFFFF',
     padding: 0,
   },
   sectionHeader: {
@@ -198,7 +212,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#E2E8F0',
   },
   listContent: {
     paddingHorizontal: 12,
@@ -207,13 +220,16 @@ const styles = StyleSheet.create({
   studentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#12111A',
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   rankPill: {
     width: 32,
@@ -233,7 +249,6 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   studentInfo: {
     flex: 1,
@@ -241,25 +256,20 @@ const styles = StyleSheet.create({
   studentName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
   studentCollege: {
     fontSize: 11.5,
-    color: '#94A3B8',
     marginTop: 2,
   },
   streakBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: 'rgba(249, 115, 22, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(249, 115, 22, 0.3)',
   },
   streakScore: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#FB923C',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -269,6 +279,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: '#64748B',
   },
 })

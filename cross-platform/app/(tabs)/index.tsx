@@ -20,12 +20,14 @@ import { PostCard } from '../../components/feed/PostCard'
 import { QuickShareCard } from '../../components/composer/QuickShareCard'
 import { api } from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
+import { useAppTheme } from '../../store/themeStore'
 
 export default function HomeFeedScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const queryClient = useQueryClient()
   const user = useAuthStore((state) => state.user)
+  const { colors, isDark, toggleTheme } = useAppTheme()
   const [activeTab, setActiveTab] = useState<'for-you' | 'following' | 'college'>('for-you')
 
   const {
@@ -58,6 +60,13 @@ export default function HomeFeedScreen() {
     setActiveTab(tabId)
   }
 
+  const handleToggleTheme = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    }
+    toggleTheme()
+  }
+
   // Calculate dynamic bottom spacing for FAB
   const fabBottom = 16 + Math.max(insets.bottom, 12)
 
@@ -67,46 +76,89 @@ export default function HomeFeedScreen() {
         <QuickShareCard onPostCreated={() => queryClient.invalidateQueries({ queryKey: ['feed'] })} />
       }
     >
-      <View style={styles.feedWrapper}>
+      <View style={[styles.feedWrapper, { backgroundColor: colors.background }]}>
         {/* Compact Mobile Header Bar */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <View style={styles.greetingContainer}>
-            <Text style={styles.greetingTitle}>
+            <Text style={[styles.greetingTitle, { color: colors.textPrimary }]}>
               {user?.full_name ? `Hey, ${user.full_name.split(' ')[0]} 👋` : 'Welcome to Trackr 👋'}
             </Text>
-            <Text style={styles.greetingSubtitle}>Let's make today count.</Text>
+            <Text style={[styles.greetingSubtitle, { color: colors.textMuted }]}>Let's make today count.</Text>
           </View>
 
           <View style={styles.headerRight}>
-            <View style={styles.streakBadge}>
-              <Text style={styles.streakText}>
+            {/* Theme Toggle Button (Light / Dark Switch) */}
+            <Pressable
+              onPress={handleToggleTheme}
+              style={[
+                styles.themeToggleBtn,
+                {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0',
+                },
+              ]}
+              hitSlop={6}
+            >
+              <Ionicons
+                name={isDark ? 'sunny' : 'moon'}
+                size={18}
+                color={isDark ? '#FBBF24' : '#6366F1'}
+              />
+            </Pressable>
+
+            {/* Streak Badge */}
+            <View style={[styles.streakBadge, { backgroundColor: colors.streakBg, borderColor: colors.streakBorder }]}>
+              <Text style={[styles.streakText, { color: colors.streak }]}>
                 🔥 {user?.streak || user?.consistency_score || 2}d
               </Text>
             </View>
 
+            {/* User Avatar */}
             <Image
               source={{
                 uri:
                   user?.avatar_url ||
                   `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.full_name || 'User')}&background=7C3AED&color=fff`,
               }}
-              style={styles.headerAvatar}
+              style={[styles.headerAvatar, { borderColor: colors.border }]}
             />
           </View>
         </View>
 
         {/* Feed Tabs Pill Selector */}
-        <View style={styles.tabRow}>
+        <View style={[styles.tabRow, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id
             return (
               <Pressable
                 key={tab.id}
                 onPress={() => handleTabChange(tab.id)}
-                style={[styles.tabBtn, isActive && styles.tabBtnActive]}
+                style={[
+                  styles.tabBtn,
+                  {
+                    backgroundColor: isActive
+                      ? colors.primary
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : '#F1F5F9',
+                    borderColor: isActive
+                      ? colors.primary
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : '#E2E8F0',
+                  },
+                ]}
                 hitSlop={6}
               >
-                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    {
+                      color: isActive ? '#FFFFFF' : colors.textSecondary,
+                      fontWeight: isActive ? '700' : '600',
+                    },
+                  ]}
+                >
                   {tab.label}
                 </Text>
               </Pressable>
@@ -117,8 +169,8 @@ export default function HomeFeedScreen() {
         {/* Feed Posts List */}
         {isLoading && posts.length === 0 ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#8B5CF6" />
-            <Text style={styles.loadingText}>Loading community updates...</Text>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading community updates...</Text>
           </View>
         ) : (
           <FlatList
@@ -129,22 +181,22 @@ export default function HomeFeedScreen() {
               <RefreshControl
                 refreshing={isRefetching}
                 onRefresh={refetch}
-                tintColor="#8B5CF6"
-                colors={['#8B5CF6']}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
               />
             }
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
-              <View style={styles.emptyCard}>
-                <View style={styles.emptyIconCircle}>
-                  <Ionicons name="sparkles" size={32} color="#8B5CF6" />
+              <View style={[styles.emptyCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+                <View style={[styles.emptyIconCircle, { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : '#F5F3FF' }]}>
+                  <Ionicons name="sparkles" size={32} color={colors.primary} />
                 </View>
-                <Text style={styles.emptyTitle}>Nothing here yet</Text>
-                <Text style={styles.emptySubtitle}>
+                <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>Nothing here yet</Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
                   Your learning journey starts with your next update. Share what you learned, built, or practiced!
                 </Text>
-                <Pressable onPress={handleFabPress} style={styles.emptyActionBtn}>
+                <Pressable onPress={handleFabPress} style={[styles.emptyActionBtn, { backgroundColor: colors.primary }]}>
                   <Ionicons name="add" size={18} color="#FFFFFF" />
                   <Text style={styles.emptyActionText}>Share your progress</Text>
                 </Pressable>
@@ -156,7 +208,7 @@ export default function HomeFeedScreen() {
         {/* Mobile Floating Action Button (FAB) */}
         <Pressable
           onPress={handleFabPress}
-          style={[styles.fab, { bottom: fabBottom }]}
+          style={[styles.fab, { bottom: fabBottom, backgroundColor: colors.primary, shadowColor: colors.primary }]}
           hitSlop={8}
         >
           <Ionicons name="pencil" size={22} color="#FFFFFF" />
@@ -169,7 +221,6 @@ export default function HomeFeedScreen() {
 const styles = StyleSheet.create({
   feedWrapper: {
     flex: 1,
-    backgroundColor: '#07060A',
   },
   header: {
     flexDirection: 'row',
@@ -179,7 +230,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
   },
   greetingContainer: {
     flex: 1,
@@ -187,29 +237,32 @@ const styles = StyleSheet.create({
   greetingTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#FFFFFF',
     letterSpacing: -0.3,
   },
   greetingSubtitle: {
     fontSize: 12,
-    color: '#94A3B8',
     marginTop: 2,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+  },
+  themeToggleBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
   },
   streakBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 16,
-    backgroundColor: 'rgba(249, 115, 22, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(249, 115, 22, 0.3)',
   },
   streakText: {
-    color: '#FB923C',
     fontWeight: '800',
     fontSize: 12,
   },
@@ -218,34 +271,22 @@ const styles = StyleSheet.create({
     height: 34,
     borderRadius: 17,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   tabRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
     paddingHorizontal: 16,
     gap: 8,
     paddingVertical: 10,
-    backgroundColor: '#0A0910',
   },
   tabBtn: {
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  tabBtnActive: {
-    backgroundColor: '#8B5CF6',
+    borderWidth: 1,
   },
   tabLabel: {
     fontSize: 12.5,
-    fontWeight: '600',
-    color: '#94A3B8',
-  },
-  tabLabelActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
   },
   loadingContainer: {
     flex: 1,
@@ -256,7 +297,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 13,
-    color: '#94A3B8',
   },
   listContent: {
     paddingTop: 10,
@@ -268,16 +308,13 @@ const styles = StyleSheet.create({
     padding: 32,
     marginHorizontal: 16,
     marginTop: 40,
-    backgroundColor: '#111019',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
   },
   emptyIconCircle: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(139, 92, 246, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -285,13 +322,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 13,
     lineHeight: 20,
-    color: '#94A3B8',
     textAlign: 'center',
     maxWidth: 280,
     marginBottom: 20,
@@ -303,7 +338,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#8B5CF6',
   },
   emptyActionText: {
     color: '#FFFFFF',
@@ -316,13 +350,11 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 27,
-    backgroundColor: '#8B5CF6',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 8,
-    shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
   },
 })

@@ -3,7 +3,7 @@ import { View, Text, Image, Pressable, StyleSheet, Platform, Share } from 'react
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
 import { Post } from '../../types'
-import { Colors } from '../../theme/colors'
+import { useAppTheme } from '../../store/themeStore'
 import { api } from '../../services/api'
 
 interface PostCardProps {
@@ -29,6 +29,7 @@ function formatRelativeTime(dateString?: string): string {
 }
 
 export function PostCard({ post, onCommentPress }: PostCardProps) {
+  const { colors, isDark } = useAppTheme()
   const [hasLiked, setHasLiked] = useState(post.user_has_liked)
   const [likesCount, setLikesCount] = useState(post.likes_count)
   const [hasBookmarked, setHasBookmarked] = useState(post.user_has_bookmarked)
@@ -79,15 +80,28 @@ export function PostCard({ post, onCommentPress }: PostCardProps) {
   }
 
   const getCategoryBadge = (type?: string | null) => {
-    switch (type) {
-      case 'Learned':
-        return { label: '💡 Learned', bg: 'rgba(139, 92, 246, 0.15)', text: '#A78BFA', border: 'rgba(139, 92, 246, 0.3)' }
-      case 'Built':
-        return { label: '🚀 Built', bg: 'rgba(16, 185, 129, 0.15)', text: '#34D399', border: 'rgba(16, 185, 129, 0.3)' }
-      case 'Practiced':
-        return { label: '🎯 Practiced', bg: 'rgba(249, 115, 22, 0.15)', text: '#FB923C', border: 'rgba(249, 115, 22, 0.3)' }
-      default:
-        return { label: '📝 Other', bg: 'rgba(59, 130, 246, 0.15)', text: '#60A5FA', border: 'rgba(59, 130, 246, 0.3)' }
+    if (isDark) {
+      switch (type) {
+        case 'Learned':
+          return { label: '💡 Learned', bg: 'rgba(139, 92, 246, 0.15)', text: '#A78BFA', border: 'rgba(139, 92, 246, 0.3)' }
+        case 'Built':
+          return { label: '🚀 Built', bg: 'rgba(16, 185, 129, 0.15)', text: '#34D399', border: 'rgba(16, 185, 129, 0.3)' }
+        case 'Practiced':
+          return { label: '🎯 Practiced', bg: 'rgba(249, 115, 22, 0.15)', text: '#FB923C', border: 'rgba(249, 115, 22, 0.3)' }
+        default:
+          return { label: '📝 Other', bg: 'rgba(59, 130, 246, 0.15)', text: '#60A5FA', border: 'rgba(59, 130, 246, 0.3)' }
+      }
+    } else {
+      switch (type) {
+        case 'Learned':
+          return { label: '💡 Learned', bg: '#F5F3FF', text: '#7C3AED', border: '#DDD6FE' }
+        case 'Built':
+          return { label: '🚀 Built', bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' }
+        case 'Practiced':
+          return { label: '🎯 Practiced', bg: '#FFF7ED', text: '#EA580C', border: '#FED7AA' }
+        default:
+          return { label: '📝 Other', bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' }
+      }
     }
   }
 
@@ -95,7 +109,7 @@ export function PostCard({ post, onCommentPress }: PostCardProps) {
   const timeFormatted = formatRelativeTime(post.created_at)
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
       {/* Post Header */}
       <View style={styles.header}>
         <View style={styles.authorRow}>
@@ -105,25 +119,25 @@ export function PostCard({ post, onCommentPress }: PostCardProps) {
                 post.user?.avatar_url ||
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(post.user?.full_name || 'User')}&background=7C3AED&color=fff`,
             }}
-            style={styles.avatar}
+            style={[styles.avatar, { borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#E2E8F0' }]}
           />
           <View style={styles.authorMeta}>
             <View style={styles.nameRow}>
-              <Text style={styles.authorName} numberOfLines={1}>
+              <Text style={[styles.authorName, { color: colors.textPrimary }]} numberOfLines={1}>
                 {post.user?.full_name || 'Trackr Student'}
               </Text>
               {post.user?.badge_level ? (
-                <View style={styles.badgePill}>
+                <View style={[styles.badgePill, { backgroundColor: colors.primary }]}>
                   <Text style={styles.badgeText}>✓</Text>
                 </View>
               ) : null}
             </View>
             <View style={styles.subMetaRow}>
-              <Text style={styles.authorCollege} numberOfLines={1}>
+              <Text style={[styles.authorCollege, { color: colors.textSecondary }]} numberOfLines={1}>
                 {post.user?.college || 'Community Member'}
               </Text>
-              <Text style={styles.dotSeparator}>•</Text>
-              <Text style={styles.timestamp}>{timeFormatted}</Text>
+              <Text style={[styles.dotSeparator, { color: colors.textMuted }]}>•</Text>
+              <Text style={[styles.timestamp, { color: colors.textSecondary }]}>{timeFormatted}</Text>
             </View>
           </View>
         </View>
@@ -135,34 +149,34 @@ export function PostCard({ post, onCommentPress }: PostCardProps) {
       </View>
 
       {/* Post Text Content */}
-      <Text style={styles.content}>{post.content}</Text>
+      <Text style={[styles.content, { color: colors.textPrimary }]}>{post.content}</Text>
 
       {/* Attached Media */}
       {post.image_url ? (
-        <View style={styles.imageContainer}>
+        <View style={[styles.imageContainer, { borderColor: colors.border }]}>
           <Image source={{ uri: post.image_url }} style={styles.postImage} resizeMode="cover" />
         </View>
       ) : null}
 
       {/* Action Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <Pressable onPress={handleLike} style={styles.actionButton} hitSlop={8}>
           <Ionicons
             name={hasLiked ? 'heart' : 'heart-outline'}
             size={20}
-            color={hasLiked ? '#EF4444' : '#94A3B8'}
+            color={hasLiked ? '#EF4444' : colors.textSecondary}
           />
           {likesCount > 0 ? (
-            <Text style={[styles.actionCount, hasLiked && { color: '#EF4444' }]}>
+            <Text style={[styles.actionCount, { color: hasLiked ? '#EF4444' : colors.textSecondary }]}>
               {likesCount}
             </Text>
           ) : null}
         </Pressable>
 
         <Pressable onPress={onCommentPress} style={styles.actionButton} hitSlop={8}>
-          <Ionicons name="chatbubble-outline" size={19} color="#94A3B8" />
+          <Ionicons name="chatbubble-outline" size={19} color={colors.textSecondary} />
           {post.comments_count > 0 ? (
-            <Text style={styles.actionCount}>{post.comments_count}</Text>
+            <Text style={[styles.actionCount, { color: colors.textSecondary }]}>{post.comments_count}</Text>
           ) : null}
         </Pressable>
 
@@ -170,12 +184,12 @@ export function PostCard({ post, onCommentPress }: PostCardProps) {
           <Ionicons
             name={hasBookmarked ? 'bookmark' : 'bookmark-outline'}
             size={19}
-            color={hasBookmarked ? '#8B5CF6' : '#94A3B8'}
+            color={hasBookmarked ? colors.primary : colors.textSecondary}
           />
         </Pressable>
 
         <Pressable onPress={handleShare} style={styles.actionButton} hitSlop={8}>
-          <Ionicons name="share-outline" size={19} color="#94A3B8" />
+          <Ionicons name="share-outline" size={19} color={colors.textSecondary} />
         </Pressable>
       </View>
     </View>
@@ -184,18 +198,16 @@ export function PostCard({ post, onCommentPress }: PostCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#14131E',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
     padding: 14,
     marginHorizontal: 12,
     marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1.5 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   header: {
     flexDirection: 'row',
@@ -213,9 +225,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1F1E2E',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   authorMeta: {
     flex: 1,
@@ -228,7 +238,6 @@ const styles = StyleSheet.create({
   authorName: {
     fontSize: 14.5,
     fontWeight: '700',
-    color: '#FFFFFF',
     letterSpacing: -0.2,
   },
   subMetaRow: {
@@ -239,22 +248,18 @@ const styles = StyleSheet.create({
   },
   authorCollege: {
     fontSize: 11.5,
-    color: '#94A3B8',
     maxWidth: 130,
   },
   dotSeparator: {
     fontSize: 11,
-    color: '#64748B',
   },
   timestamp: {
     fontSize: 11.5,
-    color: '#94A3B8',
   },
   badgePill: {
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#8B5CF6',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -277,7 +282,6 @@ const styles = StyleSheet.create({
   content: {
     fontSize: 14.5,
     lineHeight: 22,
-    color: '#E2E8F0',
     marginBottom: 12,
   },
   imageContainer: {
@@ -286,7 +290,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     maxHeight: 280,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   postImage: {
     width: '100%',
@@ -296,10 +299,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 6,
-    paddingHorizontal: 6,
+    paddingTop: 8,
+    paddingHorizontal: 4,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
   },
   actionButton: {
     flexDirection: 'row',
@@ -311,6 +313,5 @@ const styles = StyleSheet.create({
   actionCount: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#94A3B8',
   },
 })

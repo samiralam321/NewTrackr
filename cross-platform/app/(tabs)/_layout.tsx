@@ -3,11 +3,12 @@ import { Tabs } from 'expo-router'
 import { useWindowDimensions, Platform } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { Colors } from '../../theme/colors'
+import { useAppTheme } from '../../store/themeStore'
 
 export default function TabLayout() {
   const { width } = useWindowDimensions()
   const insets = useSafeAreaInsets()
+  const { colors, isDark } = useAppTheme()
   const isDesktop = width >= 768
 
   // Calculate safe bottom padding so navigation never collides with Android 3-button bar or home gestures
@@ -18,20 +19,20 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#8B5CF6',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: '#0E0D15',
-          borderTopColor: 'rgba(255, 255, 255, 0.08)',
+          backgroundColor: colors.tabBarBg,
+          borderTopColor: colors.tabBarBorder,
           borderTopWidth: 1,
           height: tabHeight,
           display: isDesktop ? 'none' : 'flex',
           paddingBottom: bottomInset,
           paddingTop: 6,
-          elevation: 12,
+          elevation: isDark ? 12 : 6,
           shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.35,
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: isDark ? 0.35 : 0.08,
           shadowRadius: 8,
         },
         tabBarLabelStyle: {

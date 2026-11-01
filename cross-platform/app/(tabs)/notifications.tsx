@@ -3,41 +3,41 @@ import { View, Text, FlatList, Image, StyleSheet, RefreshControl } from 'react-n
 import { useQuery } from '@tanstack/react-query'
 import { Ionicons } from '@expo/vector-icons'
 import { ResponsiveContainer } from '../../components/layout/ResponsiveContainer'
-import { Colors } from '../../theme/colors'
+import { useAppTheme } from '../../store/themeStore'
 import { api } from '../../services/api'
 import { NotificationItem } from '../../types'
 
 export default function NotificationsScreen() {
+  const { colors, isDark } = useAppTheme()
   const { data: notifications = [], refetch, isRefetching } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
-      // Mock / API call
       return [] as NotificationItem[]
     },
   })
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'like': return <Ionicons name="heart" size={16} color={Colors.dark.error} />
+      case 'like': return <Ionicons name="heart" size={16} color={colors.error} />
       case 'comment': return <Ionicons name="chatbubble" size={16} color="#3B82F6" />
       case 'follow': return <Ionicons name="person-add" size={16} color="#10B981" />
       case 'badge': return <Ionicons name="ribbon" size={16} color="#F59E0B" />
-      default: return <Ionicons name="notifications" size={16} color={Colors.dark.primary} />
+      default: return <Ionicons name="notifications" size={16} color={colors.primary} />
     }
   }
 
   return (
     <ResponsiveContainer>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Notifications</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Notifications</Text>
         </View>
 
         {notifications.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="notifications-outline" size={44} color={Colors.dark.textMuted} />
-            <Text style={styles.emptyTitle}>All caught up!</Text>
-            <Text style={styles.emptySubtitle}>You will be notified here when students like, comment, or follow you.</Text>
+            <Ionicons name="notifications-outline" size={44} color={colors.textMuted} />
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>All caught up!</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>You will be notified here when students like, comment, or follow you.</Text>
           </View>
         ) : (
           <FlatList

@@ -5,6 +5,14 @@ import { Post, Comment, Message, ConversationPreview, Profile, Question } from '
 // Default fallback student ID if not logged in
 const DEFAULT_USER_ID = "149304fc-ee0a-4980-83ed-9ed88cf48d6d"
 
+export function getBadgeLevel(consistencyScore?: number | null): number {
+  const score = consistencyScore || 0
+  if (score >= 100) return 3
+  if (score >= 30) return 2
+  if (score >= 5) return 1
+  return 0
+}
+
 function getCurrentUserId(): string {
   const storeUser = useAuthStore.getState().user
   return storeUser?.id || DEFAULT_USER_ID
@@ -20,22 +28,8 @@ export const api = {
       let query = supabase
         .from('posts')
         .select(`
-          id,
-          user_id,
-          content,
-          image_url,
-          tags,
-          type,
-          created_at,
-          profiles!posts_user_id_fkey (
-            id,
-            full_name,
-            avatar_url,
-            college,
-            streak,
-            consistency_score,
-            badge_level
-          ),
+          *,
+          profiles!posts_user_id_fkey (*),
           likes (user_id),
           comments (id, user_id),
           bookmarks (user_id)
@@ -96,7 +90,7 @@ export const api = {
           college: row.profiles?.college || 'Student Community',
           streak: row.profiles?.streak || row.profiles?.consistency_score || 0,
           consistency_score: row.profiles?.consistency_score || 0,
-          badge_level: row.profiles?.badge_level || 0,
+          badge_level: getBadgeLevel(row.profiles?.consistency_score),
         }
       }))
     } catch (err: any) {
@@ -201,7 +195,7 @@ export const api = {
         college: newPost.profiles?.college || 'Student Community',
         streak: newPost.profiles?.streak || 1,
         consistency_score: newPost.profiles?.consistency_score || 1,
-        badge_level: newPost.profiles?.badge_level || 0,
+        badge_level: getBadgeLevel(newPost.profiles?.consistency_score),
       }
     }
   },
@@ -265,7 +259,7 @@ export const api = {
         college: data.profiles?.college || 'Trackr Student',
         streak: data.profiles?.consistency_score || 0,
         consistency_score: data.profiles?.consistency_score || 0,
-        badge_level: data.profiles?.badge_level || 0,
+        badge_level: getBadgeLevel(data.profiles?.consistency_score),
       }
     }
   },
@@ -402,7 +396,7 @@ export const api = {
       college: p.college || 'Trackr Student',
       streak: p.consistency_score || 0,
       consistency_score: p.consistency_score || 0,
-      badge_level: p.badge_level || 0,
+      badge_level: getBadgeLevel(p.consistency_score),
       bio: p.bio,
     }))
   },
@@ -426,7 +420,7 @@ export const api = {
       college: data.college || 'Trackr Student',
       streak: data.consistency_score || 0,
       consistency_score: data.consistency_score || 0,
-      badge_level: data.badge_level || 0,
+      badge_level: getBadgeLevel(data.consistency_score),
       bio: data.bio,
     }
   },
@@ -469,7 +463,7 @@ export const api = {
       college: p.college || 'Trackr Student',
       streak: p.consistency_score || 0,
       consistency_score: p.consistency_score || 0,
-      badge_level: p.badge_level || 0,
+      badge_level: getBadgeLevel(p.consistency_score),
     }))
   },
 

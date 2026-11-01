@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics'
 import { useQueryClient } from '@tanstack/react-query'
 import { api } from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
+import { useAppTheme } from '../../store/themeStore'
 
 const CATEGORIES = [
   { id: 'Learned', label: '💡 Learned' },
@@ -34,6 +35,7 @@ export default function ComposeModal() {
   const insets = useSafeAreaInsets()
   const queryClient = useQueryClient()
   const user = useAuthStore((state) => state.user)
+  const { colors, isDark } = useAppTheme()
 
   const [content, setContent] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<'Learned' | 'Built' | 'Practiced' | 'Other'>('Learned')
@@ -93,22 +95,30 @@ export default function ComposeModal() {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      style={[styles.container, { paddingTop: topInset, paddingBottom: bottomInset }]}
+      style={[styles.container, { backgroundColor: colors.background, paddingTop: topInset, paddingBottom: bottomInset }]}
     >
       {/* Top Header Bar */}
-      <View style={styles.topBar}>
-        <Pressable onPress={() => router.back()} style={styles.closeBtn} hitSlop={10}>
-          <Ionicons name="close" size={24} color="#FFFFFF" />
+      <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Pressable
+          onPress={() => router.back()}
+          style={[styles.closeBtn, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9' }]}
+          hitSlop={10}
+        >
+          <Ionicons name="close" size={22} color={colors.textPrimary} />
         </Pressable>
 
-        <Text style={styles.topBarTitle}>Share Progress</Text>
+        <Text style={[styles.topBarTitle, { color: colors.textPrimary }]}>Share Progress</Text>
 
         <View style={styles.topBarRight}>
-          <Text style={styles.charCounter}>{content.length} / 500</Text>
+          <Text style={[styles.charCounter, { color: colors.textMuted }]}>{content.length} / 500</Text>
           <Pressable
             onPress={handlePost}
             disabled={!content.trim() || isSubmitting}
-            style={[styles.postBtn, (!content.trim() || isSubmitting) && styles.postBtnDisabled]}
+            style={[
+              styles.postBtn,
+              { backgroundColor: colors.primary },
+              (!content.trim() || isSubmitting) && styles.postBtnDisabled,
+            ]}
           >
             {isSubmitting ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
@@ -133,7 +143,7 @@ export default function ComposeModal() {
       )}
 
       {/* Category Pills Bar */}
-      <View style={styles.categoryContainer}>
+      <View style={[styles.categoryContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -150,9 +160,31 @@ export default function ComposeModal() {
                   }
                   setSelectedCategory(cat.id)
                 }}
-                style={[styles.catPill, isSelected && styles.catPillActive]}
+                style={[
+                  styles.catPill,
+                  {
+                    backgroundColor: isSelected
+                      ? colors.primary
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.06)'
+                      : '#F1F5F9',
+                    borderColor: isSelected
+                      ? colors.primary
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : '#E2E8F0',
+                  },
+                ]}
               >
-                <Text style={[styles.catText, isSelected && styles.catTextActive]}>
+                <Text
+                  style={[
+                    styles.catText,
+                    {
+                      color: isSelected ? '#FFFFFF' : colors.textSecondary,
+                      fontWeight: isSelected ? '700' : '600',
+                    },
+                  ]}
+                >
                   {cat.label}
                 </Text>
               </Pressable>
@@ -174,22 +206,22 @@ export default function ComposeModal() {
                 user?.avatar_url ||
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.full_name || 'User')}&background=7C3AED&color=fff`,
             }}
-            style={styles.avatar}
+            style={[styles.avatar, { borderColor: colors.border }]}
           />
           <View style={styles.editorWrapper}>
             <TextInput
               value={content}
               onChangeText={setContent}
               placeholder="What did you learn, build, or practice today?"
-              placeholderTextColor="#64748B"
+              placeholderTextColor={colors.textMuted}
               multiline
               autoFocus
               maxLength={500}
-              style={styles.textInput}
+              style={[styles.textInput, { color: colors.textPrimary }]}
             />
 
             {imageUri && (
-              <View style={styles.previewContainer}>
+              <View style={[styles.previewContainer, { borderColor: colors.border }]}>
                 <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
                 <Pressable onPress={() => setImageUri(null)} style={styles.removeImgBtn} hitSlop={6}>
                   <Ionicons name="close" size={16} color="#FFFFFF" />
@@ -201,11 +233,15 @@ export default function ComposeModal() {
       </ScrollView>
 
       {/* Bottom Accessory Toolbar */}
-      <View style={styles.bottomToolbar}>
+      <View style={[styles.bottomToolbar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         {/* Media Attach Button */}
-        <Pressable onPress={handlePickImage} style={styles.mediaBtn} hitSlop={8}>
-          <Ionicons name="image-outline" size={22} color="#8B5CF6" />
-          <Text style={styles.mediaBtnText}>{imageUri ? 'Change Image' : 'Add Photo'}</Text>
+        <Pressable
+          onPress={handlePickImage}
+          style={[styles.mediaBtn, { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : '#F5F3FF' }]}
+          hitSlop={8}
+        >
+          <Ionicons name="image-outline" size={20} color={colors.primary} />
+          <Text style={[styles.mediaBtnText, { color: colors.primary }]}>{imageUri ? 'Change' : 'Add Photo'}</Text>
         </Pressable>
 
         {/* Quick Emoji Strip */}
@@ -229,7 +265,6 @@ export default function ComposeModal() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0D0C13',
   },
   topBar: {
     flexDirection: 'row',
@@ -238,7 +273,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   closeBtn: {
     width: 36,
@@ -246,12 +280,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
   topBarTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
     letterSpacing: -0.3,
   },
   topBarRight: {
@@ -261,14 +293,12 @@ const styles = StyleSheet.create({
   },
   charCounter: {
     fontSize: 11.5,
-    color: '#94A3B8',
     fontWeight: '500',
   },
   postBtn: {
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#8B5CF6',
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 64,
@@ -284,9 +314,9 @@ const styles = StyleSheet.create({
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(239, 68, 68, 0.3)',
+    borderBottomColor: 'rgba(239, 68, 68, 0.25)',
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
@@ -294,12 +324,10 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     fontSize: 12.5,
-    color: '#FCA5A5',
+    color: '#EF4444',
   },
   categoryContainer: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
-    backgroundColor: '#12111A',
     paddingVertical: 10,
   },
   categoryRow: {
@@ -310,22 +338,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  catPillActive: {
-    backgroundColor: '#8B5CF6',
-    borderColor: '#A78BFA',
   },
   catText: {
     fontSize: 12.5,
-    fontWeight: '600',
-    color: '#CBD5E1',
-  },
-  catTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
   },
   editorScroll: {
     flex: 1,
@@ -340,7 +356,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   editorWrapper: {
     flex: 1,
@@ -348,7 +363,6 @@ const styles = StyleSheet.create({
   textInput: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#FFFFFF',
     textAlignVertical: 'top',
     minHeight: 160,
   },
@@ -358,7 +372,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   previewImage: {
     width: '100%',
@@ -382,21 +395,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
-    backgroundColor: '#100F17',
   },
   mediaBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    paddingHorizontal: 12,
+    borderRadius: 14,
   },
   mediaBtnText: {
     fontSize: 12,
-    color: '#A78BFA',
     fontWeight: '600',
   },
   emojiStrip: {

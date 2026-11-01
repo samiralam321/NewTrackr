@@ -2,7 +2,7 @@ import React from 'react'
 import { View, StyleSheet, useWindowDimensions, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { DesktopSidebar } from './DesktopSidebar'
-import { Colors } from '../../theme/colors'
+import { useAppTheme } from '../../store/themeStore'
 
 interface ResponsiveContainerProps {
   children: React.ReactNode
@@ -16,16 +16,17 @@ export function ResponsiveContainer({
   showDesktopSidebar = true 
 }: ResponsiveContainerProps) {
   const { width } = useWindowDimensions()
+  const { colors } = useAppTheme()
   const isDesktop = width >= 768
 
   if (isDesktop && showDesktopSidebar) {
     return (
-      <View style={styles.desktopWrapper}>
+      <View style={[styles.desktopWrapper, { backgroundColor: colors.background }]}>
         {/* Left Column: Responsive Desktop Navigation */}
         <DesktopSidebar />
 
         {/* Center Column: Feed & Main Application Canvas */}
-        <View style={styles.desktopMainContent}>
+        <View style={[styles.desktopMainContent, { borderRightColor: colors.border }]}>
           {children}
         </View>
 
@@ -41,7 +42,7 @@ export function ResponsiveContainer({
 
   // Mobile Native Layout: Edge-to-edge safe area
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={styles.mobileWrapper}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.mobileWrapper, { backgroundColor: colors.background }]}>
       {children}
     </SafeAreaView>
   )

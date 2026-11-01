@@ -21,11 +21,13 @@ import { wsService } from '../../services/websocket'
 import { useAuthStore } from '../../store/authStore'
 import { usePresenceStore, useCallStore } from '../../store/presenceStore'
 import { ConversationPreview, Message, Profile } from '../../types'
+import { useAppTheme } from '../../store/themeStore'
 
 export default function MessagesScreen() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { width } = useWindowDimensions()
+  const { colors, isDark } = useAppTheme()
   const isDesktop = width >= 768
 
   const currentUser = useAuthStore((state) => state.user)
@@ -299,7 +301,7 @@ export default function MessagesScreen() {
 
   return (
     <ResponsiveContainer showDesktopSidebar={true}>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {isDesktop ? (
           <View style={styles.splitView}>
             {renderConversationList()}
