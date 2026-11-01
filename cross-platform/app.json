@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Trackr",
+    "slug": "trackr",
+    "version": "2.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "scheme": "trackr",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#07060A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.trackr.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Trackr needs camera access for sharing learning progress photos and video calls.",
+        "NSMicrophoneUsageDescription": "Trackr needs microphone access for student voice calls.",
+        "NSPhotoLibraryUsageDescription": "Trackr needs photo library access to upload project screenshots."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#7C3AED"
+      },
+      "package": "com.trackr.app",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

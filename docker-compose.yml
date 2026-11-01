@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # 1. FastAPI Backend API & WebSocket Gateway
+  trackr-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trackr-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql+asyncpg://trackr_user:trackr_secret_pass@postgres:5432/trackr_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=trackr-production-super-secret-jwt-key-2026-hyper-secure
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8081,http://localhost:19006,https://trackr-ten-eta.vercel.app,*
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - trackr-network
+
+  # 2. PostgreSQL 16 Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: trackr-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: trackr_user
+      POSTGRES_PASSWORD: trackr_secret_pass
+      POSTGRES_DB: trackr_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./arena_schema.sql:/docker-entrypoint-initdb.d/02_arena.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trackr_user -d trackr_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - trackr-network
+
+  # 3. Redis 7 Pub/Sub & Presence Cache
+  redis:
+    image: redis:7-alpine
+    container_name: trackr-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - trackr-network
+
+  # 4. CoTURN Server for WebRTC STUN/TURN Relays (Optional / Production)
+  coturn:
+    image: coturn/coturn:latest
+    container_name: trackr-turn
+    restart: unless-stopped
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+    environment:
+      - TURN_PORT=3478
+      - TURN_REALM=trackr.local
+    networks:
+      - trackr-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  trackr-network:
+    driver: bridge
