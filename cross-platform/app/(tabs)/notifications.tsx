@@ -1,14 +1,14 @@
 import React from 'react'
-import { View, Text, FlatList, Image, StyleSheet, RefreshControl } from 'react-native'
+import { View, Text, FlatList, StyleSheet, RefreshControl } from 'react-native'
 import { useQuery } from '@tanstack/react-query'
 import { Ionicons } from '@expo/vector-icons'
 import { ResponsiveContainer } from '../../components/layout/ResponsiveContainer'
 import { useAppTheme } from '../../store/themeStore'
-import { api } from '../../services/api'
+import { Colors } from '../../theme/colors'
 import { NotificationItem } from '../../types'
 
 export default function NotificationsScreen() {
-  const { colors, isDark } = useAppTheme()
+  const { colors } = useAppTheme()
   const { data: notifications = [], refetch, isRefetching } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
@@ -37,7 +37,9 @@ export default function NotificationsScreen() {
           <View style={styles.emptyState}>
             <Ionicons name="notifications-outline" size={44} color={colors.textMuted} />
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>All caught up!</Text>
-            <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>You will be notified here when students like, comment, or follow you.</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+              You will be notified here when students like, comment, or follow you.
+            </Text>
           </View>
         ) : (
           <FlatList
@@ -45,13 +47,13 @@ export default function NotificationsScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ paddingBottom: 90 }}
             renderItem={({ item }) => (
-              <View style={styles.notifItem}>
-                <View style={styles.iconCircle}>
+              <View style={[styles.notifItem, { borderBottomColor: colors.border }]}>
+                <View style={[styles.iconCircle, { backgroundColor: colors.surfaceSecondary }]}>
                   {getNotificationIcon(item.type)}
                 </View>
                 <View style={styles.notifContent}>
-                  <Text style={styles.actorName}>{item.actor?.full_name || 'Student'}</Text>
-                  <Text style={styles.notifText}>
+                  <Text style={[styles.actorName, { color: colors.textPrimary }]}>{item.actor?.full_name || 'Student'}</Text>
+                  <Text style={[styles.notifText, { color: colors.textSecondary }]}>
                     {item.type === 'like' && 'liked your progress update.'}
                     {item.type === 'comment' && 'commented on your post.'}
                     {item.type === 'follow' && 'started following your consistency journey.'}
@@ -64,7 +66,7 @@ export default function NotificationsScreen() {
               <RefreshControl
                 refreshing={isRefetching}
                 onRefresh={refetch}
-                tintColor={Colors.dark.primary}
+                tintColor={colors.primary}
               />
             }
           />
@@ -77,18 +79,15 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
   },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.dark.border,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#FFFFFF',
     letterSpacing: -0.4,
   },
   emptyState: {
@@ -100,12 +99,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginTop: 12,
   },
   emptySubtitle: {
     fontSize: 12.5,
-    color: Colors.dark.textMuted,
     textAlign: 'center',
     marginTop: 6,
     maxWidth: 240,
@@ -116,14 +113,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.dark.border,
     gap: 12,
   },
   iconCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.dark.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -133,11 +128,9 @@ const styles = StyleSheet.create({
   actorName: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
   notifText: {
     fontSize: 12,
-    color: Colors.dark.textSecondary,
     marginTop: 2,
   },
 })

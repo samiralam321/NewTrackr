@@ -1,8 +1,9 @@
 import React from 'react'
-import { View, StyleSheet, useWindowDimensions, Platform } from 'react-native'
+import { View, StyleSheet, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { DesktopSidebar } from './DesktopSidebar'
 import { useAppTheme } from '../../store/themeStore'
+import { Colors } from '../../theme/colors'
 
 interface ResponsiveContainerProps {
   children: React.ReactNode
@@ -52,7 +53,6 @@ const styles = StyleSheet.create({
   desktopWrapper: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: Colors.dark.background,
     height: '100%',
     width: '100%',
   },
@@ -60,7 +60,6 @@ const styles = StyleSheet.create({
     flex: 1,
     maxWidth: 720,
     borderRightWidth: 1,
-    borderRightColor: Colors.dark.border,
     height: '100%',
   },
   desktopRightColumn: {
@@ -71,6 +70,5 @@ const styles = StyleSheet.create({
   },
   mobileWrapper: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
-  }
+  },
 })

@@ -8,8 +8,8 @@ export interface Profile {
   resume_name?: string | null
   consistency_score: number
   streak: number
-  challenge_rank: string
-  badge_level: number
+  challenge_rank?: string | null
+  badge_level?: number
   followers_count?: number
   following_count?: number
   posts_count?: number
@@ -28,6 +28,7 @@ export interface Post {
   user?: Profile
   likes_count: number
   comments_count: number
+  bookmarks_count?: number
   user_has_liked: boolean
   user_has_bookmarked: boolean
 }
@@ -55,7 +56,7 @@ export interface ConversationPreview {
   user: Profile
   last_message?: Message | null
   unread_count: number
-  is_online: boolean
+  is_online?: boolean
 }
 
 export interface NotificationItem {

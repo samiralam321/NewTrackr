@@ -58,7 +58,7 @@ export function QuickShareCard({ onPostCreated }: QuickShareCardProps) {
     setFeedback(null)
 
     try {
-      await api.createPost(trimmed, selectedCategory, selectedImage || undefined)
+      await api.createPost(trimmed, selectedCategory, [], selectedImage || undefined)
       setContent('')
       setSelectedImage(null)
       setShowEmojiPicker(false)

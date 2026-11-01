@@ -71,7 +71,9 @@ export default function MessagesScreen() {
         refetchConversations()
       }
     })
-    return unsubscribe
+    return () => {
+      unsubscribe()
+    }
   }, [selectedUser])
 
   // Auto-select first conversation on desktop

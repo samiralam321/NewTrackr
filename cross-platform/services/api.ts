@@ -175,6 +175,10 @@ export const api = {
       console.warn('Streak update error:', streakErr)
     }
 
+    const prof: any = Array.isArray((newPost as any).profiles) 
+      ? (newPost as any).profiles[0] 
+      : (newPost as any).profiles
+
     return {
       id: newPost.id,
       user_id: newPost.user_id,
@@ -189,13 +193,13 @@ export const api = {
       user_has_liked: false,
       user_has_bookmarked: false,
       user: {
-        id: newPost.profiles?.id || currentUid,
-        full_name: newPost.profiles?.full_name || 'Trackr Student',
-        avatar_url: newPost.profiles?.avatar_url || `https://ui-avatars.com/api/?name=User&background=7C3AED&color=fff`,
-        college: newPost.profiles?.college || 'Student Community',
-        streak: newPost.profiles?.streak || 1,
-        consistency_score: newPost.profiles?.consistency_score || 1,
-        badge_level: getBadgeLevel(newPost.profiles?.consistency_score),
+        id: prof?.id || currentUid,
+        full_name: prof?.full_name || 'Trackr Student',
+        avatar_url: prof?.avatar_url || `https://ui-avatars.com/api/?name=User&background=7C3AED&color=fff`,
+        college: prof?.college || 'Student Community',
+        streak: prof?.streak || 1,
+        consistency_score: prof?.consistency_score || 1,
+        badge_level: getBadgeLevel(prof?.consistency_score),
       }
     }
   },
