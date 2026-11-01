@@ -7,12 +7,6 @@
     "icon": "./assets/icon.png",
     "scheme": "trackr",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#07060A"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.trackr.app",
@@ -42,7 +36,15 @@
     "plugins": [
       "expo-router",
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#07060A"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
