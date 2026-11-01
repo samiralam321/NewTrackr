@@ -1,23 +1,39 @@
 import React, { useState } from 'react'
-import { View, Text, FlatList, Pressable, StyleSheet, RefreshControl, Platform } from 'react-native'
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  RefreshControl,
+  Platform,
+  Image,
+  ActivityIndicator,
+} from 'react-native'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ResponsiveContainer } from '../../components/layout/ResponsiveContainer'
 import { PostCard } from '../../components/feed/PostCard'
 import { QuickShareCard } from '../../components/composer/QuickShareCard'
-import { Colors } from '../../theme/colors'
 import { api } from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
 
 export default function HomeFeedScreen() {
   const router = useRouter()
+  const insets = useSafeAreaInsets()
   const queryClient = useQueryClient()
   const user = useAuthStore((state) => state.user)
   const [activeTab, setActiveTab] = useState<'for-you' | 'following' | 'college'>('for-you')
 
-  const { data: posts = [], isLoading, refetch, isRefetching } = useQuery({
+  const {
+    data: posts = [],
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ['feed', activeTab],
     queryFn: () => api.getFeed(activeTab),
   })
@@ -35,6 +51,16 @@ export default function HomeFeedScreen() {
     router.push('/modal/compose')
   }
 
+  const handleTabChange = (tabId: 'for-you' | 'following' | 'college') => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    }
+    setActiveTab(tabId)
+  }
+
+  // Calculate dynamic bottom spacing for FAB
+  const fabBottom = 16 + Math.max(insets.bottom, 12)
+
   return (
     <ResponsiveContainer
       rightSidebar={
@@ -42,31 +68,43 @@ export default function HomeFeedScreen() {
       }
     >
       <View style={styles.feedWrapper}>
-        {/* Header Bar */}
+        {/* Compact Mobile Header Bar */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.greetingContainer}>
             <Text style={styles.greetingTitle}>
-              {user ? `Hey, ${user.full_name?.split(' ')[0]}` : 'Welcome to Trackr'}
+              {user?.full_name ? `Hey, ${user.full_name.split(' ')[0]} 👋` : 'Welcome to Trackr 👋'}
             </Text>
             <Text style={styles.greetingSubtitle}>Let's make today count.</Text>
           </View>
 
-          {user && (
+          <View style={styles.headerRight}>
             <View style={styles.streakBadge}>
-              <Text style={styles.streakText}>🔥 {user.streak}</Text>
+              <Text style={styles.streakText}>
+                🔥 {user?.streak || user?.consistency_score || 2}d
+              </Text>
             </View>
-          )}
+
+            <Image
+              source={{
+                uri:
+                  user?.avatar_url ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.full_name || 'User')}&background=7C3AED&color=fff`,
+              }}
+              style={styles.headerAvatar}
+            />
+          </View>
         </View>
 
-        {/* Feed Tabs */}
+        {/* Feed Tabs Pill Selector */}
         <View style={styles.tabRow}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id
             return (
               <Pressable
                 key={tab.id}
-                onPress={() => setActiveTab(tab.id)}
+                onPress={() => handleTabChange(tab.id)}
                 style={[styles.tabBtn, isActive && styles.tabBtnActive]}
+                hitSlop={6}
               >
                 <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
                   {tab.label}
@@ -76,25 +114,52 @@ export default function HomeFeedScreen() {
           })}
         </View>
 
-        {/* Posts Stream */}
-        <FlatList
-          data={posts}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <PostCard post={item} />}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
-              tintColor={Colors.dark.primary}
-            />
-          }
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        {/* Feed Posts List */}
+        {isLoading && posts.length === 0 ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#8B5CF6" />
+            <Text style={styles.loadingText}>Loading community updates...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={posts}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <PostCard post={item} />}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                onRefresh={refetch}
+                tintColor="#8B5CF6"
+                colors={['#8B5CF6']}
+              />
+            }
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyCard}>
+                <View style={styles.emptyIconCircle}>
+                  <Ionicons name="sparkles" size={32} color="#8B5CF6" />
+                </View>
+                <Text style={styles.emptyTitle}>Nothing here yet</Text>
+                <Text style={styles.emptySubtitle}>
+                  Your learning journey starts with your next update. Share what you learned, built, or practiced!
+                </Text>
+                <Pressable onPress={handleFabPress} style={styles.emptyActionBtn}>
+                  <Ionicons name="add" size={18} color="#FFFFFF" />
+                  <Text style={styles.emptyActionText}>Share your progress</Text>
+                </Pressable>
+              </View>
+            }
+          />
+        )}
 
         {/* Mobile Floating Action Button (FAB) */}
-        <Pressable onPress={handleFabPress} style={styles.fab}>
-          <Ionicons name="pencil" size={24} color="#FFFFFF" />
+        <Pressable
+          onPress={handleFabPress}
+          style={[styles.fab, { bottom: fabBottom }]}
+          hitSlop={8}
+        >
+          <Ionicons name="pencil" size={22} color="#FFFFFF" />
         </Pressable>
       </View>
     </ResponsiveContainer>
@@ -104,16 +169,20 @@ export default function HomeFeedScreen() {
 const styles = StyleSheet.create({
   feedWrapper: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: '#07060A',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.dark.border,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  greetingContainer: {
+    flex: 1,
   },
   greetingTitle: {
     fontSize: 18,
@@ -123,62 +192,135 @@ const styles = StyleSheet.create({
   },
   greetingSubtitle: {
     fontSize: 12,
-    color: Colors.dark.textMuted,
+    color: '#94A3B8',
     marginTop: 2,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   streakBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 20,
-    backgroundColor: Colors.dark.streakBg,
+    borderRadius: 16,
+    backgroundColor: 'rgba(249, 115, 22, 0.12)',
     borderWidth: 1,
     borderColor: 'rgba(249, 115, 22, 0.3)',
   },
   streakText: {
-    color: Colors.dark.streak,
+    color: '#FB923C',
     fontWeight: '800',
     fontSize: 12,
+  },
+  headerAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   tabRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.dark.border,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
     paddingHorizontal: 16,
     gap: 8,
-    paddingVertical: 8,
+    paddingVertical: 10,
+    backgroundColor: '#0A0910',
   },
   tabBtn: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 6,
-    borderRadius: 18,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   tabBtnActive: {
-    backgroundColor: Colors.dark.primary,
+    backgroundColor: '#8B5CF6',
   },
   tabLabel: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
-    color: Colors.dark.textSecondary,
+    color: '#94A3B8',
   },
   tabLabelActive: {
     color: '#FFFFFF',
     fontWeight: '700',
   },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: '#94A3B8',
+  },
   listContent: {
-    paddingBottom: 90,
+    paddingTop: 10,
+    paddingBottom: 96,
+  },
+  emptyCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    marginHorizontal: 16,
+    marginTop: 40,
+    backgroundColor: '#111019',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#94A3B8',
+    textAlign: 'center',
+    maxWidth: 280,
+    marginBottom: 20,
+  },
+  emptyActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#8B5CF6',
+  },
+  emptyActionText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
   },
   fab: {
     position: 'absolute',
-    bottom: Platform.OS === 'web' ? 24 : 80,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.dark.primary,
+    right: 18,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#8B5CF6',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 6,
-    shadowColor: Colors.dark.primary,
+    elevation: 8,
+    shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,

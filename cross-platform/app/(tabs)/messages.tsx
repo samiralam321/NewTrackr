@@ -173,6 +173,17 @@ export default function MessagesScreen() {
         <FlatList
           data={conversations}
           keyExtractor={(item) => item.user.id}
+          ListEmptyComponent={
+            <View style={styles.emptyConversations}>
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="chatbubbles-outline" size={32} color="#8B5CF6" />
+              </View>
+              <Text style={styles.emptyConvoTitle}>No messages yet</Text>
+              <Text style={styles.emptyConvoSubtitle}>
+                Search for classmates or peers above to collaborate and track progress together.
+              </Text>
+            </View>
+          }
           renderItem={({ item }) => {
             const isSelected = selectedUser?.id === item.user.id
             return (
@@ -504,5 +515,33 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     maxWidth: 240,
+  },
+  emptyConversations: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    marginTop: 40,
+  },
+  emptyIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  emptyConvoTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  emptyConvoSubtitle: {
+    fontSize: 12.5,
+    lineHeight: 18,
+    color: Colors.dark.textMuted,
+    textAlign: 'center',
+    maxWidth: 260,
   },
 })

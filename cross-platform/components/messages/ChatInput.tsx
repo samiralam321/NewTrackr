@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { View, TextInput, Pressable, StyleSheet, Platform, ActivityIndicator } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
 import { Colors } from '../../theme/colors'
@@ -12,6 +13,7 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSendMessage, targetUserId, targetUserName }: ChatInputProps) {
+  const insets = useSafeAreaInsets()
   const [text, setText] = useState('')
   const [isSending, setIsSending] = useState(false)
   const typingTimeoutRef = useRef<any>(null)
@@ -52,8 +54,10 @@ export function ChatInput({ onSendMessage, targetUserId, targetUserName }: ChatI
     }
   }
 
+  const bottomPadding = Math.max(insets.bottom, 10)
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: bottomPadding }]}>
       <Pressable onPress={pickImage} style={styles.actionBtn}>
         <Ionicons name="image-outline" size={21} color={Colors.dark.textSecondary} />
       </Pressable>

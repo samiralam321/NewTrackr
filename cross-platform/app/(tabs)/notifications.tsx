@@ -43,6 +43,7 @@ export default function NotificationsScreen() {
           <FlatList
             data={notifications}
             keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: 90 }}
             renderItem={({ item }) => (
               <View style={styles.notifItem}>
                 <View style={styles.iconCircle}>

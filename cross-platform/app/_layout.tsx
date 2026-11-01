@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
 import { wsService } from '../services/websocket'
+import { api } from '../services/api'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,6 +18,21 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const token = useAuthStore((state) => state.token)
+
+  // Initialize active user profile on app startup
+  useEffect(() => {
+    const initProfile = async () => {
+      try {
+        const profile = await api.getProfile('149304fc-ee0a-4980-83ed-9ed88cf48d6d')
+        if (profile) {
+          useAuthStore.getState().setAuth('session-active', profile)
+        }
+      } catch (e) {
+        console.warn('Initial profile load notice:', e)
+      }
+    }
+    initProfile()
+  }, [])
 
   // Connect to FastAPI WebSocket Gateway when authenticated
   useEffect(() => {
