@@ -249,24 +249,7 @@ export function Sidebar({ profile }: { profile?: any }) {
   ]
 
   const handlePostClick = () => {
-    if (pathname !== '/dashboard') {
-      router.push('/dashboard')
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('focus-post-composer'))
-        const ta = document.querySelector('textarea')
-        if (ta) {
-          ta.focus()
-          ta.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
-      }, 300)
-    } else {
-      window.dispatchEvent(new CustomEvent('focus-post-composer'))
-      const ta = document.querySelector('textarea')
-      if (ta) {
-        ta.focus()
-        ta.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
-    }
+    window.dispatchEvent(new CustomEvent('open-post-modal'))
   }
 
   return (

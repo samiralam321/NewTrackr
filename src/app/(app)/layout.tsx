@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/layout/sidebar"
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav"
 import { MobilePostDrawer } from "@/components/layout/mobile-post-drawer"
+import { PostModal } from "@/components/dashboard/post-modal"
 import { getAuthenticatedUserAndProfile } from "@/lib/auth/get-user-profile"
 import { PresenceProvider } from "@/components/providers/presence-provider"
 import { CongratulationsModal } from "@/components/ui/congratulations-modal"
@@ -32,6 +33,7 @@ export default async function AppLayout({
         </div>
         <MobileBottomNav profile={profile} />
         <MobilePostDrawer profile={profile} />
+        <PostModal user={user} profile={profile} />
         <CongratulationsModal />
       </PresenceProvider>
     </div>
