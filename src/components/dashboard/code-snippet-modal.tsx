@@ -156,7 +156,7 @@ export function CodeSnippetModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         overlayClassName="z-[10000] bg-black/70 backdrop-blur-xs"
-        className="z-[10001] sm:max-w-[700px] max-h-[92vh] flex flex-col p-0 overflow-hidden rounded-2xl bg-white dark:bg-[#0D0B14] border border-gray-100 dark:border-[#2D2B3B] shadow-2xl"
+        className="z-[10001] sm:max-w-[700px] max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl bg-white dark:bg-[#0D0B14] border border-gray-100 dark:border-[#2D2B3B] shadow-2xl"
       >
         {/* Modal Header */}
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-gray-100 dark:border-white/10 shrink-0">
@@ -199,7 +199,7 @@ export function CodeSnippetModal({
         </DialogHeader>
 
         {/* Modal Body */}
-        <div className="p-5 flex-1 overflow-y-auto space-y-4 [scrollbar-gutter:stable]">
+        <div className="px-5 pt-4 pb-2.5 flex-1 overflow-y-auto space-y-3.5 [scrollbar-gutter:stable]">
           {/* Controls Bar: Language, Title, Theme */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Custom Aesthetic Language Selector */}
@@ -301,7 +301,7 @@ export function CodeSnippetModal({
                 onKeyDown={handleKeyDown}
                 placeholder={`// Paste or write your ${LANGUAGE_LABELS[language] || language} code here...\n\n#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Trackr Code Snippet" << endl;\n    return 0;\n}`}
                 rows={12}
-                className="w-full p-3.5 font-mono text-[13px] sm:text-[13.5px] leading-relaxed rounded-xl border border-gray-200 dark:border-white/10 bg-[#0D0B14] text-gray-100 placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-violet-500 resize-none select-text"
+                className="w-full block p-3.5 font-mono text-[13px] sm:text-[13.5px] leading-relaxed rounded-xl border border-gray-200 dark:border-white/10 bg-[#0D0B14] text-gray-100 placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-violet-500 resize-none select-text"
                 spellCheck={false}
               />
             </div>
@@ -328,7 +328,7 @@ export function CodeSnippetModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="relative px-5 py-3 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#12101A] flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 shrink-0">
+        <div className="relative px-5 py-2.5 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#12101A] flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 shrink-0">
           {/* Centered Minimal Tagline */}
           <div className="w-full sm:w-auto sm:absolute sm:inset-0 sm:flex sm:items-center sm:justify-center text-center pointer-events-none order-2 sm:order-1">
             <p className="text-[11.5px] sm:text-xs font-medium text-gray-400 dark:text-gray-500 tracking-normal select-none inline-flex items-center justify-center gap-1.5">
