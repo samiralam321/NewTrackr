@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getOpportunities } from "@/lib/opportunities/queries"
 import { OpportunityCategory, OpportunityLocation, OpportunityMode } from "@/lib/opportunities/types"
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 600
 
 export async function GET(request: NextRequest) {
   try {
