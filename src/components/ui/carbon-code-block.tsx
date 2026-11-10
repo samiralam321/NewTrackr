@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Copy, Check, Terminal } from 'lucide-react'
+import { Copy, Check, Terminal, ChevronDown, ChevronUp } from 'lucide-react'
 
 export type CarbonTheme = 'trackr' | 'dracula' | 'sunset' | 'midnight' | 'cyberpunk' | 'minimal'
 
@@ -359,6 +359,7 @@ export function CarbonCodeBlock({
   className = ''
 }: CarbonCodeBlockProps) {
   const [copied, setCopied] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const activeThemeKey: CarbonTheme = (theme in THEME_CONFIGS) 
     ? (theme as CarbonTheme) 
@@ -369,6 +370,8 @@ export function CarbonCodeBlock({
   const lines = cleanCode.split('\n')
   const langKey = language.toLowerCase()
   const displayLang = LANGUAGE_LABELS[langKey] || language.toUpperCase() || 'CODE'
+
+  const isCollapsible = lines.length > 9
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -383,42 +386,42 @@ export function CarbonCodeBlock({
 
   return (
     <div 
-      className={`my-3.5 rounded-2xl p-2.5 sm:p-4 shadow-xl select-none ${currentTheme.outerBg} ${className}`}
+      className={`my-2 rounded-xl p-1.5 sm:p-2 shadow-md select-none ${currentTheme.outerBg} ${className}`}
       onClick={(e) => e.stopPropagation()}
     >
       {/* Carbon Window */}
-      <div className={`rounded-xl shadow-2xl overflow-hidden backdrop-blur-md ${currentTheme.windowBg}`}>
+      <div className={`rounded-lg shadow-lg overflow-hidden backdrop-blur-md ${currentTheme.windowBg}`}>
         {/* macOS Style Window Header */}
-        <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/10 bg-black/20 select-none">
+        <div className="flex items-center justify-between px-3 py-1.5 sm:py-2 border-b border-white/10 bg-black/25 select-none">
           {/* Traffic Light Buttons */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="w-3 h-3 rounded-full bg-[#FF5F56] shadow-xs inline-block" />
-            <span className="w-3 h-3 rounded-full bg-[#FFBD2E] shadow-xs inline-block" />
-            <span className="w-3 h-3 rounded-full bg-[#27C93F] shadow-xs inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF5F56] shadow-xs inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E] shadow-xs inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#27C93F] shadow-xs inline-block" />
           </div>
 
           {/* Window Title / Filename */}
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-300 dark:text-gray-300 truncate max-w-[200px] sm:max-w-[300px]">
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-300 dark:text-gray-300 truncate max-w-[180px] sm:max-w-[280px]">
             {title ? (
               <span>{title}</span>
             ) : (
               <span className="flex items-center gap-1 text-gray-400">
-                <Terminal className="w-3.5 h-3.5" />
+                <Terminal className="w-3 h-3" />
                 <span>{displayLang}</span>
               </span>
             )}
           </div>
 
           {/* Right Action: Language Badge & One-Click Copy */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/10 text-gray-300 border border-white/10">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/10 text-gray-300 border border-white/10">
               {displayLang}
             </span>
 
             <button
               type="button"
               onClick={handleCopy}
-              className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md transition-all duration-150 cursor-pointer ${
+              className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded transition-all duration-150 cursor-pointer ${
                 copied 
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
                   : 'bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 active:scale-95'
@@ -427,12 +430,12 @@ export function CarbonCodeBlock({
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <Check className="w-3 h-3 stroke-[2.5]" />
                   <span>Copied!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3.5 h-3.5" />
+                  <Copy className="w-3 h-3" />
                   <span>Copy</span>
                 </>
               )}
@@ -440,25 +443,59 @@ export function CarbonCodeBlock({
           </div>
         </div>
 
-        {/* Code Viewport with Horizontal Scroll */}
-        <div className="p-3 sm:p-4 overflow-x-auto text-[13px] sm:text-[13.5px] font-mono leading-relaxed select-text no-scrollbar">
-          <table className="border-collapse w-full">
-            <tbody>
-              {lines.map((line, idx) => (
-                <tr key={`line-${idx}`} className="hover:bg-white/[0.03] transition-colors">
-                  {showLineNumbers && (
-                    <td className="pr-3.5 pl-1 py-0.5 text-right select-none text-gray-500/50 text-[11px] w-[35px] font-mono align-top">
-                      {idx + 1}
+        {/* Code Viewport with Horizontal Scroll & Optimistic Max Height */}
+        <div className="relative">
+          <div 
+            className={`p-2.5 sm:p-3 overflow-x-auto text-[12px] sm:text-[12.5px] font-mono leading-[1.48] select-text no-scrollbar transition-all duration-200 ${
+              isCollapsible && !isExpanded 
+                ? 'max-h-[220px] overflow-hidden' 
+                : 'max-h-[500px] overflow-y-auto'
+            }`}
+          >
+            <table className="border-collapse w-full">
+              <tbody>
+                {lines.map((line, idx) => (
+                  <tr key={`line-${idx}`} className="hover:bg-white/[0.03] transition-colors">
+                    {showLineNumbers && (
+                      <td className="pr-2.5 pl-0.5 py-[1px] text-right select-none text-gray-500/50 text-[10px] w-[26px] font-mono align-top">
+                        {idx + 1}
+                      </td>
+                    )}
+                    <td className="py-[1px] whitespace-pre font-mono text-gray-200 break-normal">
+                      {tokenizeLine(line, langKey, currentTheme.tokens)}
                     </td>
-                  )}
-                  <td className="py-0.5 whitespace-pre font-mono text-gray-200 break-normal">
-                    {tokenizeLine(line, langKey, currentTheme.tokens)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Fade mask when collapsed */}
+          {isCollapsible && !isExpanded && (
+            <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" />
+          )}
         </div>
+
+        {/* Expand / Collapse Footer Toggle for Longer Snippets */}
+        {isCollapsible && (
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full py-1.5 px-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-gray-400 hover:text-white bg-black/35 hover:bg-black/50 border-t border-white/5 transition-colors cursor-pointer select-none"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="w-3.5 h-3.5" />
+                <span>Collapse snippet</span>
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-3.5 h-3.5" />
+                <span>Show more ({lines.length} lines)</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   )
