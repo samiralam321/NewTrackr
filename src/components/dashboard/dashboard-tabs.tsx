@@ -7,6 +7,7 @@ import { InlinePostComposer } from "@/components/dashboard/inline-post-composer"
 import { OpportunitiesFeed } from "@/components/opportunities/opportunities-feed"
 import { motion } from "framer-motion"
 import { Globe, Users, GraduationCap, Briefcase, Calendar } from "lucide-react"
+import { scrollToFeedTop } from "@/lib/utils/scroll"
 
 interface DashboardTabsProps {
   currentUserId?: string
@@ -74,7 +75,13 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
             return (
               <button
                 key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
+                onClick={() => {
+                  if (isActive) {
+                    scrollToFeedTop()
+                  } else {
+                    handleTabChange(tab.id)
+                  }
+                }}
                 className={`relative px-3.5 sm:px-4.5 py-1.5 sm:py-2 text-[13.5px] sm:text-[14.5px] font-semibold rounded-full transition-colors duration-200 flex items-center gap-2 select-none shrink-0 cursor-pointer ${
                   isActive
                     ? "text-white font-bold"

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Home, Compass, Bell, Mail } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { scrollToFeedTop } from "@/lib/utils/scroll"
 
 export function MobileBottomNav({ profile }: { profile?: any }) {
   const pathname = usePathname()
@@ -94,6 +95,13 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
     { name: 'Messages', href: '/messages', icon: Mail },
   ]
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (pathname === href || (href === '/dashboard' && pathname === '/')) {
+      e.preventDefault()
+      scrollToFeedTop()
+    }
+  }
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[calc(3.75rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 dark:bg-[#0B0A10]/95 backdrop-blur-md border-t border-gray-100 dark:border-[#2D2B3B] flex items-center justify-around px-2 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
       {navItems.map((item) => {
@@ -103,6 +111,7 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
             key={item.name}
             href={item.href}
             prefetch={true}
+            onClick={(e) => handleNavClick(e, item.href)}
             onTouchStart={() => { try { router.prefetch(item.href) } catch {} }}
             className="flex flex-col items-center justify-center min-w-[56px] h-12 relative active:scale-90 transition-transform"
             aria-label={item.name}
@@ -125,6 +134,7 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
       <Link 
         href="/profile"
         prefetch={true}
+        onClick={(e) => handleNavClick(e, '/profile')}
         onTouchStart={() => { try { router.prefetch('/profile') } catch {} }}
         className="flex flex-col items-center justify-center min-w-[56px] h-12 active:scale-90 transition-transform"
         aria-label="Profile"

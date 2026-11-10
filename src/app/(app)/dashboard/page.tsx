@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex h-full w-full overflow-hidden bg-white dark:bg-[#000000]">
       {/* Central Timeline Column — flush 3-column architecture matching Twitter */}
-      <main className="flex-1 min-w-0 max-w-[640px] xl:max-w-[690px] 2xl:max-w-[730px] h-full overflow-y-auto no-scrollbar border-r border-[#eff3f4] dark:border-[#2f3336] flex flex-col bg-white dark:bg-[#000000] shrink-0">
+      <main id="main-feed-container" className="flex-1 min-w-0 max-w-[640px] xl:max-w-[690px] 2xl:max-w-[730px] h-full overflow-y-auto no-scrollbar border-r border-[#eff3f4] dark:border-[#2f3336] flex flex-col bg-white dark:bg-[#000000] shrink-0">
         {/* Mobile Top App Bar (Only visible on mobile screens) */}
         <div className="flex md:hidden items-center justify-between w-full px-4 py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] sticky top-0 z-30 bg-white/90 dark:bg-black/90 backdrop-blur-md">
           <MobileMenuDropdown profile={profile} />

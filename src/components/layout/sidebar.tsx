@@ -11,6 +11,7 @@ import { getBadgeLevel } from "@/lib/utils/streak"
 import { getUserHandle } from "@/lib/utils/user"
 import { InstallButton } from "@/components/pwa/InstallPWA"
 import { clearTrackrClientCaches } from "@/lib/cache/client-cache"
+import { scrollToFeedTop } from "@/lib/utils/scroll"
 
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
@@ -252,12 +253,20 @@ export function Sidebar({ profile }: { profile?: any }) {
     window.dispatchEvent(new CustomEvent('open-post-modal'))
   }
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (pathname === href || (href === '/dashboard' && pathname === '/')) {
+      e.preventDefault()
+      scrollToFeedTop()
+    }
+  }
+
   return (
     <aside className="w-[260px] xl:w-[285px] 2xl:w-[305px] h-screen sticky top-0 z-30 border-r border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] flex flex-col pt-2 pb-2 px-2.5 xl:px-3 shrink-0 overflow-y-auto no-scrollbar transition-colors select-none">
       {/* Logo */}
       <Link 
         href="/dashboard" 
         prefetch={true} 
+        onClick={(e) => handleNavClick(e, '/dashboard')}
         onMouseEnter={() => { try { router.prefetch('/dashboard') } catch {} }}
         className="flex items-center gap-3 px-3 py-2 mb-2 pt-1 shrink-0 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors w-fit group"
       >
@@ -274,6 +283,7 @@ export function Sidebar({ profile }: { profile?: any }) {
               key={item.name}
               href={item.href}
               prefetch={true}
+              onClick={(e) => handleNavClick(e, item.href)}
               onMouseEnter={() => { try { router.prefetch(item.href) } catch {} }}
               onTouchStart={() => { try { router.prefetch(item.href) } catch {} }}
               className={`flex items-center gap-4 px-4.5 py-3 xl:px-5 xl:py-3 rounded-full transition-all duration-150 relative select-none w-fit min-w-[200px] group ${
