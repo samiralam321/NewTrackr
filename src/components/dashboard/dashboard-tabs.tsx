@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Feed } from "@/components/dashboard/feed"
 import { InlinePostComposer } from "@/components/dashboard/inline-post-composer"
+import { OpportunitiesFeed } from "@/components/opportunities/opportunities-feed"
 import { motion } from "framer-motion"
 import { Globe, Users, GraduationCap, Briefcase, Calendar } from "lucide-react"
 
@@ -12,8 +14,16 @@ interface DashboardTabsProps {
   profile?: any
 }
 
+type TabType = "for-you" | "following" | "college" | "opportunities" | "events"
+
 export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsProps) {
-  const [activeTab, setActiveTab] = useState<"for-you" | "following" | "college" | "opportunities" | "events">("for-you")
+  const searchParams = useSearchParams()
+  const initialTab = (searchParams.get('feed') || searchParams.get('tab') || 'for-you') as TabType
+  const [activeTab, setActiveTab] = useState<TabType>(
+    ['for-you', 'following', 'college', 'opportunities', 'events'].includes(initialTab)
+      ? initialTab
+      : 'for-you'
+  )
 
   const tabs = [
     { id: "for-you", label: "For You", icon: Globe },
@@ -23,9 +33,39 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
     { id: "events", label: "Events", icon: Calendar },
   ] as const
 
+  // Sync tab change to URL without full page reload
+  const handleTabChange = (tabId: TabType) => {
+    setActiveTab(tabId)
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      if (tabId === 'for-you') {
+        url.searchParams.delete('feed')
+        url.searchParams.delete('tab')
+      } else {
+        url.searchParams.set('feed', tabId)
+      }
+      window.history.replaceState({}, '', url.toString())
+    }
+  }
+
+  // Listen for custom tab switch events (e.g. from Upcoming Hackathons widget)
+  useEffect(() => {
+    const handleSwitch = (e: Event) => {
+      const customEvent = e as CustomEvent
+      if (customEvent.detail && ['for-you', 'following', 'college', 'opportunities', 'events'].includes(customEvent.detail)) {
+        handleTabChange(customEvent.detail as TabType)
+      }
+    }
+
+    window.addEventListener('switch-feed-tab', handleSwitch)
+    return () => {
+      window.removeEventListener('switch-feed-tab', handleSwitch)
+    }
+  }, [])
+
   return (
     <div className="w-full">
-      {/* Sliding Pill Navigation Bar (Matching User Screenshot Exactly) */}
+      {/* Sliding Pill Navigation Bar (Matching Design) */}
       <div className="flex items-center pb-4 mb-3 overflow-x-auto no-scrollbar">
         <div className="inline-flex items-center gap-1 p-1 bg-[#F4F3F7] dark:bg-[#15141D] rounded-full border border-gray-200/70 dark:border-[#2D2B3B]/80 shadow-inner">
           {tabs.map((tab) => {
@@ -34,7 +74,7 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`relative px-4 sm:px-5 py-2 text-xs md:text-sm font-semibold rounded-full transition-colors duration-200 flex items-center gap-2 select-none shrink-0 cursor-pointer ${
                   isActive
                     ? "text-white"
@@ -60,19 +100,25 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
         </div>
       </div>
 
-      {/* Inline Post Composer above the feed */}
-      <InlinePostComposer user={user} profile={profile} />
+      {/* When in Opportunities mode: Render the dedicated Opportunities Discovery Feed */}
+      {activeTab === "opportunities" ? (
+        <OpportunitiesFeed currentUserId={currentUserId} />
+      ) : (
+        <>
+          {/* Post Composer for Social Tabs */}
+          <InlinePostComposer user={user} profile={profile} />
 
-      {/* Feed Content with Tab Filter */}
-      <Feed 
-        key={activeTab}
-        currentUserIdProp={currentUserId}
-        followingOnlyFilter={activeTab === "following"}
-        collegeOnlyFilter={activeTab === "college"}
-        opportunitiesOnlyFilter={activeTab === "opportunities"}
-        eventsOnlyFilter={activeTab === "events"}
-        sortBy="new" 
-      />
+          {/* Feed Content with Tab Filter */}
+          <Feed 
+            key={activeTab}
+            currentUserIdProp={currentUserId}
+            followingOnlyFilter={activeTab === "following"}
+            collegeOnlyFilter={activeTab === "college"}
+            eventsOnlyFilter={activeTab === "events"}
+            sortBy="new" 
+          />
+        </>
+      )}
     </div>
   )
 }

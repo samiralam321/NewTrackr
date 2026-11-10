@@ -70,12 +70,16 @@ export function UpcomingHackathons() {
           <Calendar className="w-4 h-4 text-violet-600 dark:text-violet-400" />
           <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-white">Upcoming Hackathons</h3>
         </div>
-        <Link
-          href="/challenges"
-          className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors flex items-center gap-0.5"
+        <button
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('switch-feed-tab', { detail: 'opportunities' }))
+            }
+          }}
+          className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors flex items-center gap-0.5 cursor-pointer"
         >
           See all →
-        </Link>
+        </button>
       </div>
 
       {/* List */}
