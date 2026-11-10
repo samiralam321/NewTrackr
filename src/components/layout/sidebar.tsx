@@ -354,7 +354,7 @@ export function Sidebar({ profile }: { profile?: any }) {
               className="w-10 h-10 rounded-full object-cover shrink-0"
             />
             <div className="flex flex-col overflow-hidden min-w-0">
-              <span className="text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-1 min-w-0 truncate group-hover:underline">
+              <span className="text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-1 min-w-0 truncate">
                 <span className="truncate">{profileState?.full_name || 'Samir Alam'}</span>
                 <VerifiedBadge level={getBadgeLevel(profileState?.consistency_score)} />
               </span>
