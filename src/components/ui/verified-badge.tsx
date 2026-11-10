@@ -31,7 +31,7 @@ export function VerifiedBadge({ level, size = 'sm', nameOrHandle, className = ''
 
   const badgeSize = sizeClasses[size] || sizeClasses.sm
 
-  // Details per level
+  // Details per level - Clean flat authentic Twitter/X badge without any blur glow or outer halo
   const badgeDetails = {
     1: {
       title: isAdmin ? 'Verified Admin' : 'Verified Account',
@@ -40,21 +40,18 @@ export function VerifiedBadge({ level, size = 'sm', nameOrHandle, className = ''
         : 'Earned by posting for 5 consecutive days.',
       rosetteColor: '#1D9BF0', // Official Twitter Verified Blue
       checkColor: '#FFFFFF',
-      glow: 'shadow-[0_0_8px_rgba(29,155,240,0.35)]',
     },
     2: {
       title: 'Trackr Elite Member',
       desc: 'Earned by posting for 30 consecutive days.',
       rosetteColor: '#EAB308', // Gold
       checkColor: '#FFFFFF',
-      glow: 'shadow-[0_0_8px_rgba(234,179,8,0.45)]',
     },
     3: {
       title: 'Trackr Legend Member',
       desc: 'Earned by posting for 100 consecutive days.',
       rosetteColor: '#8B5CF6', // Purple Diamond
       checkColor: '#FFFFFF',
-      glow: 'shadow-[0_0_12px_rgba(139,92,246,0.55)]',
     },
   }
 
@@ -72,9 +69,9 @@ export function VerifiedBadge({ level, size = 'sm', nameOrHandle, className = ''
           scale: hovered ? 1.15 : 1,
         }}
         transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-        className={`flex items-center justify-center ${details.glow} rounded-full transition-shadow duration-200`}
+        className="flex items-center justify-center shrink-0 bg-transparent"
       >
-        {/* Authentic Twitter Verified Seal & Checkmark */}
+        {/* Authentic Twitter Verified Seal & Checkmark (Clean SVG, 0 outer shadow, 0 border, 0 background) */}
         <svg
           viewBox="0 0 22 22"
           aria-label={details.title}

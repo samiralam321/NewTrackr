@@ -120,14 +120,9 @@ export function CongratulationsModal() {
             initial={{ scale: 0, rotate: -30 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 10 }}
-            className="w-24 h-24 rounded-full bg-violet-50 dark:bg-violet-950/20 border border-violet-100/50 dark:border-violet-900/30 flex items-center justify-center mb-6 shadow-inner relative"
+            className="flex items-center justify-center mb-6 relative bg-transparent"
           >
             <VerifiedBadge level={level} size="lg" />
-            <motion.div
-              animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
-              transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-              className="absolute inset-0 rounded-full border-4 border-violet-400/20"
-            />
           </motion.div>
 
           {/* Typography */}
