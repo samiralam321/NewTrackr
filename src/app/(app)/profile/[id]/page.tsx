@@ -21,28 +21,28 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     notFound()
   }
 
-  const { data: posts } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('user_id', profile.id)
-    .order('created_at', { ascending: false })
-
-  const { count: followersCount } = await supabase
-    .from('follows')
-    .select('*', { count: 'exact', head: true })
-    .eq('following_id', profile.id)
-
-  const { count: followingCount } = await supabase
-    .from('follows')
-    .select('*', { count: 'exact', head: true })
-    .eq('follower_id', profile.id)
+  const [postsRes, followersRes, followingRes] = await Promise.all([
+    supabase
+      .from('posts')
+      .select('*')
+      .eq('user_id', profile.id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('follows')
+      .select('*', { count: 'exact', head: true })
+      .eq('following_id', profile.id),
+    supabase
+      .from('follows')
+      .select('*', { count: 'exact', head: true })
+      .eq('follower_id', profile.id)
+  ])
 
   return (
     <ProfileDashboard 
       profile={profile}
-      posts={posts || []}
-      followersCount={followersCount || 0}
-      followingCount={followingCount || 0}
+      posts={postsRes.data || []}
+      followersCount={followersRes.count || 0}
+      followingCount={followingRes.count || 0}
       isCurrentUser={user?.id === profile.id}
       currentUserId={user?.id || ''}
     />

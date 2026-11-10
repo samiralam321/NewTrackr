@@ -35,7 +35,7 @@ export function ProfileDashboard({
   const [followingCountState, setFollowingCountState] = useState(followingCount || 0)
   const [activeTab, setActiveTab] = useState("posts")
   const onlineUsers = usePresence()
-  const isOnline = onlineUsers.includes(profileState.id)
+  const isOnline = profileState?.id ? onlineUsers.includes(profileState?.id) : false
   
   const supabase = createClient()
 
@@ -84,6 +84,8 @@ export function ProfileDashboard({
 
   // Real-time Postgres subscriptions for Streaks, Posts Count, and Followers/Following Count
   useEffect(() => {
+    if (!profile?.id) return
+
     const channel = supabase
       .channel(`profile-dashboard-realtime:${profile.id}`)
       .on('postgres_changes', { 
@@ -146,7 +148,7 @@ export function ProfileDashboard({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [profile.id])
+  }, [profile?.id])
 
   // Main Streak Logic (Synchronized with sidebar & LeetCode DCC UTC logic)
   let displayStreak = profileState?.consistency_score || 0
@@ -256,13 +258,13 @@ export function ProfileDashboard({
                 ) : (
                   <>
                     <FollowButton 
-                      targetUserId={profileState.id} 
+                      targetUserId={profileState?.id} 
                       onFollowChange={(isFollowing) => {
                         setFollowersCountState(prev => prev + (isFollowing ? 1 : -1))
                       }}
                     />
                     <Link 
-                      href={`/messages?userId=${profileState.id}`}
+                      href={`/messages?userId=${profileState?.id}`}
                       className="flex items-center justify-center w-11 h-11 bg-white dark:bg-[#1A1A24] border border-gray-200 dark:border-[#2D2B3B] text-gray-700 dark:text-gray-200 hover:text-violet-600 dark:hover:text-violet-400 rounded-xl transition-all duration-200 shadow-sm active:scale-95 shrink-0"
                       title="Send Message"
                     >
@@ -339,7 +341,7 @@ export function ProfileDashboard({
             </div>
           </div>
 
-          <FollowListDialog userId={profileState.id} type="followers" count={followersCountState || 0}>
+          <FollowListDialog userId={profileState?.id} type="followers" count={followersCountState || 0}>
             <div className="flex items-center gap-3 md:gap-4 p-3.5 md:p-4 bg-white dark:bg-[#0B0A10] md:bg-transparent border border-gray-100 dark:border-[#2D2B3B] md:border-0 rounded-2xl md:rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] md:hover:bg-gray-50 dark:md:hover:bg-[#1A1A24] transition-all duration-200 shadow-sm md:shadow-none cursor-pointer w-full text-left">
               <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5 text-emerald-500" />
@@ -351,7 +353,7 @@ export function ProfileDashboard({
             </div>
           </FollowListDialog>
 
-          <FollowListDialog userId={profileState.id} type="following" count={followingCountState || 0}>
+          <FollowListDialog userId={profileState?.id} type="following" count={followingCountState || 0}>
             <div className="flex items-center gap-3 md:gap-4 p-3.5 md:p-4 bg-white dark:bg-[#0B0A10] md:bg-transparent border border-gray-100 dark:border-[#2D2B3B] md:border-0 rounded-2xl md:rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] md:hover:bg-gray-50 dark:md:hover:bg-[#1A1A24] transition-all duration-200 shadow-sm md:shadow-none cursor-pointer w-full text-left">
               <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5 text-blue-500" />
@@ -419,16 +421,16 @@ export function ProfileDashboard({
               </div>
               
               <div className={`space-y-0 mt-0 ${activeTab === 'posts' ? 'block' : 'hidden'}`}>
-                <Feed userIdFilter={profileState.id} currentUserIdProp={currentUserId} sortBy="new" />
+                <Feed userIdFilter={profileState?.id} currentUserIdProp={currentUserId} sortBy="new" />
               </div>
               <div className={`space-y-0 mt-0 ${activeTab === 'likes' ? 'block' : 'hidden'}`}>
-                <Feed likedByFilter={profileState.id} currentUserIdProp={currentUserId} sortBy="new" />
+                <Feed likedByFilter={profileState?.id} currentUserIdProp={currentUserId} sortBy="new" />
               </div>
               <div className={`space-y-0 mt-0 ${activeTab === 'replies' ? 'block' : 'hidden'}`}>
-                <Feed commentedByFilter={profileState.id} currentUserIdProp={currentUserId} sortBy="new" />
+                <Feed commentedByFilter={profileState?.id} currentUserIdProp={currentUserId} sortBy="new" />
               </div>
               <div className={`space-y-0 mt-0 ${activeTab === 'highlights' ? 'block' : 'hidden'}`}>
-                <Feed userIdFilter={profileState.id} highlightsOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
+                <Feed userIdFilter={profileState?.id} highlightsOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
               </div>
             </div>
 

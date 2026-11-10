@@ -11,9 +11,10 @@ export interface AuthenticatedUserSession {
     college?: string | null
     consistency_score?: number | null
     streak?: number | null
-    handle?: string | null
-    is_admin?: boolean | null
-    role?: string | null
+    last_post_date?: string | null
+    challenge_rank?: number | null
+    resume_url?: string | null
+    resume_name?: string | null
     updated_at?: string | null
   } | null
 }
@@ -21,7 +22,7 @@ export interface AuthenticatedUserSession {
 /**
  * Server-side request-scoped deduplication for user session and profile.
  * Wrapped in React `cache()`, so multiple calls within the same SSR request lifecycle
- * (e.g. in AppLayout and DashboardPage) will execute only ONCE against Supabase.
+ * (e.g. in AppLayout, DashboardPage, and ProfilePage) will execute only ONCE against Supabase.
  */
 export const getAuthenticatedUserAndProfile = cache(async (): Promise<AuthenticatedUserSession> => {
   const supabase = await createClient()
@@ -42,15 +43,36 @@ export const getAuthenticatedUserAndProfile = cache(async (): Promise<Authentica
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, avatar_url, bio, college, consistency_score, streak, handle, is_admin, role, updated_at')
+      .select('*')
       .eq('id', user.id)
       .maybeSingle()
 
     if (!error && data) {
       profile = data
+    } else if (error) {
+      console.warn("Supabase profile load warning:", error.message)
     }
   } catch (err) {
     console.warn("Could not load user profile in getAuthenticatedUserAndProfile:", err)
+  }
+
+  // If no profile record exists in the database, provide a safe synthetic profile
+  // so downstream components never crash with Cannot read properties of null
+  if (!profile && user) {
+    profile = {
+      id: user.id,
+      full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student',
+      avatar_url: user.user_metadata?.avatar_url || null,
+      bio: '',
+      college: '',
+      consistency_score: 0,
+      streak: 0,
+      last_post_date: null,
+      challenge_rank: null,
+      resume_url: null,
+      resume_name: null,
+      updated_at: new Date().toISOString()
+    }
   }
 
   return { user, profile }

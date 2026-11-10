@@ -31,9 +31,24 @@ export default async function ProfilePage() {
       .eq('follower_id', user.id)
   ])
 
+  const resolvedProfile = profile || {
+    id: user.id,
+    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student',
+    avatar_url: user.user_metadata?.avatar_url || null,
+    bio: '',
+    college: '',
+    consistency_score: 0,
+    streak: 0,
+    last_post_date: null,
+    challenge_rank: null,
+    resume_url: null,
+    resume_name: null,
+    updated_at: new Date().toISOString()
+  }
+
   return (
     <ProfileDashboard 
-      profile={profile}
+      profile={resolvedProfile}
       posts={postsRes.data || []}
       followersCount={followersRes.count || 0}
       followingCount={followingRes.count || 0}
