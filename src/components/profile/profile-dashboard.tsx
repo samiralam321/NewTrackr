@@ -194,7 +194,7 @@ export function ProfileDashboard({
   }
 
   // Verification Progress calculation
-  const currentBadgeLevel = getBadgeLevel(profileState?.consistency_score)
+  const currentBadgeLevel = getBadgeLevel(profileState?.consistency_score, profileState?.full_name)
   let nextTierName = ""
   let nextTierTarget = 0
   let nextTierBadgeLevel = 0
@@ -306,9 +306,7 @@ export function ProfileDashboard({
             <div className="mt-4">
               <h1 className="text-2xl md:text-3xl font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-2">
                 {profileState?.full_name || 'Anonymous User'}
-                {getBadgeLevel(profileState?.consistency_score) > 0 && (
-                  <VerifiedBadge level={getBadgeLevel(profileState?.consistency_score)} size="md" />
-                )}
+                <VerifiedBadge level={currentBadgeLevel} nameOrHandle={profileState?.full_name} size="md" />
               </h1>
               
               <p className="text-[15px] text-[#536471] dark:text-[#71767b] font-normal mt-1.5 flex items-center gap-2">

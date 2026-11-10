@@ -238,7 +238,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
           const isFollowing = !!followingMap[user.id]
           const isSelf = currentUserId === user.id
           const handle = getUserHandle(user.full_name)
-          const badgeLevel = getBadgeLevel(user.consistency_score)
+          const badgeLevel = getBadgeLevel(user.consistency_score, user.full_name)
           const streak = user.consistency_score || 0
 
           return (
@@ -264,7 +264,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
                     <p className="text-[15px] sm:text-[16px] font-bold text-[#0f1419] dark:text-[#e7e9ea] truncate group-hover:underline">
                       {user.full_name || "Student"}
                     </p>
-                    <VerifiedBadge level={badgeLevel} />
+                    <VerifiedBadge level={badgeLevel} nameOrHandle={user.full_name} />
                   </div>
                   <div className="flex items-center gap-1.5">
                     <p className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal truncate">

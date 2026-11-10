@@ -109,7 +109,7 @@ export default function NotificationsPage() {
         return (
           <span className="inline-flex items-center gap-1.5 flex-wrap">
             <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
-            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score)} />
+            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score, actorName)} nameOrHandle={actorName} />
             <span>liked your post</span>
           </span>
         )
@@ -117,7 +117,7 @@ export default function NotificationsPage() {
         return (
           <span className="inline-flex items-center gap-1.5 flex-wrap">
             <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
-            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score)} />
+            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score, actorName)} nameOrHandle={actorName} />
             <span>commented on your post</span>
           </span>
         )
@@ -125,7 +125,7 @@ export default function NotificationsPage() {
         return (
           <span className="inline-flex items-center gap-1.5 flex-wrap">
             <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
-            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score)} />
+            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score, actorName)} nameOrHandle={actorName} />
             <span>started following you</span>
           </span>
         )
@@ -133,7 +133,7 @@ export default function NotificationsPage() {
         return (
           <span className="inline-flex items-center gap-1.5 flex-wrap">
             <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
-            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score)} />
+            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score, actorName)} nameOrHandle={actorName} />
             <span>mentioned you</span>
           </span>
         )

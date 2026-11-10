@@ -2,129 +2,108 @@
 
 import { motion } from 'framer-motion'
 import { useState } from 'react'
+import { isUserAdmin } from '@/lib/utils/streak'
 
 export type VerifiedBadgeProps = {
-  level: number | null | undefined
-  size?: 'sm' | 'md' | 'lg'
+  level?: number | null | undefined
+  size?: 'xs' | 'sm' | 'md' | 'lg'
+  nameOrHandle?: string | null
+  className?: string
 }
 
-export function VerifiedBadge({ level, size = 'sm' }: VerifiedBadgeProps) {
+export function VerifiedBadge({ level, size = 'sm', nameOrHandle, className = '' }: VerifiedBadgeProps) {
   const [hovered, setHovered] = useState(false)
 
-  if (!level || level < 1 || level > 3) return null
+  const isAdmin = isUserAdmin(nameOrHandle)
+  const effectiveLevel = isAdmin ? 1 : (level || 0)
+
+  if (!effectiveLevel || effectiveLevel < 1 || effectiveLevel > 3) {
+    return null
+  }
 
   // Size mapping
   const sizeClasses = {
-    sm: 'w-4 h-4',
+    xs: 'w-3.5 h-3.5',
+    sm: 'w-[18px] h-[18px]',
     md: 'w-5 h-5',
-    lg: 'w-6 h-6',
+    lg: 'w-12 h-12',
   }
 
-  const badgeSize = sizeClasses[size]
+  const badgeSize = sizeClasses[size] || sizeClasses.sm
 
   // Details per level
   const badgeDetails = {
     1: {
-      title: 'Trackr Verified Member',
-      desc: 'Earned by posting for 5 consecutive days.',
-      gradientId: 'blueGrad',
-      gradient: (
-        <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#60A5FA" />
-          <stop offset="100%" stopColor="#2563EB" />
-        </linearGradient>
-      ),
-      glow: 'shadow-[0_0_8px_rgba(59,130,246,0.5)]',
+      title: isAdmin ? 'Verified Admin' : 'Verified Account',
+      desc: isAdmin 
+        ? 'Samir Alam (@samCPer) · Trackr Creator & Admin'
+        : 'Earned by posting for 5 consecutive days.',
+      rosetteColor: '#1D9BF0', // Official Twitter Verified Blue
+      checkColor: '#FFFFFF',
+      glow: 'shadow-[0_0_8px_rgba(29,155,240,0.35)]',
     },
     2: {
       title: 'Trackr Elite Member',
       desc: 'Earned by posting for 30 consecutive days.',
-      gradientId: 'goldGrad',
-      gradient: (
-        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FDE047" />
-          <stop offset="50%" stopColor="#EAB308" />
-          <stop offset="100%" stopColor="#CA8A04" />
-        </linearGradient>
-      ),
-      glow: 'shadow-[0_0_8px_rgba(234,179,8,0.5)]',
+      rosetteColor: '#EAB308', // Gold
+      checkColor: '#FFFFFF',
+      glow: 'shadow-[0_0_8px_rgba(234,179,8,0.45)]',
     },
     3: {
       title: 'Trackr Legend Member',
       desc: 'Earned by posting for 100 consecutive days.',
-      gradientId: 'diamondGrad',
-      gradient: (
-        <linearGradient id="diamondGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#22D3EE" />
-          <stop offset="50%" stopColor="#6366F1" />
-          <stop offset="100%" stopColor="#EC4899" />
-        </linearGradient>
-      ),
-      glow: 'shadow-[0_0_12px_rgba(99,102,241,0.6)] animate-pulse',
+      rosetteColor: '#8B5CF6', // Purple Diamond
+      checkColor: '#FFFFFF',
+      glow: 'shadow-[0_0_12px_rgba(139,92,246,0.55)]',
     },
   }
 
-  const details = badgeDetails[level as 1 | 2 | 3]
-
-  // Animation variants
-  const getAnimation = (): any => {
-    if (level === 3) {
-      // Continuous gentle pulse & breathing for Diamond
-      return {
-        scale: hovered ? 1.25 : [1, 1.06, 1],
-        rotate: hovered ? 360 : 0,
-        transition: {
-          scale: hovered ? { duration: 0.2 } : { repeat: Infinity, duration: 2.5, ease: 'easeInOut' },
-          rotate: { duration: 0.5, ease: 'easeOut' },
-        },
-      }
-    }
-    // Standard spring scale for Gold & Blue
-    return {
-      scale: hovered ? 1.2 : 1,
-      rotate: hovered ? 15 : 0,
-      transition: { type: 'spring', stiffness: 300, damping: 12 },
-    }
-  }
+  const details = badgeDetails[effectiveLevel as 1 | 2 | 3]
 
   return (
     <div
-      className="relative inline-flex items-center justify-center cursor-pointer select-none group vertical-middle shrink-0"
+      className={`relative inline-flex items-center justify-center cursor-pointer select-none group shrink-0 ${className}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      title={details.title}
     >
       <motion.div
-        animate={getAnimation()}
-        className={`rounded-full flex items-center justify-center ${details.glow} transition-shadow duration-300`}
+        animate={{
+          scale: hovered ? 1.15 : 1,
+        }}
+        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+        className={`flex items-center justify-center ${details.glow} rounded-full transition-shadow duration-200`}
       >
+        {/* Authentic Twitter Verified Seal & Checkmark */}
         <svg
-          viewBox="0 0 24 24"
-          className={`${badgeSize} fill-current`}
-          style={{
-            color: `url(#${details.gradientId})`,
-            filter: level === 2 ? 'drop-shadow(0 0 2px rgba(250, 204, 21, 0.4))' : undefined,
-          }}
+          viewBox="0 0 22 22"
+          aria-label={details.title}
+          role="img"
+          className={`${badgeSize} shrink-0 block`}
         >
-          <defs>{details.gradient}</defs>
-          {/* Twitter-like verification badge wavy seal path */}
-          <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.17-2.9-.81-3.88-.98-.98-2.49-1.27-3.88-.81C14.67 2.66 13.43 1.75 12 1.75s-2.67.91-3.37 2.22c-1.39-.46-2.9-.17-3.88.81-.98.98-1.27 2.49-.81 3.88C2.66 9.33 1.75 10.57 1.75 12s.91 2.67 2.22 3.37c-.46 1.39-.17 2.9.81 3.88.98.98 2.49 1.27 3.88.81.7 1.31 1.94 2.22 3.37 2.22s2.67-.91 3.37-2.22c1.39.46 2.9.17 3.88-.81.98-.98 1.27-2.49.81-3.88 1.31-.7 2.22-1.94 2.22-3.37zM10.85 16.5l-3.5-3.5 1.41-1.41 2.09 2.09 5.68-5.68 1.41 1.41-7.09 7.09z" />
+          <g>
+            {/* 12-lobed Scalloped Rosette Seal */}
+            <path
+              d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816z"
+              fill={details.rosetteColor}
+            />
+            {/* Crisp Solid White Checkmark */}
+            <path
+              d="M9.662 14.85l-3.429-3.428 1.293-1.302 2.136 2.136 5.467-5.467 1.293 1.302-6.76 6.759z"
+              fill={details.checkColor}
+            />
+          </g>
         </svg>
-
-        {/* Shine sweeping effect for Gold level */}
-        {level === 2 && (
-          <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
-            <div className="w-[300%] h-[300%] bg-gradient-to-tr from-transparent via-white/50 to-transparent rotate-45 absolute -top-[100%] -left-[100%] transition-transform duration-1000 group-hover:translate-x-[50%] group-hover:translate-y-[50%]" />
-          </div>
-        )}
       </motion.div>
 
-      {/* Modern custom Tooltip */}
-      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none transition-all duration-200 z-50">
-        <div className="bg-gray-900/95 dark:bg-[#1A1A24]/95 text-white p-2.5 rounded-xl shadow-xl border border-white/10 dark:border-gray-800 text-[11px] w-48 text-center backdrop-blur-md">
-          <p className="font-extrabold text-violet-400 mb-0.5 tracking-wide uppercase text-[9px]">{details.title}</p>
-          <p className="text-gray-300 font-medium leading-normal">{details.desc}</p>
-          {/* Arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-top-gray-900 dark:border-top-[#1A1A24]" />
+      {/* Modern Tooltip */}
+      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none transition-all duration-150 z-50">
+        <div className="bg-gray-900/95 dark:bg-[#1A1A24]/95 text-white py-1.5 px-3 rounded-xl shadow-xl border border-white/10 dark:border-gray-800 text-[11px] whitespace-nowrap text-center backdrop-blur-md">
+          <p className="font-bold text-[#1D9BF0] flex items-center justify-center gap-1">
+            <span>{details.title}</span>
+          </p>
+          <p className="text-gray-300 text-[10px] font-normal mt-0.5">{details.desc}</p>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-[#1A1A24]" />
         </div>
       </div>
     </div>

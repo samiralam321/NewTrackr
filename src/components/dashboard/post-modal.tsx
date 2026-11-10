@@ -498,7 +498,7 @@ export function PostModal({ user, profile }: PostModalProps) {
                 ) : (
                   mentionResults.map((u) => {
                     const handle = getUserHandle(u.full_name)
-                    const badgeLevel = getBadgeLevel(u.consistency_score)
+                    const badgeLevel = getBadgeLevel(u.consistency_score, u.full_name)
                     return (
                       <button
                         key={u.id}
@@ -514,7 +514,7 @@ export function PostModal({ user, profile }: PostModalProps) {
                         <div className="min-w-0 flex-1">
                           <div className="text-[13px] font-bold text-gray-900 dark:text-white flex items-center gap-1 truncate group-hover:text-violet-600 transition-colors">
                             <span className="truncate">{u.full_name}</span>
-                            <VerifiedBadge level={badgeLevel} />
+                            <VerifiedBadge level={badgeLevel} nameOrHandle={u.full_name} />
                           </div>
                           <div className="text-[11px] text-gray-400 truncate">
                             {handle}

@@ -439,7 +439,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
               {mentionResults.length > 0 ? (
                 mentionResults.map((u) => {
                   const handle = getUserHandle(u.full_name)
-                  const badgeLevel = getBadgeLevel(u.consistency_score)
+                  const badgeLevel = getBadgeLevel(u.consistency_score, u.full_name)
                   return (
                     <button
                       key={u.id}
@@ -457,7 +457,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
                           <span className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-violet-600 dark:group-hover:text-violet-400">
                             {u.full_name}
                           </span>
-                          <VerifiedBadge level={badgeLevel} size="sm" />
+                          <VerifiedBadge level={badgeLevel} nameOrHandle={u.full_name} size="sm" />
                         </div>
                         <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">
                           {handle}

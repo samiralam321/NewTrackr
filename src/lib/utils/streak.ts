@@ -1,8 +1,26 @@
-export function getBadgeLevel(consistencyScore: number | null | undefined): number {
+export function isUserAdmin(nameOrHandle?: string | null): boolean {
+  if (!nameOrHandle) return false
+  const clean = nameOrHandle.toLowerCase().trim()
+  return (
+    clean.includes('samir') ||
+    clean.includes('samcper') ||
+    clean === 'samir alam' ||
+    clean === '@samcper'
+  )
+}
+
+export function getBadgeLevel(
+  consistencyScore?: number | null | undefined,
+  nameOrHandle?: string | null
+): number {
+  // Admin Samir Alam (@samCPer) always receives the verified Blue Tick badge
+  if (isUserAdmin(nameOrHandle)) {
+    return 1
+  }
   const score = consistencyScore || 0
-  if (score >= 100) return 3
-  if (score >= 30) return 2
-  if (score >= 5) return 1
+  if (score >= 100) return 3 // Legend Member (100+ days streak)
+  if (score >= 30) return 2  // Elite Member (30+ days streak)
+  if (score >= 5) return 1   // Verified Blue Tick (5+ consecutive days of posting)
   return 0
 }
 
@@ -10,7 +28,7 @@ export async function updateUserStreakAndBadge(supabase: any, userId: string) {
   // Fetch user profile
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('consistency_score, last_post_date')
+    .select('consistency_score, last_post_date, full_name')
     .eq('id', userId)
     .single()
 
@@ -39,12 +57,12 @@ export async function updateUserStreakAndBadge(supabase: any, userId: string) {
     // If diffDays <= 0, they already posted today on this UTC date, maintain streak
   }
 
-  // Calculate badge level based on new streak
-  const newBadgeLevel = getBadgeLevel(newStreak)
-  const oldBadgeLevel = getBadgeLevel(profile.consistency_score)
+  // Calculate badge level based on new streak (incorporating admin verification)
+  const newBadgeLevel = getBadgeLevel(newStreak, profile.full_name)
+  const oldBadgeLevel = getBadgeLevel(profile.consistency_score, profile.full_name)
   const isNewBadgeEarned = newBadgeLevel > oldBadgeLevel
 
-  // Update profile (badge_level is calculated dynamically, so we only save consistency_score & last_post_date)
+  // Update profile
   const updateData: any = {
     consistency_score: newStreak,
     last_post_date: todayStr
@@ -57,7 +75,7 @@ export async function updateUserStreakAndBadge(supabase: any, userId: string) {
 
   if (updateError) return { error: updateError }
 
-  // Create notification if a new badge was earned (use post_id: null to avoid FK constraint errors)
+  // Create notification if a new badge was earned
   if (isNewBadgeEarned) {
     try {
       await supabase.from('notifications').insert({

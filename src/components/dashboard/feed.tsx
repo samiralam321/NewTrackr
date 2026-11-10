@@ -843,7 +843,7 @@ export function Feed({
                     >
                       {post.profiles?.full_name || 'Anonymous User'}
                     </Link>
-                    <VerifiedBadge level={getBadgeLevel(post.profiles?.consistency_score)} />
+                    <VerifiedBadge level={getBadgeLevel(post.profiles?.consistency_score, post.profiles?.full_name)} nameOrHandle={post.profiles?.full_name} />
                     <span className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal truncate">
                       {getUserHandle(post.profiles?.full_name)}
                     </span>
@@ -1127,7 +1127,7 @@ export function Feed({
                         <div className="bg-gray-50 dark:bg-[#1A1A24] rounded-2xl rounded-tl-none px-4 py-2.5 flex-1 transition-colors">
                           <p className="text-[14px] font-bold text-[#0f1419] dark:text-[#e7e9ea] mb-0.5 flex items-center gap-1.5 flex-wrap">
                             <span>{comment.profiles?.full_name}</span>
-                            <VerifiedBadge level={getBadgeLevel(comment.profiles?.consistency_score)} />
+                            <VerifiedBadge level={getBadgeLevel(comment.profiles?.consistency_score, comment.profiles?.full_name)} nameOrHandle={comment.profiles?.full_name} />
                             {(comment as any).created_at && (
                               <>
                                 <span className="text-[#536471] dark:text-[#71767b] text-[12px] font-normal">·</span>
