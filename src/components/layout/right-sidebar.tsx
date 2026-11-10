@@ -4,7 +4,6 @@ import { SearchBar } from "@/components/widgets/search-bar"
 import { TrendingWidget } from "@/components/widgets/trending-widget"
 import { UpcomingHackathons } from "@/components/widgets/upcoming-hackathons"
 import { WhoToFollow } from "@/components/widgets/who-to-follow"
-import { CollegeCommunitiesWidget } from "@/components/widgets/college-communities-widget"
 
 interface RightSidebarProps {
   profile?: any
@@ -25,9 +24,6 @@ export function RightSidebar({ profile, currentUserId }: RightSidebarProps) {
 
       {/* Real Supabase Students Discovery */}
       <WhoToFollow currentUserId={currentUserId || profile?.id} />
-
-      {/* College Communities Gateway */}
-      <CollegeCommunitiesWidget />
 
       {/* Footer Branding */}
       <div className="pt-2 pb-4 text-center">
