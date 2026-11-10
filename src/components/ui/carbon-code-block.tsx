@@ -476,25 +476,37 @@ export function CarbonCodeBlock({
           )}
         </div>
 
-        {/* Expand / Collapse Footer Toggle for Longer Snippets */}
-        {isCollapsible && (
-          <button
-            type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full py-1.5 px-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-gray-400 hover:text-white bg-black/35 hover:bg-black/50 border-t border-white/5 transition-colors cursor-pointer select-none"
-          >
-            {isExpanded ? (
-              <>
-                <ChevronUp className="w-3.5 h-3.5" />
-                <span>Collapse snippet</span>
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-3.5 h-3.5" />
-                <span>Show more ({lines.length} lines)</span>
-              </>
-            )}
-          </button>
+        {/* Card Footer: Toggle & Aesthetic Slogan */}
+        {isCollapsible ? (
+          <div className="w-full py-1.5 px-3 flex items-center justify-between text-[11px] bg-black/35 border-t border-white/5 select-none">
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-1.5 font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer"
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="w-3.5 h-3.5" />
+                  <span>Collapse snippet</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                  <span>Show more ({lines.length} lines)</span>
+                </>
+              )}
+            </button>
+            <span className="text-[10px] font-mono tracking-wider bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent font-medium">
+              Learn. Code. Share. Repeat.
+            </span>
+          </div>
+        ) : (
+          <div className="w-full py-1.5 px-3 flex items-center justify-between text-[10px] bg-black/25 border-t border-white/5 select-none">
+            <span className="text-gray-500 font-mono tracking-wider text-[9.5px]">Trackr</span>
+            <span className="font-mono tracking-wider bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent font-medium">
+              Learn. Code. Share. Repeat.
+            </span>
+          </div>
         )}
       </div>
     </div>

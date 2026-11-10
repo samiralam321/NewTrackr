@@ -264,7 +264,15 @@ export function CodeSnippetModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-5 py-3.5 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#12101A] flex items-center justify-end shrink-0">
+        <div className="px-5 py-3 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#12101A] flex items-center justify-between gap-3 shrink-0">
+          {/* Aesthetic Slogan */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-violet-500/[0.08] via-fuchsia-500/[0.08] to-indigo-500/[0.08] dark:from-violet-500/15 dark:via-fuchsia-500/15 dark:to-indigo-500/15 border border-violet-500/20 dark:border-violet-500/30 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-violet-500 dark:text-violet-400 shrink-0" />
+            <span className="text-[11px] sm:text-xs font-semibold tracking-wider bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 dark:from-violet-300 dark:via-fuchsia-300 dark:to-indigo-300 bg-clip-text text-transparent font-mono select-none">
+              Learn. Code. Share. Repeat.
+            </span>
+          </div>
+
           <div className="flex items-center gap-2.5">
             <Button
               type="button"
