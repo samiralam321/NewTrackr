@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Bell, Heart, MessageCircle, UserPlus, AtSign, ChevronLeft } from "lucide-react"
+import { Bell, Heart, MessageCircle, UserPlus, AtSign, ChevronLeft, Repeat2, PenLine } from "lucide-react"
 import Link from "next/link"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
@@ -12,7 +12,7 @@ type Notification = {
   id: string
   user_id: string
   actor_id: string
-  type: 'like' | 'comment' | 'follow' | 'mention' | 'badge'
+  type: 'like' | 'comment' | 'follow' | 'mention' | 'badge' | 'repost' | 'quote'
   post_id?: string
   is_read: boolean
   created_at: string
@@ -86,6 +86,8 @@ export default function NotificationsPage() {
       case 'comment': return <MessageCircle className="w-5 h-5 text-blue-500 fill-current" />
       case 'follow': return <UserPlus className="w-5 h-5 text-emerald-500" />
       case 'mention': return <AtSign className="w-5 h-5 text-violet-500" />
+      case 'repost': return <Repeat2 className="w-5 h-5 text-emerald-500 stroke-[2.2]" />
+      case 'quote': return <PenLine className="w-5 h-5 text-violet-500 stroke-[2.2]" />
       default: return <Bell className="w-5 h-5 text-gray-500" />
     }
   }
@@ -135,6 +137,22 @@ export default function NotificationsPage() {
             <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
             <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score, actorName)} nameOrHandle={actorName} />
             <span>mentioned you</span>
+          </span>
+        )
+      case 'repost':
+        return (
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
+            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score, actorName)} nameOrHandle={actorName} />
+            <span>reposted your post</span>
+          </span>
+        )
+      case 'quote':
+        return (
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span className="font-semibold text-gray-900 dark:text-white">{actorName}</span>
+            <VerifiedBadge level={getBadgeLevel((n.actor as any)?.consistency_score, actorName)} nameOrHandle={actorName} />
+            <span>quoted your post</span>
           </span>
         )
       default: return <span>New notification from {actorName}</span>

@@ -15,6 +15,9 @@ import { formatTimeCompact, formatFullDateTime } from "@/lib/utils/date"
 import { getCacheEntry, setCacheEntry, mutateAllFeedCaches } from "@/lib/cache/client-cache"
 import { ImagePreviewModal } from "@/components/ui/image-preview-modal"
 import { LikeButton } from "@/components/ui/like-button"
+import { RepostButton } from "@/components/ui/repost-button"
+import { EmbeddedQuoteCard } from "@/components/dashboard/embedded-quote-card"
+import { QuoteModal } from "@/components/dashboard/quote-modal"
 
 export function Feed({ 
   userIdFilter,
@@ -52,7 +55,15 @@ export function Feed({
   })
   const [currentUserId, setCurrentUserId] = useState<string | null>(currentUserIdProp || null)
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({})
-  const [repostedPosts, setRepostedPosts] = useState<Record<string, boolean>>({})
+  const [repostedPosts, setRepostedPosts] = useState<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('trackr_user_reposts') || '{}')
+    } catch {
+      return {}
+    }
+  })
+  const [quoteTargetPost, setQuoteTargetPost] = useState<Post | null>(null)
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false)
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({})
   const [postComments, setPostComments] = useState<Record<string, Comment[]>>({})
   const [isLoadingComments, setIsLoadingComments] = useState<Record<string, boolean>>({})
@@ -214,6 +225,11 @@ export function Feed({
     }
   }, [currentFeedKey, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter, opportunitiesOnlyFilter, eventsOnlyFilter, sortBy, currentUserIdProp])
 
+  const handleOpenQuote = (post: Post) => {
+    setQuoteTargetPost(post)
+    setIsQuoteModalOpen(true)
+  }
+
   const handleRepost = async (target: Post | string) => {
     const uid = currentUserId || currentUserIdProp
     if (!uid) {
@@ -223,16 +239,20 @@ export function Feed({
 
     const postId = typeof target === 'string' ? target : target.id
     const post = typeof target === 'string' ? posts.find(p => p.id === target) : target
+
+    if (post && post.user_id === uid) {
+      return
+    }
+
     const isCurrentlyReposted = !!repostedPosts[postId]
+    if (isCurrentlyReposted) {
+      handleUndoRepost(target)
+      return
+    }
 
     // 1. Instant optimistic UI toggle
     setRepostedPosts(prev => {
-      const next = { ...prev }
-      if (isCurrentlyReposted) {
-        delete next[postId]
-      } else {
-        next[postId] = true
-      }
+      const next = { ...prev, [postId]: true }
       try {
         localStorage.setItem('trackr_user_reposts', JSON.stringify(next))
       } catch (e) {}
@@ -244,7 +264,8 @@ export function Feed({
         const count = (p as any).reposts_count || 0
         return {
           ...p,
-          reposts_count: Math.max(0, count + (isCurrentlyReposted ? -1 : 1))
+          user_has_reposted: true,
+          reposts_count: count + 1
         }
       }
       return p
@@ -255,28 +276,112 @@ export function Feed({
       liveChannelRef.current?.send({
         type: 'broadcast',
         event: 'repost_toggled',
-        payload: { postId, userId: uid, action: isCurrentlyReposted ? 'unrepost' : 'repost' }
+        payload: { postId, userId: uid, action: 'repost' }
       })
     } catch (e) {}
 
-    // 3. Persist repost as real feed item in Supabase posts table
-    if (!isCurrentlyReposted && post) {
-      try {
-        const authorName = post.profiles?.full_name || 'student'
-        const { data: newRepostPost } = await supabase.from('posts').insert({
-          user_id: uid,
-          content: `🔁 Reposted from ${authorName}:\n\n${post.content}`,
-          type: null,
-          image_url: post.image_url,
-          tags: post.tags || []
-        }).select(`*, profiles:user_id(id, full_name, avatar_url, bio, college, consistency_score, streak)`).single()
+    // 3. Persist relational repost in Supabase
+    try {
+      // A) Try inserting into relational reposts table
+      await supabase.from('reposts').insert({
+        post_id: postId,
+        user_id: uid
+      })
 
-        if (newRepostPost) {
-          window.dispatchEvent(new CustomEvent('post-created', { detail: newRepostPost }))
-        }
-      } catch (err) {
-        console.warn('Could not insert repost feed post:', err)
+      // B) Insert timeline repost reference in posts table (without duplicating content!)
+      const repostPayload: any = {
+        user_id: uid,
+        content: '',
+        tags: [`repost:${postId}`],
+        type: 'Repost',
+        repost_of_id: postId
       }
+
+      const { error: repostErr } = await supabase
+        .from('posts')
+        .insert(repostPayload)
+
+      if (repostErr) {
+        // Fallback if repost_of_id or type column doesn't exist yet
+        delete repostPayload.repost_of_id
+        delete repostPayload.type
+        await supabase.from('posts').insert(repostPayload)
+      }
+
+      // C) Send notification to original post author if not own post
+      if (post && post.user_id !== uid) {
+        try {
+          await supabase.from('notifications').insert({
+            user_id: post.user_id,
+            actor_id: uid,
+            type: 'repost',
+            post_id: postId,
+            is_read: false
+          })
+        } catch (notifErr) {
+          try {
+            await supabase.from('notifications').insert({
+              user_id: post.user_id,
+              actor_id: uid,
+              type: 'mention',
+              post_id: postId,
+              is_read: false
+            })
+          } catch (e) {}
+        }
+      }
+    } catch (err) {
+      console.warn('Could not insert repost:', err)
+    }
+  }
+
+  const handleUndoRepost = async (target: Post | string) => {
+    const uid = currentUserId || currentUserIdProp
+    if (!uid) return
+
+    const postId = typeof target === 'string' ? target : target.id
+
+    // 1. Instant optimistic UI toggle
+    setRepostedPosts(prev => {
+      const next = { ...prev }
+      delete next[postId]
+      try {
+        localStorage.setItem('trackr_user_reposts', JSON.stringify(next))
+      } catch (e) {}
+      return next
+    })
+
+    setPosts(prev => {
+      // Remove any pure repost timeline item by current user for this post
+      const filtered = prev.filter(p => !(p.is_repost && p.reposted_by?.id === uid && p.id === postId))
+      return filtered.map(p => {
+        if (p.id === postId) {
+          const count = (p as any).reposts_count || 0
+          return {
+            ...p,
+            user_has_reposted: false,
+            reposts_count: Math.max(0, count - 1)
+          }
+        }
+        return p
+      })
+    })
+
+    // 2. Broadcast unrepost to other viewers in real time
+    try {
+      liveChannelRef.current?.send({
+        type: 'broadcast',
+        event: 'repost_toggled',
+        payload: { postId, userId: uid, action: 'unrepost' }
+      })
+    } catch (e) {}
+
+    // 3. Delete from Supabase
+    try {
+      await supabase.from('reposts').delete().eq('post_id', postId).eq('user_id', uid)
+      await supabase.from('posts').delete().eq('user_id', uid).contains('tags', [`repost:${postId}`])
+    } catch (err) {
+      console.warn("Could not undo repost in database:", err)
     }
   }
 
@@ -343,21 +448,141 @@ export function Feed({
       return
     }
 
-    let formattedPosts = data.map((p: any) => {
-      const activePinnedId = localStorage.getItem(`pinned_post_${userIdFilter || currentUid}`)
-      return {
-        ...p,
-        user_has_liked: p.likes.some((l: any) => l.user_id === currentUid),
-        user_has_bookmarked: p.bookmarks.some((b: any) => b.user_id === currentUid),
-        likes_count: p.likes.length,
-        comments_count: p.comments.length,
-        bookmarks_count: p.bookmarks.length,
-        is_pinned: p.id === activePinnedId
+    // Build raw post map to resolve quotes and reposts
+    const rawPostMap = new Map<string, any>()
+    data.forEach((p: any) => rawPostMap.set(p.id, p))
+
+    // Collect any missing referenced IDs (for quotes or pure reposts)
+    const missingIds = new Set<string>()
+    data.forEach((p: any) => {
+      const quoteTag = p.tags?.find((t: string) => typeof t === 'string' && t.startsWith('quote:'))
+      const quotedId = p.quoted_post_id || (quoteTag ? quoteTag.split('quote:')[1] : null)
+      if (quotedId && !rawPostMap.has(quotedId)) {
+        missingIds.add(quotedId)
       }
-    }) as Post[]
+
+      const repostTag = p.tags?.find((t: string) => typeof t === 'string' && t.startsWith('repost:'))
+      const repostId = p.repost_of_id || (repostTag ? repostTag.split('repost:')[1] : null)
+      if (repostId && !rawPostMap.has(repostId)) {
+        missingIds.add(repostId)
+      }
+    })
+
+    if (missingIds.size > 0) {
+      try {
+        const { data: missingPosts } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            profiles!posts_user_id_fkey(id, full_name, avatar_url, bio, college, consistency_score, streak),
+            likes(user_id),
+            comments(user_id, id),
+            bookmarks(user_id)
+          `)
+          .in('id', Array.from(missingIds))
+
+        if (missingPosts) {
+          missingPosts.forEach((mp: any) => rawPostMap.set(mp.id, mp))
+        }
+      } catch (e) {}
+    }
+
+    // Calculate repost counts and user repost status
+    const repostCountsMap: Record<string, number> = {}
+    const userRepostsSet = new Set<string>()
+
+    try {
+      const { data: dbReposts } = await supabase.from('reposts').select('post_id, user_id')
+      if (dbReposts) {
+        dbReposts.forEach((r: any) => {
+          repostCountsMap[r.post_id] = (repostCountsMap[r.post_id] || 0) + 1
+          if (r.user_id === currentUid) {
+            userRepostsSet.add(r.post_id)
+          }
+        })
+      }
+    } catch (e) {}
+
+    data.forEach((p: any) => {
+      const repostTag = p.tags?.find((t: string) => typeof t === 'string' && t.startsWith('repost:'))
+      const repostId = p.repost_of_id || (repostTag ? repostTag.split('repost:')[1] : null)
+      if (repostId) {
+        repostCountsMap[repostId] = (repostCountsMap[repostId] || 0) + 1
+        if (p.user_id === currentUid) {
+          userRepostsSet.add(repostId)
+        }
+      }
+    })
+
+    try {
+      const localReposts = JSON.parse(localStorage.getItem('trackr_user_reposts') || '{}')
+      Object.keys(localReposts).forEach(pid => {
+        if (localReposts[pid]) {
+          userRepostsSet.add(pid)
+        }
+      })
+    } catch (e) {}
+
+    const mergedRepostsObj: Record<string, boolean> = {}
+    userRepostsSet.forEach(id => {
+      mergedRepostsObj[id] = true
+    })
+    setRepostedPosts(mergedRepostsObj)
+    try {
+      localStorage.setItem('trackr_user_reposts', JSON.stringify(mergedRepostsObj))
+    } catch (e) {}
+
+    const activePinnedId = localStorage.getItem(`pinned_post_${userIdFilter || currentUid}`)
+    let formattedPosts: Post[] = []
+
+    for (const p of data) {
+      const repostTag = p.tags?.find((t: string) => typeof t === 'string' && t.startsWith('repost:'))
+      const repostId = p.repost_of_id || (repostTag ? repostTag.split('repost:')[1] : null)
+
+      // If pure repost timeline entry:
+      if (repostId) {
+        const original = rawPostMap.get(repostId)
+        if (original) {
+          formattedPosts.push({
+            ...original,
+            feed_item_id: `repost-${p.id}`,
+            is_repost: true,
+            reposted_by: p.profiles,
+            reposted_at: p.created_at,
+            user_has_liked: (original.likes || []).some((l: any) => l.user_id === currentUid),
+            user_has_bookmarked: (original.bookmarks || []).some((b: any) => b.user_id === currentUid),
+            likes_count: (original.likes || []).length,
+            comments_count: (original.comments || []).length,
+            bookmarks_count: (original.bookmarks || []).length,
+            reposts_count: repostCountsMap[original.id] || 0,
+            user_has_reposted: userRepostsSet.has(original.id)
+          })
+        }
+        continue
+      }
+
+      // Normal post or Quote post:
+      const quoteTag = p.tags?.find((t: string) => typeof t === 'string' && t.startsWith('quote:'))
+      const quotedId = p.quoted_post_id || (quoteTag ? quoteTag.split('quote:')[1] : null)
+      const quotedPost = quotedId ? (rawPostMap.get(quotedId) || null) : null
+
+      formattedPosts.push({
+        ...p,
+        feed_item_id: p.id,
+        quoted_post_id: quotedId,
+        quoted_post: quotedPost,
+        user_has_liked: (p.likes || []).some((l: any) => l.user_id === currentUid),
+        user_has_bookmarked: (p.bookmarks || []).some((b: any) => b.user_id === currentUid),
+        likes_count: (p.likes || []).length,
+        comments_count: (p.comments || []).length,
+        bookmarks_count: (p.bookmarks || []).length,
+        reposts_count: repostCountsMap[p.id] || 0,
+        user_has_reposted: userRepostsSet.has(p.id),
+        is_pinned: p.id === activePinnedId
+      })
+    }
 
     // Sort the pinned post to the very top of the feed
-    const activePinnedId = localStorage.getItem(`pinned_post_${userIdFilter || currentUid}`)
     if (activePinnedId) {
       formattedPosts = formattedPosts.sort((a, b) => (a.id === activePinnedId ? -1 : b.id === activePinnedId ? 1 : 0))
     }
@@ -711,7 +936,7 @@ export function Feed({
 
   const handleCopyPostLink = async (post: Post) => {
     try {
-      const postUrl = `${window.location.origin}/profile/${post.user_id}?postId=${post.id}`
+      const postUrl = `${window.location.origin}/post/${post.id}`
       await navigator.clipboard.writeText(postUrl)
       setCopiedPostId(`link-${post.id}`)
       setCopiedToast("Post link copied to clipboard! 🔗")
@@ -728,7 +953,7 @@ export function Feed({
   }
 
   const handleSharePost = async (post: Post) => {
-    const postUrl = `${window.location.origin}/profile/${post.user_id}?postId=${post.id}`
+    const postUrl = `${window.location.origin}/post/${post.id}`
     const shareData = {
       title: `${post.profiles?.full_name || 'A user'} shared a progress update on Trackr`,
       text: extractCleanPlainText(post.content).substring(0, 100) + '...',
@@ -853,22 +1078,40 @@ export function Feed({
               </>
             )}
 
-            <article className={`px-4 py-3.5 hover:bg-black/[0.015] dark:hover:bg-white/[0.02] transition-colors border-b border-[#eff3f4] dark:border-[#2f3336] flex gap-3 text-left w-full group/card ${isJourneyMode ? 'relative z-10' : ''}`}>
-              {/* Left Column: Author Avatar */}
-              <Link href={`/profile/${post.user_id}`} className="shrink-0 group mt-0.5">
-                <img 
-                  src={post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.profiles?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} 
-                  className="w-10 h-10 rounded-full object-cover group-hover:opacity-90 transition-opacity" 
-                  alt={post.profiles?.full_name || "Author"} 
-                  width={40} 
-                  height={40} 
-                  loading="lazy" 
-                  decoding="async" 
-                />
-              </Link>
+            <article 
+              key={post.feed_item_id || post.id}
+              className={`px-4 py-3.5 hover:bg-black/[0.015] dark:hover:bg-white/[0.02] transition-colors border-b border-[#eff3f4] dark:border-[#2f3336] flex flex-col text-left w-full group/card ${isJourneyMode ? 'relative z-10' : ''}`}
+            >
+              {/* Repost Header Banner: Display "Username reposted" if pure repost */}
+              {post.is_repost && (
+                <div className="flex items-center gap-2 text-xs font-bold text-[#536471] dark:text-[#71767b] mb-1.5 ml-11">
+                  <Repeat2 className="w-4 h-4 stroke-[2.3] text-emerald-500 shrink-0" />
+                  <Link 
+                    href={`/profile/${post.reposted_by?.id || ''}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors"
+                  >
+                    {post.reposted_by?.id === currentUserId ? 'You' : (post.reposted_by?.full_name || 'Someone')} reposted
+                  </Link>
+                </div>
+              )}
 
-              {/* Right Column: Post Body, Header, Media, Actions */}
-              <div className="flex-1 min-w-0">
+              <div className="flex gap-3 text-left w-full">
+                {/* Left Column: Author Avatar */}
+                <Link href={`/profile/${post.user_id}`} className="shrink-0 group mt-0.5">
+                  <img 
+                    src={post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.profiles?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} 
+                    className="w-10 h-10 rounded-full object-cover group-hover:opacity-90 transition-opacity" 
+                    alt={post.profiles?.full_name || "Author"} 
+                    width={40} 
+                    height={40} 
+                    loading="lazy" 
+                    decoding="async" 
+                  />
+                </Link>
+
+                {/* Right Column: Post Body, Header, Media, Actions */}
+                <div className="flex-1 min-w-0">
                 {/* Twitter-style Header Line: Name · @Handle · Time · Category */}
                 <div className="flex items-center justify-between gap-1 mb-1">
                   <div className="flex items-center gap-1.5 flex-wrap min-w-0">
@@ -1120,6 +1363,15 @@ export function Feed({
                     </div>
                   </div>
                 )}
+
+                {/* Embedded Quoted Post Card (if Quote Post) */}
+                {(post.quoted_post || post.quoted_post_id) && (
+                  <EmbeddedQuoteCard 
+                    quotedPost={post.quoted_post} 
+                    quotedPostId={post.quoted_post_id} 
+                    onImageClick={setPreviewImageUrl} 
+                  />
+                )}
                   
                 {/* Twitter Action Bar: Comment, Repost, Like, Bookmark, Share */}
                 <div className="flex items-center justify-between pt-1.5 text-[#536471] dark:text-[#71767b] max-w-md -ml-2">
@@ -1139,23 +1391,20 @@ export function Feed({
                     <span className="text-[14px] font-medium leading-none">{(post as any).comments_count || 0}</span>
                   </button>
 
-                  {/* Repost */}
-                  <button 
-                    onClick={() => handleRepost(post)} 
-                    className={`flex items-center gap-1.5 text-[14px] font-medium hover:text-emerald-600 dark:hover:text-emerald-400 group/btn transition-colors cursor-pointer ${
-                      repostedPosts[post.id] ? 'text-emerald-600 dark:text-emerald-400' : ''
-                    }`}
-                  >
-                    <div className="relative">
-                      <div className="p-2 rounded-full group-hover/btn:bg-emerald-50 dark:group-hover/btn:bg-emerald-950/40 transition-colors">
-                        <Repeat2 className="w-[19px] h-[19px]" />
-                      </div>
-                      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xs text-white text-[11px] leading-tight font-medium rounded-md whitespace-nowrap shadow-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-150 z-50">
-                        {repostedPosts[post.id] ? 'Undo Repost' : 'Repost'}
-                      </div>
-                    </div>
-                    <span className="text-[14px] font-medium leading-none">{((post as any).reposts_count || 0) + (repostedPosts[post.id] ? 1 : 0)}</span>
-                  </button>
+                  {/* Twitter/X Style Repost & Quote Button */}
+                  <RepostButton
+                    isReposted={Boolean(repostedPosts[post.id] || post.user_has_reposted)}
+                    repostsCount={Math.max(
+                      0,
+                      (post.reposts_count || 0) + 
+                      (repostedPosts[post.id] && !post.user_has_reposted ? 1 : 0) - 
+                      (!repostedPosts[post.id] && post.user_has_reposted ? 1 : 0)
+                    )}
+                    isOwnPost={post.user_id === currentUserId}
+                    onRepost={() => handleRepost(post)}
+                    onUndoRepost={() => handleUndoRepost(post)}
+                    onQuote={() => handleOpenQuote(post)}
+                  />
 
                   {/* Like */}
                   <LikeButton
@@ -1275,6 +1524,7 @@ export function Feed({
                 </div>
               </div>
             )}
+            </div>
           </div>
         </article>
         </div>
@@ -1383,6 +1633,28 @@ export function Feed({
         imageUrl={previewImageUrl}
         isOpen={!!previewImageUrl}
         onClose={() => setPreviewImageUrl(null)}
+      />
+
+      {/* Quote Composer Modal */}
+      <QuoteModal
+        open={isQuoteModalOpen}
+        onOpenChange={setIsQuoteModalOpen}
+        targetPost={quoteTargetPost}
+        user={{ id: currentUserId }}
+        profile={{ id: currentUserId, full_name: 'You' }}
+        onSuccess={() => {
+          if (quoteTargetPost) {
+            setPosts(prev => prev.map(p => {
+              if (p.id === quoteTargetPost.id) {
+                return {
+                  ...p,
+                  reposts_count: ((p as any).reposts_count || 0) + 1
+                }
+              }
+              return p
+            }))
+          }
+        }}
       />
 
       {/* Floating Copied Toast Notification */}
