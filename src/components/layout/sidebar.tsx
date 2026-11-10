@@ -343,7 +343,7 @@ export function Sidebar({ profile }: { profile?: any }) {
         <button
           type="button"
           onClick={handlePostClick}
-          className="w-full h-[52px] rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-[17px] shadow-md shadow-violet-500/25 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer select-none"
+          className="w-full h-[52px] rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-[17px] active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer select-none"
         >
           Post
         </button>

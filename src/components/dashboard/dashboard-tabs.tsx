@@ -67,7 +67,7 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
     <div className="w-full">
       {/* Sliding Pill Navigation Bar (Previous Trackr Style) */}
       <div className="sticky top-0 z-20 backdrop-blur-md bg-white/90 dark:bg-black/90 px-3.5 py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] flex items-center overflow-x-auto no-scrollbar">
-        <div className="inline-flex items-center gap-1 p-1 bg-[#F4F3F7] dark:bg-[#15141D] rounded-full border border-gray-200/70 dark:border-[#2D2B3B]/80 shadow-xs">
+        <div className="inline-flex items-center gap-1 p-1 bg-[#F4F3F7] dark:bg-[#15141D] rounded-full border border-gray-200/70 dark:border-[#2D2B3B]/80">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id
             const Icon = tab.icon
@@ -84,7 +84,7 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
                 {isActive && (
                   <motion.div
                     layoutId="sliding-feed-pill"
-                    className="absolute inset-0 bg-[#7C3AED] rounded-full shadow-md shadow-violet-500/25"
+                    className="absolute inset-0 bg-[#7C3AED] rounded-full"
                     transition={{ type: "spring", stiffness: 500, damping: 35 }}
                   />
                 )}
