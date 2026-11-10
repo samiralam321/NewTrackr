@@ -1012,18 +1012,18 @@ export function Feed({
                   )}
                 </div>
                 
-                {/* Responsive Post Image - Natural Aspect Ratio & Uncropped Containment */}
+                {/* Compact, Optimized Post Image Attachment (Twitter standard) */}
                 {post.image_url && (
-                  <div 
-                    className="my-2.5 w-full max-w-2xl rounded-2xl overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] bg-gray-50/70 dark:bg-[#111019] cursor-pointer hover:border-violet-300 dark:hover:border-violet-800/60 transition-all shadow-xs group/img" 
-                    onClick={() => setPreviewImageUrl(post.image_url!)}
-                    title="Click to view full image"
-                  >
-                    <div className="w-full flex items-center justify-center p-1 sm:p-2">
+                  <div className="mt-2.5 mb-1.5 w-fit max-w-full sm:max-w-[504px]">
+                    <div 
+                      className="rounded-2xl overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] bg-black/[0.02] dark:bg-white/[0.02] cursor-pointer hover:opacity-95 transition-all shadow-2xs group/img inline-block w-fit max-w-full" 
+                      onClick={() => setPreviewImageUrl(post.image_url!)}
+                      title="Click to view full image"
+                    >
                       <img 
                         src={post.image_url} 
                         alt="Post attachment" 
-                        className="block w-auto max-w-full h-auto max-h-[560px] object-contain object-center rounded-xl mx-auto transition-transform duration-200 group-hover/img:scale-[1.008]" 
+                        className="block w-auto max-w-full h-auto max-h-[280px] sm:max-h-[320px] object-contain rounded-2xl transition-transform duration-150 group-hover/img:scale-[1.005]" 
                         loading="lazy" 
                         decoding="async" 
                       />

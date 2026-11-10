@@ -481,16 +481,16 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
 
           {/* Image Thumbnail Preview */}
           {imagePreview && (
-            <div className="relative mt-2 mb-3 inline-block rounded-xl overflow-hidden border border-gray-200 dark:border-[#2D2B3B]">
+            <div className="relative mt-2 mb-3 inline-block rounded-2xl overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] bg-black/[0.02] dark:bg-white/[0.02] max-h-60 w-fit max-w-full">
               <img
                 src={imagePreview}
                 alt="Preview"
-                className="max-h-60 w-auto max-w-full rounded-xl object-contain bg-gray-50/70 dark:bg-[#111019]"
+                className="max-h-60 w-auto max-w-full rounded-2xl object-contain block"
               />
               <button
                 type="button"
                 onClick={removeImage}
-                className="absolute top-2 right-2 bg-black/70 hover:bg-black text-white p-1 rounded-full transition-colors active:scale-95 shadow-md"
+                className="absolute top-2 right-2 bg-black/70 hover:bg-black text-white p-1 rounded-full transition-colors active:scale-95 shadow-md cursor-pointer"
                 title="Remove image"
               >
                 <X className="w-3.5 h-3.5" />

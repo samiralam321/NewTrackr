@@ -520,11 +520,11 @@ export function PostModal({ user, profile }: PostModalProps) {
 
             {/* Image Preview with remove button */}
             {imagePreview && (
-              <div className="relative mt-2 rounded-2xl overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] bg-gray-50 dark:bg-[#111019] max-h-72 flex items-center justify-center p-1">
+              <div className="relative mt-2 rounded-2xl overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] bg-black/[0.02] dark:bg-white/[0.02] max-h-60 w-fit max-w-full inline-block">
                 <img
                   src={imagePreview}
                   alt="Upload preview"
-                  className="max-h-68 w-auto max-w-full rounded-xl object-contain mx-auto"
+                  className="max-h-60 w-auto max-w-full rounded-2xl object-contain block"
                 />
                 <button
                   type="button"
