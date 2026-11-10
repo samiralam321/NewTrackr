@@ -14,6 +14,7 @@ import { extractCleanPlainText } from "@/lib/utils/text"
 import { formatTimeCompact, formatFullDateTime } from "@/lib/utils/date"
 import { getCacheEntry, setCacheEntry, mutateAllFeedCaches } from "@/lib/cache/client-cache"
 import { ImagePreviewModal } from "@/components/ui/image-preview-modal"
+import { LikeButton } from "@/components/ui/like-button"
 
 export function Feed({ 
   userIdFilter,
@@ -1148,17 +1149,11 @@ export function Feed({
                   </button>
 
                   {/* Like */}
-                  <button 
-                    onClick={() => toggleLike(post.id, post.user_has_liked || false)} 
-                    className={`flex items-center gap-1.5 text-[14px] font-medium hover:text-rose-600 dark:hover:text-rose-500 group/btn transition-colors cursor-pointer ${
-                      post.user_has_liked ? 'text-rose-600 dark:text-rose-500' : ''
-                    }`}
-                  >
-                    <div className="p-2 rounded-full group-hover/btn:bg-rose-50 dark:group-hover/btn:bg-rose-950/40 transition-colors">
-                      <Heart className={`w-[19px] h-[19px] transition-transform ${post.user_has_liked ? 'fill-current scale-110' : ''}`} />
-                    </div>
-                    <span className="text-[14px] font-medium leading-none">{(post as any).likes_count || 0}</span>
-                  </button>
+                  <LikeButton
+                    isLiked={Boolean(post.user_has_liked)}
+                    likesCount={(post as any).likes_count || 0}
+                    onToggle={() => toggleLike(post.id, post.user_has_liked || false)}
+                  />
 
                   {/* Bookmark */}
                   <button 
