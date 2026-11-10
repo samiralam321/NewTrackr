@@ -20,12 +20,12 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[#FDFCFE] dark:bg-[#050505] transition-colors duration-300 pb-16 md:pb-0">
+    <div className="flex h-screen overflow-hidden bg-[#FDFCFE] dark:bg-[#050505] transition-colors duration-300 pb-16 md:pb-0">
       <PresenceProvider userId={user?.id}>
-        <div className="hidden md:block">
+        <div className="hidden md:block shrink-0">
           <Sidebar profile={profile} />
         </div>
-        <div className="flex-1 overflow-x-hidden">
+        <div className="flex-1 min-w-0 overflow-hidden">
           {children}
         </div>
         <MobileBottomNav profile={profile} />

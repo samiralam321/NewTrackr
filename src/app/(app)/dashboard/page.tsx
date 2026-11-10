@@ -20,8 +20,8 @@ export default async function DashboardPage() {
     : (user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0] : 'Samir')
 
   return (
-    <div className="flex min-h-screen w-full">
-      {/* Central Social Feed Column */}
+    <div className="flex h-full w-full overflow-hidden">
+      {/* Central Social Feed Column — only this scrolls */}
       <main className="flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 md:px-8 lg:px-10 py-5 md:py-6">
         <div className="max-w-[680px] mx-auto w-full">
           {/* Header */}

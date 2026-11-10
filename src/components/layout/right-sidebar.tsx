@@ -13,7 +13,7 @@ interface RightSidebarProps {
 
 export function RightSidebar({ profile, currentUserId }: RightSidebarProps) {
   return (
-    <aside className="hidden lg:flex flex-col w-[340px] xl:w-[370px] h-screen sticky top-0 py-5 px-4 overflow-y-auto no-scrollbar gap-4 shrink-0 border-l border-gray-100 dark:border-[#2D2B3B] bg-white dark:bg-[#0B0A10] transition-colors duration-300">
+    <aside className="hidden lg:flex flex-col w-[340px] xl:w-[370px] h-screen sticky top-0 py-5 px-4 overflow-y-auto no-scrollbar gap-4 shrink-0 border-l border-gray-100 dark:border-[#2D2B3B] bg-white dark:bg-[#0B0A10] transition-colors duration-300 self-start">
       {/* Top Search & Actions Bar */}
       <SearchBar userProfile={profile} />
 

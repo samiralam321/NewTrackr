@@ -73,7 +73,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
           setFollowingMap(initialMap)
         }
 
-        // 2. Fetch real active profiles from Supabase (limiting to required columns only)
+        // 2. Fetch top 10 most active profiles ordered by consistency_score (streak)
         let query = supabase
           .from('profiles')
           .select('id, full_name, avatar_url, consistency_score, college')
@@ -88,10 +88,10 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
         const { data: profiles, error } = await query
 
         if (!error && profiles) {
-          // Prioritize users not yet followed, then display top 4
+          // Prioritize users not yet followed, then display top 5 most active
           const notFollowed = profiles.filter(p => !followingIds.includes(p.id))
           const alreadyFollowed = profiles.filter(p => followingIds.includes(p.id))
-          const sorted = [...notFollowed, ...alreadyFollowed].slice(0, 4)
+          const sorted = [...notFollowed, ...alreadyFollowed].slice(0, 5)
           setUsers(sorted)
 
           // Save to client cache
@@ -202,7 +202,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
       <div className="flex items-center justify-between mb-3.5">
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-          <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-white">Who to follow</h3>
+          <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-white">Most Active</h3>
         </div>
         <Link
           href="/explore"
@@ -212,12 +212,13 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
         </Link>
       </div>
 
-      {/* Real users list */}
+      {/* Top 5 most active users list */}
       <div className="space-y-3">
         {users.map((user) => {
           const isFollowing = !!followingMap[user.id]
           const handle = getUserHandle(user.full_name)
           const badgeLevel = getBadgeLevel(user.consistency_score)
+          const streak = user.consistency_score || 0
 
           return (
             <div
@@ -244,9 +245,16 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
                     </p>
                     <VerifiedBadge level={badgeLevel} />
                   </div>
-                  <p className="text-[11.5px] text-gray-400 dark:text-gray-500 font-normal truncate">
-                    {handle}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[11.5px] text-gray-400 dark:text-gray-500 font-normal truncate">
+                      {handle}
+                    </p>
+                    {streak > 0 && (
+                      <span className="text-[10.5px] font-bold text-orange-500 dark:text-orange-400 flex items-center gap-0.5 shrink-0">
+                        🔥{streak}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </Link>
 
