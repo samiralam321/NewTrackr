@@ -14,6 +14,7 @@ import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { motion } from "framer-motion"
 import { getBadgeLevel } from "@/lib/utils/streak"
 import { getCacheEntry, setCacheEntry } from "@/lib/cache/client-cache"
+import { getUserHandle } from "@/lib/utils/user"
 
 export function ProfileDashboard({ 
   profile, 
@@ -306,10 +307,14 @@ export function ProfileDashboard({
             <div className="mt-4">
               <h1 className="text-2xl md:text-3xl font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-2">
                 {profileState?.full_name || 'Anonymous User'}
-                <VerifiedBadge level={currentBadgeLevel} nameOrHandle={profileState?.full_name} size="md" />
+                <VerifiedBadge level={currentBadgeLevel} nameOrHandle={profileState?.username || profileState?.full_name} size="md" />
               </h1>
+
+              <p className="text-[15px] text-[#536471] dark:text-[#71767b] font-normal mt-0.5">
+                {getUserHandle(profileState?.full_name, profileState?.username)}
+              </p>
               
-              <p className="text-[15px] text-[#536471] dark:text-[#71767b] font-normal mt-1.5 flex items-center gap-2">
+              <p className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal mt-1 flex items-center gap-2">
                 {profileState?.college || 'Trackr Member'} 🎓
               </p>
               

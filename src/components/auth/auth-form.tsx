@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
-import { useState, useEffect } from "react"
-import { Loader2, Mail, Lock } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Loader2, Mail, Lock, Check } from "lucide-react"
+import { cleanUsername, validateUsernameFormat } from "@/lib/utils/user"
 
 export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -15,6 +16,12 @@ export function AuthForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [resetEmail, setResetEmail] = useState("")
+  const [username, setUsername] = useState("")
+  const [usernameStatus, setUsernameStatus] = useState<{ checking: boolean; available: boolean | null; error?: string }>({
+    checking: false,
+    available: null
+  })
+  const usernameCheckTimeout = useRef<NodeJS.Timeout | null>(null)
   
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -78,6 +85,45 @@ export function AuthForm() {
     }
   }
 
+  const handleUsernameChange = (val: string) => {
+    const clean = cleanUsername(val).replace(/\s+/g, '')
+    setUsername(clean)
+
+    if (usernameCheckTimeout.current) clearTimeout(usernameCheckTimeout.current)
+
+    if (!clean) {
+      setUsernameStatus({ checking: false, available: null })
+      return
+    }
+
+    const formatCheck = validateUsernameFormat(clean)
+    if (!formatCheck.valid) {
+      setUsernameStatus({ checking: false, available: false, error: formatCheck.error })
+      return
+    }
+
+    setUsernameStatus({ checking: true, available: null })
+    usernameCheckTimeout.current = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('username', clean)
+          .maybeSingle()
+        
+        if (error) {
+          setUsernameStatus({ checking: false, available: true })
+        } else if (data) {
+          setUsernameStatus({ checking: false, available: false, error: `@${clean} is already taken.` })
+        } else {
+          setUsernameStatus({ checking: false, available: true })
+        }
+      } catch {
+        setUsernameStatus({ checking: false, available: true })
+      }
+    }, 350)
+  }
+
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -121,13 +167,37 @@ export function AuthForm() {
     try {
       if (isSignUp) {
         // Sign Up Flow
+        const finalUsername = cleanUsername(username || email.split('@')[0])
+        const formatCheck = validateUsernameFormat(finalUsername)
+        if (!formatCheck.valid) {
+          setErrorMsg(formatCheck.error || "Please enter a valid username (3-20 characters, alphanumeric & _)")
+          setIsLoading(false)
+          return
+        }
+
+        // Live check uniqueness before signing up
+        try {
+          const { data: existingUser } = await supabase
+            .from('profiles')
+            .select('id')
+            .ilike('username', finalUsername)
+            .maybeSingle()
+          
+          if (existingUser) {
+            setErrorMsg(`Username @${finalUsername} is already taken. Please choose another.`)
+            setIsLoading(false)
+            return
+          }
+        } catch {}
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
               full_name: email.split('@')[0],
-              avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(email)}`
+              username: finalUsername,
+              avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(finalUsername)}`
             }
           }
         })
@@ -285,6 +355,45 @@ export function AuthForm() {
         {successMsg && (
           <div className="p-3 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-xl border border-emerald-100">
             {successMsg}
+          </div>
+        )}
+
+        {isSignUp && (
+          <div className="space-y-1.5 animate-in fade-in">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="username">Username (Unique Handle)</Label>
+              <span className="text-[11px] text-gray-400 font-normal">{username.length}/20</span>
+            </div>
+            <div className="relative">
+              <span className="absolute left-3.5 top-3 text-sm font-bold text-gray-400 select-none">@</span>
+              <Input 
+                id="username" 
+                type="text" 
+                placeholder="your_handle"
+                value={username}
+                onChange={(e) => handleUsernameChange(e.target.value)}
+                maxLength={20}
+                disabled={isLoading}
+                className={`pl-9 h-11 rounded-xl border-gray-200 focus-visible:ring-violet-500 ${
+                  usernameStatus.available === false ? 'border-rose-400 focus-visible:ring-rose-400' : 
+                  usernameStatus.available === true ? 'border-emerald-400 focus-visible:ring-emerald-400' : ''
+                }`} 
+              />
+              {usernameStatus.checking && (
+                <Loader2 className="absolute right-3.5 top-3.5 w-4 h-4 animate-spin text-gray-400" />
+              )}
+            </div>
+            {usernameStatus.available === false && (
+              <p className="text-[11px] font-medium text-rose-500 animate-in fade-in">
+                {usernameStatus.error || "Username is already taken"}
+              </p>
+            )}
+            {usernameStatus.available === true && username.length >= 3 && (
+              <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 animate-in fade-in">
+                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>@{username} is available!</span>
+              </p>
+            )}
           </div>
         )}
 

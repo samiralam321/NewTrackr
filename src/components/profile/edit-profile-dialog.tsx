@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Loader2, Camera, UploadCloud, FileText, Trash2 } from "lucide-react"
+import { Loader2, Camera, UploadCloud, FileText, Trash2, Check } from "lucide-react"
+import { cleanUsername, validateUsernameFormat, getUserHandle } from "@/lib/utils/user"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { 
@@ -19,6 +20,7 @@ import {
 type ProfileProps = {
   id: string
   full_name: string | null
+  username?: string | null
   bio: string | null
   college: string | null
   avatar_url: string | null
@@ -30,6 +32,13 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [fullName, setFullName] = useState(profile.full_name || "")
+  const initialUsername = (profile.username || getUserHandle(profile.full_name)).replace(/^@+/, '')
+  const [username, setUsername] = useState(initialUsername)
+  const [usernameStatus, setUsernameStatus] = useState<{ checking: boolean; available: boolean | null; error?: string }>({
+    checking: false,
+    available: null
+  })
+  const usernameCheckTimeout = useRef<NodeJS.Timeout | null>(null)
   const [bio, setBio] = useState(profile.bio || "")
   const [college, setCollege] = useState(profile.college || "")
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -43,6 +52,51 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
   const resumeInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
   const router = useRouter()
+
+  const handleUsernameChange = (val: string) => {
+    const clean = cleanUsername(val).replace(/\s+/g, '')
+    setUsername(clean)
+
+    if (usernameCheckTimeout.current) clearTimeout(usernameCheckTimeout.current)
+
+    if (!clean) {
+      setUsernameStatus({ checking: false, available: null })
+      return
+    }
+
+    const formatCheck = validateUsernameFormat(clean)
+    if (!formatCheck.valid) {
+      setUsernameStatus({ checking: false, available: false, error: formatCheck.error })
+      return
+    }
+
+    if (clean.toLowerCase() === initialUsername.toLowerCase()) {
+      setUsernameStatus({ checking: false, available: true })
+      return
+    }
+
+    setUsernameStatus({ checking: true, available: null })
+    usernameCheckTimeout.current = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('username', clean)
+          .neq('id', profile.id)
+          .maybeSingle()
+        
+        if (error) {
+          setUsernameStatus({ checking: false, available: true })
+        } else if (data) {
+          setUsernameStatus({ checking: false, available: false, error: `@${clean} is already taken. Try another.` })
+        } else {
+          setUsernameStatus({ checking: false, available: true })
+        }
+      } catch {
+        setUsernameStatus({ checking: false, available: true })
+      }
+    }, 350)
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -111,24 +165,69 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
       const cleanBio = sanitizeText(bio, 500)
       const cleanCollege = sanitizeText(college, 150)
 
-      const { error } = await supabase
+      // Validate Twitter-style unique username
+      const cleanU = cleanUsername(username)
+      const uCheck = validateUsernameFormat(cleanU)
+      if (!uCheck.valid) {
+        alert(uCheck.error)
+        setIsLoading(false)
+        return
+      }
+
+      if (usernameStatus.available === false) {
+        alert(usernameStatus.error || "Please choose an available username.")
+        setIsLoading(false)
+        return
+      }
+
+      // Live uniqueness verification
+      if (cleanU.toLowerCase() !== initialUsername.toLowerCase()) {
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('username', cleanU)
+          .neq('id', profile.id)
+          .maybeSingle()
+
+        if (existingUser) {
+          setUsernameStatus({ checking: false, available: false, error: `@${cleanU} is already taken.` })
+          alert(`Username @${cleanU} is already taken by another student.`)
+          setIsLoading(false)
+          return
+        }
+      }
+
+      const updatePayload: Record<string, any> = {
+        full_name: cleanFullName,
+        bio: cleanBio,
+        college: cleanCollege,
+        avatar_url: avatarUrl,
+        resume_url: finalResumeUrl,
+        resume_name: finalResumeName,
+        username: cleanU
+      }
+
+      let { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: cleanFullName,
-          bio: cleanBio,
-          college: cleanCollege,
-          avatar_url: avatarUrl,
-          resume_url: finalResumeUrl,
-          resume_name: finalResumeName
-        })
+        .update(updatePayload)
         .eq('id', profile.id)
 
-      if (error) throw error
+      if (error && error.message?.includes('username does not exist')) {
+        delete updatePayload.username
+        const res = await supabase.from('profiles').update(updatePayload).eq('id', profile.id)
+        if (res.error) throw res.error
+      } else if (error) {
+        if (error.code === '23505') {
+          throw new Error(`Username @${cleanU} is already taken.`)
+        }
+        throw error
+      }
 
       window.dispatchEvent(
         new CustomEvent('profile-updated', {
           detail: {
             full_name: cleanFullName,
+            username: cleanU,
             bio: cleanBio,
             college: cleanCollege,
             avatar_url: avatarUrl,
@@ -178,6 +277,41 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
               accept="image/jpeg,image/png,image/webp,image/jpg" 
               className="hidden" 
             />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="username" className="flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-300">
+              <span>Username (Unique Handle)</span>
+              <span className="text-[11px] text-gray-400 font-normal">{username.length}/20</span>
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400 select-none">@</span>
+              <Input 
+                id="username" 
+                value={username} 
+                onChange={(e) => handleUsernameChange(e.target.value)} 
+                maxLength={20} 
+                placeholder="username" 
+                className={`pl-8 rounded-xl border-gray-200 dark:border-gray-700 ${
+                  usernameStatus.available === false ? 'border-rose-400 focus-visible:ring-rose-400' : 
+                  usernameStatus.available === true ? 'border-emerald-400 focus-visible:ring-emerald-400' : ''
+                }`} 
+              />
+              {usernameStatus.checking && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+              )}
+            </div>
+            {usernameStatus.available === false && (
+              <p className="text-[11px] font-medium text-rose-500 animate-in fade-in">
+                {usernameStatus.error || "Username is not available"}
+              </p>
+            )}
+            {usernameStatus.available === true && username.length >= 3 && (
+              <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 animate-in fade-in">
+                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>@{username} is available!</span>
+              </p>
+            )}
           </div>
 
           <div className="grid gap-2">
