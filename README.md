@@ -77,35 +77,35 @@ Live Production Deployment: [trackr-ten-eta.vercel.app](https://trackr-ten-eta.v
 
 ```mermaid
 flowchart TD
-    Client["Client (Browser / Android PWA)"]
+    Client["Client: Browser & PWA"]
 
-    subgraph Edge ["Edge & CDN Layer (Vercel)"]
-        Headers["Security Headers (CSP, HSTS, XFO)"]
-        Proxy["Proxy Middleware (src/proxy.ts)"]
+    subgraph EdgeLayer["Edge & CDN Layer"]
+        Headers["Security Headers"]
+        Proxy["Proxy Middleware"]
     end
 
-    subgraph AppRouter ["Next.js 16 App Router (Turbopack)"]
-        RSC["React Server Components (SSR)"]
-        RCC["React Client Components"]
-        API["Route Handlers (/api/*)"]
-        Cache["Client-Side SWR Cache (client-cache.ts)"]
+    subgraph AppRouter["Next.js App Router"]
+        RSC["Server Components"]
+        RCC["Client Components"]
+        API["Route Handlers"]
+        Cache["Client SWR Cache"]
     end
 
-    subgraph Security ["Security & Data Layer"]
-        AuthCheck["Supabase Auth (JWT Cookie)"]
-        ZodVal["Zod Validation & Sanitization"]
-        RLS["PostgreSQL Row Level Security"]
+    subgraph SecurityLayer["Security & Data Layer"]
+        AuthCheck["Supabase Auth"]
+        ZodVal["Input Validation"]
+        RLS["PostgreSQL RLS"]
     end
 
-    subgraph Storage ["Supabase Infrastructure"]
-        DB[("PostgreSQL 15 Database")]
-        Buckets[("Storage (avatars, post_images, resumes)")]
-        Realtime["Realtime Engine (WebSockets)"]
+    subgraph StorageLayer["Supabase Backend"]
+        DB[(PostgreSQL 15 Database)]
+        Buckets[(Supabase Storage)]
+        Realtime["Realtime Engine"]
     end
 
     Client -->|HTTPS| Headers
     Headers --> Proxy
-    Proxy -->|Session Cookie Validation| RSC
+    Proxy -->|Session Cookie| RSC
     Proxy -->|API Dispatch| API
 
     RSC --> AuthCheck
@@ -115,10 +115,11 @@ flowchart TD
     AuthCheck --> RLS
     RLS --> DB
 
-    Client -->|SWR Cache Hit / Mutation| Cache
-    RCC -->|WebSocket Connection| Realtime
-    RCC -->|Validated Upload| Buckets
-    Realtime <--> DB
+    Client -->|SWR Cache| Cache
+    RCC -->|WebSocket| Realtime
+    RCC -->|Direct Upload| Buckets
+    Realtime --> DB
+    DB --> Realtime
 ```
 
 ---
@@ -189,7 +190,7 @@ erDiagram
         uuid user_id FK
         text content
         text image_url
-        text[] tags
+        text tags
         text type
         timestamptz created_at
     }

@@ -10,22 +10,22 @@ Trackr uses **PostgreSQL 15** hosted on Supabase. The database architecture is b
 
 ```mermaid
 erDiagram
-    auth_users ||--|| profiles : "extends (1:1)"
-    profiles ||--o{ posts : "creates (1:N)"
-    profiles ||--o{ comments : "writes (1:N)"
-    profiles ||--o{ likes : "gives (1:N)"
-    profiles ||--o{ bookmarks : "saves (1:N)"
-    profiles ||--o{ follows : "follower (1:N)"
-    profiles ||--o{ follows : "following (1:N)"
-    profiles ||--o{ messages : "sends (1:N)"
-    profiles ||--o{ messages : "receives (1:N)"
-    profiles ||--o{ notifications : "receives (1:N)"
-    profiles ||--o{ notifications : "actor (1:N)"
+    auth_users ||--|| profiles : "extends"
+    profiles ||--o{ posts : "creates"
+    profiles ||--o{ comments : "writes"
+    profiles ||--o{ likes : "gives"
+    profiles ||--o{ bookmarks : "saves"
+    profiles ||--o{ follows : "follower"
+    profiles ||--o{ follows : "following"
+    profiles ||--o{ messages : "sends"
+    profiles ||--o{ messages : "receives"
+    profiles ||--o{ notifications : "receives"
+    profiles ||--o{ notifications : "actor"
 
-    posts ||--o{ comments : "contains (1:N)"
-    posts ||--o{ likes : "receives (1:N)"
-    posts ||--o{ bookmarks : "saved in (1:N)"
-    posts ||--o{ notifications : "triggers (1:N)"
+    posts ||--o{ comments : "contains"
+    posts ||--o{ likes : "receives"
+    posts ||--o{ bookmarks : "saved_in"
+    posts ||--o{ notifications : "triggers"
 
     profiles {
         uuid id PK
@@ -47,7 +47,7 @@ erDiagram
         uuid user_id FK
         text content
         text image_url
-        text[] tags
+        text tags
         integer time_spent
         text type
         timestamptz created_at
@@ -101,7 +101,7 @@ erDiagram
     daily_challenges {
         uuid id PK
         date date
-        uuid[] question_ids
+        text question_ids
         timestamptz created_at
     }
 

@@ -15,30 +15,30 @@ The platform is designed around three architectural pillars:
 
 ```mermaid
 flowchart TD
-    Client["Client Browser / Android PWA"]
+    Client["Client: Browser & PWA"]
     
-    subgraph Edge ["Edge & CDN Layer (Vercel)"]
-        HSTS["Security Headers & CSP Middleware"]
-        Proxy["Next.js Proxy / Middleware (src/proxy.ts)"]
+    subgraph EdgeLayer["Edge & CDN Layer"]
+        HSTS["Security Headers & CSP"]
+        Proxy["Proxy Middleware"]
     end
     
-    subgraph AppRouter ["Next.js 16 App Router (Node.js 20 / Turbopack)"]
-        RSC["React Server Components (SSR / Static)"]
-        RCC["React Client Components (Interactive)"]
-        APIs["Route Handlers (src/app/api/*)"]
-        Cache["Client-Side SWR Cache (client-cache.ts)"]
+    subgraph AppRouter["Next.js App Router"]
+        RSC["React Server Components"]
+        RCC["React Client Components"]
+        APIs["Route Handlers"]
+        Cache["Client SWR Cache"]
     end
     
-    subgraph DataBoundary ["Data Access & Security Layer"]
-        SSRClient["Supabase SSR Server Client (Cookie JWT)"]
-        AuthCheck["Session & RLS Policy Enforcement"]
-        ZodVal["Zod Schema & API Input Sanitization"]
+    subgraph DataBoundary["Data Access & Security"]
+        SSRClient["Supabase SSR Client"]
+        AuthCheck["Session & RLS Enforcement"]
+        ZodVal["Zod Input Validation"]
     end
     
-    subgraph StorageLayer ["Supabase Infrastructure (PostgreSQL & Storage)"]
-        PG[("PostgreSQL 15 (Tables with RLS Enabled)")]
-        Buckets[("Supabase Storage (post_images, avatars, resumes)")]
-        Realtime["Realtime Engine (WebSockets / Broadcast)"]
+    subgraph StorageLayer["Supabase Infrastructure"]
+        PG[(PostgreSQL 15 Database)]
+        Buckets[(Supabase Storage)]
+        Realtime["Realtime Engine"]
     end
 
     Client -->|HTTPS Request| HSTS
@@ -48,8 +48,8 @@ flowchart TD
     
     RSC -->|Render UI Stream| Client
     Client -->|Local Cache Check| Cache
-    Cache -->|Cache Miss / Stale| RCC
-    RCC -->|Supabase Client / WebSockets| Realtime
+    Cache -->|Cache Miss or Stale| RCC
+    RCC -->|WebSocket Connection| Realtime
     
     APIs --> ZodVal
     ZodVal --> SSRClient
@@ -57,8 +57,9 @@ flowchart TD
     
     SSRClient --> AuthCheck
     AuthCheck --> PG
-    RCC -->|Direct Authenticated Upload| Buckets
-    Realtime <--> PG
+    RCC -->|Authenticated Upload| Buckets
+    Realtime --> PG
+    PG --> Realtime
 ```
 
 ---
