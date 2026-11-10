@@ -22,19 +22,20 @@ export function AuthForm() {
 
   // Client-Side Session Auto-Restore & Redirect
   useEffect(() => {
+    const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '').split('.')[0] || 'bsqqdfkdycziocmgiani'
+    
+    // Proactively clean up any legacy corrupted URL-encoded JSON cookie
+    if (typeof document !== 'undefined') {
+      const corruptCookieName = `sb-${projectRef}-auth-token`
+      if (document.cookie.includes(`${corruptCookieName}=%7B`) || document.cookie.includes(`${corruptCookieName}={`)) {
+        document.cookie = `${corruptCookieName}=; max-age=0; path=/; SameSite=Lax`
+      }
+    }
+
     const checkActiveSession = async () => {
       try {
-        // 1. Instantly check if we have a valid session in localStorage/cookies
         const { data: { session } } = await supabase.auth.getSession()
         if (session) {
-          // Explicitly sync the session back to cookies first
-          const cookieOptions = {
-            maxAge: 30 * 24 * 60 * 60, // 30 days
-            path: '/'
-          }
-          // Restore token to cookies to ensure Next.js SSR and proxy.ts middleware pick it up immediately
-          document.cookie = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL!.replace('https://', '').split('.')[0]}-auth-token=${encodeURIComponent(JSON.stringify(session))}; max-age=${cookieOptions.maxAge}; path=${cookieOptions.path}; SameSite=Lax`
-          
           window.location.href = '/dashboard'
         }
       } catch (err) {
@@ -51,12 +52,6 @@ export function AuthForm() {
       }
 
       if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-        const cookieOptions = {
-          maxAge: 30 * 24 * 60 * 60, // 30 days
-          path: '/'
-        }
-        document.cookie = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL!.replace('https://', '').split('.')[0]}-auth-token=${encodeURIComponent(JSON.stringify(session))}; max-age=${cookieOptions.maxAge}; path=${cookieOptions.path}; SameSite=Lax`
-
         window.location.href = '/dashboard'
       }
     })

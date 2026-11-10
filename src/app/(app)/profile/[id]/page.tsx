@@ -8,7 +8,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const resolvedParams = await params
   const supabase = await createClient()
   
-  const { data: { user } } = await supabase.auth.getUser()
+  let user = null; try { const { data } = await supabase.auth.getUser(); user = data?.user || null; } catch { user = null; }
 
   // Fetch the profile
   const { data: profile } = await supabase

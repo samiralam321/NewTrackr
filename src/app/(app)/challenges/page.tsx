@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function ChallengesPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let user = null; try { const { data } = await supabase.auth.getUser(); user = data?.user || null; } catch { user = null; }
 
   if (!user) {
     redirect('/auth')
@@ -209,3 +209,4 @@ export default async function ChallengesPage() {
     </div>
   )
 }
+

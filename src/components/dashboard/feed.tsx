@@ -109,7 +109,7 @@ export function Feed({
 
     window.addEventListener('post-created', handlePostCreated)
     
-    const uniqueChannelName = `trackr-live-feed-sync`
+    const uniqueChannelName = `trackr-feed-${Math.random().toString(36).substring(7)}`
     
     const channel = supabase
       .channel(uniqueChannelName)

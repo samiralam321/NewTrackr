@@ -6,13 +6,31 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '').split('.')[0] || 'bsqqdfkdycziocmgiani'
+  const legacyTokenName = `sb-${projectRef}-auth-token`
+
+  // Check if browser sent a malformed URL-encoded JSON cookie
+  const rawTokenCookie = request.cookies.get(legacyTokenName)
+  const isCorrupted = rawTokenCookie && (rawTokenCookie.value.startsWith('%7B') || rawTokenCookie.value.startsWith('{'))
+
+  if (isCorrupted) {
+    supabaseResponse.cookies.delete(legacyTokenName)
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll()
+          const all = request.cookies.getAll()
+          // Filter out the legacy malformed cookie so GoTrueClient does not crash with TypeError
+          return all.filter(c => {
+            if (c.name === legacyTokenName) {
+              return !(c.value.startsWith('%7B') || c.value.startsWith('{'))
+            }
+            return true
+          })
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
@@ -38,9 +56,14 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data?.user || null
+  } catch (err) {
+    console.warn("Middleware caught auth session error:", err)
+    user = null
+  }
 
   const pathname = request.nextUrl.pathname
   const isPublicRoute =
@@ -56,10 +79,14 @@ export async function updateSession(request: NextRequest) {
     pathname === '/logo.png'
 
   if (!user && !isPublicRoute) {
-    // no user, respond by redirecting the user to the login page
+    // redirect unauthenticated users to the auth page
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
-    return NextResponse.redirect(url)
+    const redirectResponse = NextResponse.redirect(url)
+    if (isCorrupted) {
+      redirectResponse.cookies.delete(legacyTokenName)
+    }
+    return redirectResponse
   }
 
   return supabaseResponse

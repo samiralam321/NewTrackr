@@ -63,22 +63,16 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
       {/* Inline Post Composer above the feed */}
       <InlinePostComposer user={user} profile={profile} />
 
-      {/* Feed Content with Preserved State & Instant Switching */}
-      <div className={activeTab === "for-you" ? "block" : "hidden"}>
-        <Feed currentUserIdProp={currentUserId} sortBy="new" />
-      </div>
-      <div className={activeTab === "following" ? "block" : "hidden"}>
-        <Feed followingOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
-      </div>
-      <div className={activeTab === "college" ? "block" : "hidden"}>
-        <Feed collegeOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
-      </div>
-      <div className={activeTab === "opportunities" ? "block" : "hidden"}>
-        <Feed opportunitiesOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
-      </div>
-      <div className={activeTab === "events" ? "block" : "hidden"}>
-        <Feed eventsOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
-      </div>
+      {/* Feed Content with Tab Filter */}
+      <Feed 
+        key={activeTab}
+        currentUserIdProp={currentUserId}
+        followingOnlyFilter={activeTab === "following"}
+        collegeOnlyFilter={activeTab === "college"}
+        opportunitiesOnlyFilter={activeTab === "opportunities"}
+        eventsOnlyFilter={activeTab === "events"}
+        sortBy="new" 
+      />
     </div>
   )
 }
