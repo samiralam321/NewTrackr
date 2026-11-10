@@ -74,12 +74,28 @@ function MessagesContent() {
   const emojiPickerRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const activeRoomChannelRef = useRef<any>(null)
+  const hasUserManuallySelected = useRef(false)
   
   const supabase = createClient()
   const onlineUsers = usePresence()
   const searchParams = useSearchParams()
   const targetUserId = searchParams.get('userId')
   
+  // Reset manual selection flag when targetUserId is cleared
+  useEffect(() => {
+    if (!targetUserId) {
+      hasUserManuallySelected.current = false
+    }
+  }, [targetUserId])
+
+  // Keep latest messages synchronized to localStorage cache for 0ms mount hydration
+  useEffect(() => {
+    if (currentUser?.id && Object.keys(latestMessages).length > 0) {
+      try {
+        localStorage.setItem(`trackr_latest_msgs_${currentUser.id}`, JSON.stringify(latestMessages))
+      } catch (e) {}
+    }
+  }, [latestMessages, currentUser?.id])
   
   // Immediate cache hydration on mount so convos render with 0ms delay
   useEffect(() => {
@@ -87,16 +103,35 @@ function MessagesContent() {
       const lastUserId = localStorage.getItem('trackr_last_user_id')
       if (lastUserId) {
         const cached = localStorage.getItem(`trackr_recent_convos_${lastUserId}`)
+        const cachedLatest = localStorage.getItem(`trackr_latest_msgs_${lastUserId}`)
+        let latestMap: Record<string, Message> = {}
+        if (cachedLatest) {
+          try {
+            latestMap = JSON.parse(cachedLatest)
+            setLatestMessages(latestMap)
+          } catch {}
+        }
+
         if (cached) {
           const parsed = JSON.parse(cached)
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setUsers(parsed)
+            // Sort parsed convos strictly by latest message timestamp descending
+            const sorted = [...parsed].sort((a, b) => {
+              const timeA = latestMap[a.id]?.created_at ? new Date(latestMap[a.id].created_at).getTime() : 0
+              const timeB = latestMap[b.id]?.created_at ? new Date(latestMap[b.id].created_at).getTime() : 0
+              return timeB - timeA
+            })
+
+            setUsers(sorted)
             setIsLoadingConvos(false)
             if (targetUserId) {
-              const found = parsed.find((u: Profile) => u.id === targetUserId)
+              const found = sorted.find((u: Profile) => u.id === targetUserId)
               if (found) setSelectedUser(found)
             } else if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-              setSelectedUser(parsed[0])
+              if (!hasUserManuallySelected.current) {
+                // Auto-select the conversation with the latest message
+                setSelectedUser(sorted[0])
+              }
             }
           }
         }
@@ -124,6 +159,7 @@ function MessagesContent() {
 
   const selectUserAndUrl = (user: Profile | null) => {
     if (selectedUser?.id === user?.id) return
+    hasUserManuallySelected.current = true
     setSelectedUser(user)
 
     if (user && currentUser) {
@@ -209,12 +245,26 @@ function MessagesContent() {
 
     // 1. Load cached conversations from localStorage for instantaneous rendering
     const cacheKey = `trackr_recent_convos_${user.id}`
+    const latestMsgsKey = `trackr_latest_msgs_${user.id}`
     try {
       const cached = localStorage.getItem(cacheKey)
+      const cachedLatest = localStorage.getItem(latestMsgsKey)
       if (cached) {
         const parsed = JSON.parse(cached)
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setUsers(parsed)
+          let latestMap: Record<string, Message> = {}
+          if (cachedLatest) {
+            try {
+              latestMap = JSON.parse(cachedLatest)
+              setLatestMessages(latestMap)
+            } catch {}
+          }
+          const sorted = [...parsed].sort((a, b) => {
+            const timeA = latestMap[a.id]?.created_at ? new Date(latestMap[a.id].created_at).getTime() : 0
+            const timeB = latestMap[b.id]?.created_at ? new Date(latestMap[b.id].created_at).getTime() : 0
+            return timeB - timeA
+          })
+          setUsers(sorted)
         }
       }
     } catch (e) {
@@ -269,19 +319,29 @@ function MessagesContent() {
           .in('id', Array.from(activeUserIds))
         
         if (profilesData && profilesData.length > 0) {
-          setUsers(profilesData)
+          // Strictly sort conversations by newest message timestamp descending
+          const sortedProfiles = [...profilesData].sort((a, b) => {
+            const timeA = latest[a.id]?.created_at ? new Date(latest[a.id].created_at).getTime() : 0
+            const timeB = latest[b.id]?.created_at ? new Date(latest[b.id].created_at).getTime() : 0
+            return timeB - timeA
+          })
+
+          setUsers(sortedProfiles)
           try {
-            localStorage.setItem(cacheKey, JSON.stringify(profilesData))
+            localStorage.setItem(cacheKey, JSON.stringify(sortedProfiles))
+            localStorage.setItem(latestMsgsKey, JSON.stringify(latest))
           } catch (e) {}
 
           if (targetUserId) {
-            const foundUser = profilesData.find(u => u.id === targetUserId)
+            const foundUser = sortedProfiles.find(u => u.id === targetUserId)
             if (foundUser) {
               setSelectedUser(foundUser)
             }
-          } else if (!selectedUser && typeof window !== 'undefined' && window.innerWidth >= 768) {
-            // Auto-select first conversation on desktop screens
-            setSelectedUser(profilesData[0])
+          } else if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+            // Auto-select conversation with the latest message on desktop screens
+            if (!hasUserManuallySelected.current) {
+              setSelectedUser(sortedProfiles[0])
+            }
           }
         }
       } else if (targetUserId) {
