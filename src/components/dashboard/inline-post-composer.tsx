@@ -402,25 +402,6 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
 
   return (
     <div className="px-4 py-3.5 border-b border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] relative">
-      {/* Category Selection Bar (Twitter Style: Compact, discreet pills) */}
-      <div className="flex items-center gap-1.5 mb-2 pl-12 overflow-x-auto no-scrollbar">
-        {categories.map((cat) => (
-          <button
-            key={cat.type}
-            type="button"
-            onClick={() => setProgressType(cat.type)}
-            className={`px-3 py-1 rounded-full text-[13px] font-medium transition-all flex items-center gap-1.5 shrink-0 select-none ${
-              progressType === cat.type
-                ? 'bg-violet-100 text-[#7C3AED] dark:bg-violet-950/60 dark:text-violet-300 border border-violet-200 dark:border-violet-700'
-                : 'bg-gray-100/80 text-[#536471] dark:bg-[#1A1A24] dark:text-[#71767b] hover:bg-gray-200/60 dark:hover:bg-[#252330]'
-            }`}
-          >
-            <span>{cat.icon}</span>
-            <span>{cat.label}</span>
-          </button>
-        ))}
-      </div>
-
       {/* Main Composer Row: Avatar + Text Input */}
       <div className="flex items-start gap-3">
         <img

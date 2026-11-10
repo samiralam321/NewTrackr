@@ -424,8 +424,8 @@ export function PostModal({ user, profile }: PostModalProps) {
       <div 
         className="bg-white dark:bg-[#000000] sm:rounded-2xl border border-transparent sm:border-[#eff3f4] dark:sm:border-[#2f3336] shadow-2xl w-full max-w-[600px] flex flex-col overflow-hidden max-h-screen sm:max-h-[90vh] animate-in zoom-in-95 duration-200 relative"
       >
-        {/* Top Header Row: Close button + Category pills */}
-        <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-[#eff3f4] dark:border-[#2f3336]">
+        {/* Top Header Row: Close button */}
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336]">
           <button
             type="button"
             onClick={handleClose}
@@ -434,25 +434,6 @@ export function PostModal({ user, profile }: PostModalProps) {
           >
             <X className="w-5 h-5" />
           </button>
-
-          {/* Category selection */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-            {categories.map((cat) => (
-              <button
-                key={cat.type}
-                type="button"
-                onClick={() => setProgressType(cat.type)}
-                className={`px-3 py-1 rounded-full text-[13px] font-medium transition-all flex items-center gap-1.5 shrink-0 select-none cursor-pointer ${
-                  progressType === cat.type
-                    ? 'bg-violet-100 text-[#7C3AED] dark:bg-violet-950/60 dark:text-violet-300 border border-violet-200 dark:border-violet-700'
-                    : 'bg-gray-100/80 text-[#536471] dark:bg-[#1A1A24] dark:text-[#71767b] hover:bg-gray-200/60 dark:hover:bg-[#252330]'
-                }`}
-              >
-                <span>{cat.icon}</span>
-                <span>{cat.label}</span>
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Status Message Alert */}
