@@ -17,8 +17,8 @@ export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
   const router = useRouter()
   const [profileState, setProfileState] = useState(profile)
-  const [unreadCount, setUnreadCount] = useState(5)
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState(3)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0)
   const [activeDays, setActiveDays] = useState([false, false, false, false, false, false, false])
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const supabase = createClient()
@@ -137,6 +137,19 @@ export function Sidebar({ profile }: { profile?: any }) {
       setUnreadCount(count || 0)
     }
 
+    const fetchUnreadMessages = async () => {
+      if (pathname === '/messages') {
+        setUnreadMessagesCount(0)
+        return
+      }
+      const { count } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', profileState.id)
+        .eq('is_read', false)
+      setUnreadMessagesCount(count || 0)
+    }
+
     const fetchActiveDays = async () => {
       const now = new Date()
       let dayOfWeek = now.getDay()
@@ -165,6 +178,7 @@ export function Sidebar({ profile }: { profile?: any }) {
     }
 
     fetchUnread()
+    fetchUnreadMessages()
     fetchActiveDays()
 
     const channel = supabase
@@ -174,6 +188,12 @@ export function Sidebar({ profile }: { profile?: any }) {
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications' }, () => {
         fetchUnread()
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+        fetchUnreadMessages()
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, () => {
+        fetchUnreadMessages()
       })
       .on('postgres_changes', {
         event: 'INSERT',

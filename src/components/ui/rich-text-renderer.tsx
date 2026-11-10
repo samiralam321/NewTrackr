@@ -9,10 +9,15 @@ type RichTextRendererProps = {
 export function RichTextRenderer({ content }: RichTextRendererProps) {
   if (!content) return null
 
+  // Strip leaked CSS block comments (e.g. "/* Top Section */") from content
+  // These can appear if CSS accidentally got stored as post content
+  const sanitized = content.replace(/\/\*[\s\S]*?\*\//g, '').trim()
+  if (!sanitized) return null
+
   // Convert legacy markdown **bold** to <strong> HTML tags for unified rendering
-  const htmlContent = content.includes("**") 
-    ? content.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    : content
+  const htmlContent = sanitized.includes("**") 
+    ? sanitized.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    : sanitized
 
   const htmlToReact = (html: string): React.ReactNode[] => {
     try {
