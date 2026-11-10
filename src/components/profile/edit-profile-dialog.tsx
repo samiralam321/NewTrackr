@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -54,6 +54,25 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
   const resumeInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
   const router = useRouter()
+
+  // Keep dialog fields synchronized when dialog opens or profile changes
+  useEffect(() => {
+    if (open) {
+      setFullName(profile.full_name || "")
+      const currentU = (profile.username || getUserHandle(profile.full_name)).replace(/^@+/, '')
+      setUsername(currentU)
+      setWebsite(profile.website || "")
+      setBio(profile.bio || "")
+      setCollege(profile.college || "")
+      setPreviewUrl(profile.avatar_url)
+      setResumeUrl(profile.resume_url || null)
+      setResumeName(profile.resume_name || null)
+      setAvatarFile(null)
+      setResumeFile(null)
+      setIsDeletingResume(false)
+      setUsernameStatus({ checking: false, available: null })
+    }
+  }, [open, profile])
 
   const handleUsernameChange = (val: string) => {
     const clean = cleanUsername(val).replace(/\s+/g, '')
@@ -228,20 +247,41 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
         .update(updatePayload)
         .eq('id', profile.id)
 
-      if (error && (error.message?.includes('website does not exist') || error.message?.includes('username does not exist'))) {
-        if (error.message?.includes('website does not exist')) {
-          delete updatePayload.website
+      // Graceful fallback if database columns (e.g. 'website' or 'username') do not exist yet in public.profiles table
+      if (error) {
+        const errorMsg = (error.message || '').toLowerCase()
+        const isColumnMissing = 
+          error.code === 'PGRST204' || 
+          error.code === '42703' || 
+          errorMsg.includes('schema cache') || 
+          errorMsg.includes('does not exist')
+
+        if (isColumnMissing) {
+          let hasChanges = false
+          if (errorMsg.includes('website')) {
+            delete updatePayload.website
+            hasChanges = true
+          }
+          if (errorMsg.includes('username')) {
+            delete updatePayload.username
+            hasChanges = true
+          }
+
+          if (hasChanges) {
+            const retryRes = await supabase
+              .from('profiles')
+              .update(updatePayload)
+              .eq('id', profile.id)
+            error = retryRes.error
+          }
         }
-        if (error.message?.includes('username does not exist')) {
-          delete updatePayload.username
-        }
-        const res = await supabase.from('profiles').update(updatePayload).eq('id', profile.id)
-        if (res.error) throw res.error
-      } else if (error) {
+      }
+
+      if (error) {
         if (error.code === '23505') {
           throw new Error(`Username @${cleanU} is already taken.`)
         }
-        throw error
+        throw new Error(error.message || error.details || "Failed to update profile.")
       }
 
       window.dispatchEvent(
@@ -262,8 +302,8 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
       setOpen(false)
       router.refresh()
     } catch (error: any) {
-      console.error("Error updating profile:", error)
-      alert(error.message || "Failed to update profile.")
+      console.error("Error updating profile:", error?.message || error)
+      alert(error?.message || "Failed to update profile.")
     } finally {
       setIsLoading(false)
     }
