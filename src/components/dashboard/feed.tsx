@@ -588,6 +588,15 @@ export function Feed({
       formattedPosts = formattedPosts.sort((a, b) => (a.id === activePinnedId ? -1 : b.id === activePinnedId ? 1 : 0))
     }
 
+    // Deduplicate any accidental duplicate items in formattedPosts
+    const seenItemKeys = new Set<string>()
+    formattedPosts = formattedPosts.filter(p => {
+      const key = p.feed_item_id || (p.is_repost ? `repost-${p.id}-${p.reposted_by?.id || ''}` : p.id)
+      if (seenItemKeys.has(key)) return false
+      seenItemKeys.add(key)
+      return true
+    })
+
     
     if (opportunitiesOnlyFilter) {
       formattedPosts = formattedPosts.filter(p => {
@@ -1057,32 +1066,38 @@ export function Feed({
         </div>
       ) : posts.length === 0 ? (
         <div className="text-center py-16 text-[#536471] dark:text-[#71767b] text-[15px]">No progress shared yet. Be the first to post!</div>
-      ) : posts.filter(p => !hiddenUserIds.includes(p.user_id)).map((post, index) => {
-        const postDate = new Date(post.created_at)
-        const dateDisplay = postDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        
-        return (
-          <div key={post.id} className={isJourneyMode ? "relative pl-[90px] md:pl-[120px]" : ""}>
-            {/* Timeline UI for Journey Mode */}
-            {isJourneyMode && (
-              <>
-                {/* Vertical Line */}
-                {index !== posts.length - 1 && (
-                  <div className="absolute left-[7px] top-[40px] bottom-[-40px] w-px bg-gray-200 dark:bg-[#2D2B3B] z-0"></div>
-                )}
-                
-                {/* Date & Dot */}
-                <div className="absolute left-0 top-6 flex items-center gap-4 z-10">
-                  <div className={`w-4 h-4 rounded-full border-[3px] border-white dark:border-[#0B0A10] shadow-sm shrink-0 ${index === 0 ? 'bg-emerald-400' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
-                  <span className="text-[14px] font-bold text-gray-900 dark:text-white whitespace-nowrap">{dateDisplay}</span>
-                </div>
-              </>
-            )}
+      ) : posts
+          .filter(p => !hiddenUserIds.includes(p.user_id))
+          .filter((post, idx, arr) => {
+            const key = post.feed_item_id || (post.is_repost ? `repost-${post.id}-${post.reposted_by?.id || ''}` : post.id)
+            return arr.findIndex(p => (p.feed_item_id || (p.is_repost ? `repost-${p.id}-${p.reposted_by?.id || ''}` : p.id)) === key) === idx
+          })
+          .map((post, index) => {
+            const postDate = new Date(post.created_at)
+            const dateDisplay = postDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            const itemKey = post.feed_item_id || (post.is_repost ? `repost-${post.id}-${post.reposted_by?.id || index}` : `${post.id}-${index}`)
 
-            <article 
-              key={post.feed_item_id || post.id}
-              className={`px-4 py-3.5 hover:bg-black/[0.015] dark:hover:bg-white/[0.02] transition-colors border-b border-[#eff3f4] dark:border-[#2f3336] flex flex-col text-left w-full group/card ${isJourneyMode ? 'relative z-10' : ''}`}
-            >
+            return (
+              <div key={itemKey} className={isJourneyMode ? "relative pl-[90px] md:pl-[120px]" : ""}>
+                {/* Timeline UI for Journey Mode */}
+                {isJourneyMode && (
+                  <>
+                    {/* Vertical Line */}
+                    {index !== posts.length - 1 && (
+                      <div className="absolute left-[7px] top-[40px] bottom-[-40px] w-px bg-gray-200 dark:bg-[#2D2B3B] z-0"></div>
+                    )}
+                    
+                    {/* Date & Dot */}
+                    <div className="absolute left-0 top-6 flex items-center gap-4 z-10">
+                      <div className={`w-4 h-4 rounded-full border-[3px] border-white dark:border-[#0B0A10] shadow-sm shrink-0 ${index === 0 ? 'bg-emerald-400' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                      <span className="text-[14px] font-bold text-gray-900 dark:text-white whitespace-nowrap">{dateDisplay}</span>
+                    </div>
+                  </>
+                )}
+
+                <article 
+                  className={`px-4 py-3.5 hover:bg-black/[0.015] dark:hover:bg-white/[0.02] transition-colors border-b border-[#eff3f4] dark:border-[#2f3336] flex flex-col text-left w-full group/card ${isJourneyMode ? 'relative z-10' : ''}`}
+                >
               {/* Repost Header Banner: Display "Username reposted" if pure repost */}
               {post.is_repost && (
                 <div className="flex items-center gap-2 text-xs font-bold text-[#536471] dark:text-[#71767b] mb-1.5 ml-11">
