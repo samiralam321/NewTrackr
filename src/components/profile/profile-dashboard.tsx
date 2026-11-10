@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Flame, Star, BookOpen, Share2, Puzzle, Trophy, MapPin, Calendar, Edit2, Users, Compass, FileText, MessageCircle, Bookmark, Heart, Award, ChevronLeft, Lock } from "lucide-react"
+import { Flame, Star, BookOpen, Share2, Puzzle, Trophy, MapPin, Calendar, Edit2, Users, Compass, FileText, MessageCircle, Bookmark, Heart, Award, ArrowLeft, Lock } from "lucide-react"
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { FollowButton } from "@/components/profile/follow-button"
 import { Feed } from "@/components/dashboard/feed"
 import { FollowListDialog } from "@/components/profile/follow-list-dialog"
@@ -50,7 +51,16 @@ export function ProfileDashboard({
   const onlineUsers = usePresence()
   const isOnline = profileState?.id ? onlineUsers.includes(profileState?.id) : false
   
+  const router = useRouter()
   const supabase = createClient()
+
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+    } else {
+      router.push('/dashboard')
+    }
+  }
 
   // Save to client cache whenever data changes
   useEffect(() => {
@@ -252,9 +262,16 @@ export function ProfileDashboard({
         {/* HERO SECTION */}
         <div className="bg-white dark:bg-[#0B0A10] rounded-3xl border border-gray-100 dark:border-[#2D2B3B] shadow-sm overflow-hidden relative">
           <div className="h-40 md:h-48 bg-gradient-to-r from-violet-300 via-fuchsia-200 to-pink-200 dark:from-violet-900/60 dark:via-fuchsia-900/40 dark:to-pink-900/40 w-full relative">
-            <Link href="/dashboard" className="absolute top-4 left-4 z-10 md:hidden bg-white/20 hover:bg-white/40 backdrop-blur-md p-2 rounded-full text-gray-900 transition-colors shadow-sm">
-              <ChevronLeft className="w-6 h-6" />
-            </Link>
+            {/* Top-Left Back Button */}
+            <button
+              type="button"
+              onClick={handleBack}
+              aria-label="Back"
+              title="Back"
+              className="absolute top-4 left-4 z-20 flex items-center justify-center w-10 h-10 bg-white/70 hover:bg-white dark:bg-black/50 dark:hover:bg-black text-gray-800 dark:text-gray-100 backdrop-blur-md rounded-full shadow-sm hover:shadow border border-white/40 dark:border-white/10 transition-all duration-200 active:scale-95 cursor-pointer group"
+            >
+              <ArrowLeft className="w-5 h-5 transition-transform duration-150 group-hover:-translate-x-0.5" strokeWidth={2.2} />
+            </button>
             
             {/* Top-Right Menu Button */}
             {isCurrentUser && (
