@@ -388,21 +388,18 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : 'Samir'
 
   return (
-    <div className="bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 mb-6 relative">
-      {/* Category Selection Bar (Learned, Built, Practiced, Other) */}
-      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100 dark:border-[#1F1E2A] overflow-x-auto no-scrollbar">
-        <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 mr-1 shrink-0">
-          Category:
-        </span>
+    <div className="px-4 py-3.5 border-b border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] relative">
+      {/* Category Selection Bar (Twitter Style: Compact, discreet pills) */}
+      <div className="flex items-center gap-1.5 mb-2 pl-12 overflow-x-auto no-scrollbar">
         {categories.map((cat) => (
           <button
             key={cat.type}
             type="button"
             onClick={() => setProgressType(cat.type)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 select-none ${
+            className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-all flex items-center gap-1 shrink-0 select-none ${
               progressType === cat.type
-                ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 border border-violet-300 dark:border-violet-700 shadow-sm'
-                : 'bg-gray-50 text-gray-600 dark:bg-[#1A1A24] dark:text-gray-400 border border-gray-200/50 dark:border-[#2D2B3B] hover:bg-gray-100 dark:hover:bg-[#252330]'
+                ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 border border-violet-200 dark:border-violet-700'
+                : 'bg-gray-100/70 text-gray-600 dark:bg-[#1A1A24] dark:text-gray-400 hover:bg-gray-200/60 dark:hover:bg-[#252330]'
             }`}
           >
             <span>{cat.icon}</span>
@@ -420,7 +417,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
           height={40}
           loading="lazy"
           decoding="async"
-          className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-100 dark:border-gray-800 mt-1"
+          className="w-10 h-10 rounded-full object-cover shrink-0 mt-0.5"
         />
 
         <div className="flex-1 min-w-0 relative">
@@ -431,7 +428,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
             onChange={handleTextChange}
             onFocus={() => setIsFocused(true)}
             placeholder={`What's on your mind, ${firstName}?`}
-            className="w-full text-[14.5px] bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none resize-none leading-relaxed"
+            className="w-full text-[17px] sm:text-[18px] text-[#0f1419] dark:text-[#e7e9ea] placeholder-[#536471] dark:placeholder-[#71767b] bg-transparent outline-none border-none resize-none leading-relaxed min-h-[48px]"
           />
 
           {/* User @Mention Autocomplete Dropdown Popover */}
@@ -516,18 +513,18 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
             className="hidden"
           />
 
-          {/* Bottom Action Bar: Image, Tag People, Emoji */}
-          <div className="flex items-center justify-between pt-2.5 border-t border-gray-100 dark:border-[#1F1E2A] mt-2 relative">
+          {/* Bottom Action Bar: Image, Tag People, Emoji (Twitter Style) */}
+          <div className="flex items-center justify-between pt-2.5 border-t border-[#eff3f4] dark:border-[#2f3336] mt-2 relative">
             {/* Quick Action Icons: Image Upload, Tag People (@Mention), Emoji Picker */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               {/* 1. Image Upload Button */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 title="Upload image (JPG, PNG, WEBP)"
-                className={`p-2 rounded-xl text-gray-500 hover:text-violet-600 hover:bg-violet-50 dark:text-gray-400 dark:hover:text-violet-400 dark:hover:bg-[#1A1A24] transition-colors ${imageFile ? 'text-violet-600 bg-violet-50 dark:bg-violet-950/50' : ''}`}
+                className={`p-2 rounded-full text-[#7C3AED] hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors ${imageFile ? 'bg-violet-100 dark:bg-violet-950/60' : ''}`}
               >
-                <ImageIcon className="w-4 h-4" />
+                <ImageIcon className="w-[19px] h-[19px]" />
               </button>
 
               {/* 2. Tag People (@Mention) Button */}
@@ -535,9 +532,9 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
                 type="button"
                 onClick={triggerMentionButton}
                 title="Tag people (@mention)"
-                className="p-2 rounded-xl text-gray-500 hover:text-violet-600 hover:bg-violet-50 dark:text-gray-400 dark:hover:text-violet-400 dark:hover:bg-[#1A1A24] transition-colors"
+                className="p-2 rounded-full text-[#7C3AED] hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors"
               >
-                <AtSign className="w-4 h-4" />
+                <AtSign className="w-[19px] h-[19px]" />
               </button>
 
               {/* 3. Emoji Picker Button */}
@@ -546,9 +543,9 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   title="Add emoji"
-                  className={`p-2 rounded-xl text-gray-500 hover:text-violet-600 hover:bg-violet-50 dark:text-gray-400 dark:hover:text-violet-400 dark:hover:bg-[#1A1A24] transition-colors ${showEmojiPicker ? 'text-violet-600 bg-violet-50 dark:bg-violet-950/50' : ''}`}
+                  className={`p-2 rounded-full text-[#7C3AED] hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors ${showEmojiPicker ? 'bg-violet-100 dark:bg-violet-950/60' : ''}`}
                 >
-                  <Smile className="w-4 h-4" />
+                  <Smile className="w-[19px] h-[19px]" />
                 </button>
 
                 {/* Emoji Picker Popover */}
@@ -611,10 +608,10 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting || (!content.trim() && !imageFile)}
-                className={`px-5 py-1.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 select-none ${
+                className={`px-5 py-2 rounded-full text-[14px] font-bold transition-all duration-150 flex items-center gap-1.5 select-none ${
                   content.trim() || imageFile
-                    ? 'bg-violet-600 hover:bg-violet-700 text-white shadow-md shadow-violet-500/20 active:scale-95 cursor-pointer'
-                    : 'bg-violet-300 dark:bg-violet-950/60 text-white/70 dark:text-violet-400/40 cursor-not-allowed'
+                    ? 'bg-[#7C3AED] hover:bg-violet-700 active:scale-95 text-white shadow-none cursor-pointer'
+                    : 'bg-[#7C3AED]/40 dark:bg-[#7C3AED]/30 text-white/60 dark:text-white/40 cursor-not-allowed shadow-none'
                 }`}
               >
                 {isSubmitting ? (

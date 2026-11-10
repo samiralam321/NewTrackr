@@ -267,20 +267,20 @@ export function Sidebar({ profile }: { profile?: any }) {
   }
 
   return (
-    <aside className="w-[280px] h-screen sticky top-0 z-50 border-r border-gray-100 dark:border-[#2D2B3B] bg-white dark:bg-[#0B0A10] flex flex-col pt-4 pb-4 px-4 shrink-0 overflow-y-auto no-scrollbar transition-colors duration-300">
+    <aside className="w-[260px] xl:w-[285px] 2xl:w-[320px] h-screen sticky top-0 z-30 border-r border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] flex flex-col pt-2 pb-3 px-3 shrink-0 overflow-y-auto no-scrollbar transition-colors select-none">
       {/* Logo */}
       <Link 
         href="/dashboard" 
         prefetch={true} 
         onMouseEnter={() => { try { router.prefetch('/dashboard') } catch {} }}
-        className="flex items-center gap-3 px-2 mb-4 shrink-0"
+        className="flex items-center gap-3 px-3 py-2.5 mb-1 shrink-0 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors w-fit group"
       >
-        <img src="/logo.png" alt="Trackr Logo" className="w-12 h-12 object-contain drop-shadow-sm scale-[1.2] origin-left" />
+        <img src="/logo.png" alt="Trackr Logo" className="w-10 h-10 object-contain drop-shadow-xs group-hover:scale-105 transition-transform" />
         <span className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Trackr</span>
       </Link>
 
-      {/* Nav Items */}
-      <nav className="flex flex-col gap-0.5 mb-4 shrink-0">
+      {/* Nav Items - Twitter Navigation Rhythm (20px typography, 22px icons, rounded-full hover) */}
+      <nav className="flex flex-col gap-0.5 my-1 shrink-0">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -290,33 +290,26 @@ export function Sidebar({ profile }: { profile?: any }) {
               prefetch={true}
               onMouseEnter={() => { try { router.prefetch(item.href) } catch {} }}
               onTouchStart={() => { try { router.prefetch(item.href) } catch {} }}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors relative select-none ${
+              className={`flex items-center gap-4 px-3.5 py-2.5 xl:px-4 xl:py-3 rounded-full transition-all duration-150 relative select-none w-fit min-w-[210px] group ${
                 isActive 
-                  ? 'text-violet-600 dark:text-violet-400 font-semibold' 
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50/80 dark:hover:bg-[#1A1A24] hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-[#7C3AED] dark:text-[#A78BFA] font-bold bg-violet-50/80 dark:bg-violet-950/30' 
+                  : 'text-[#0f1419] dark:text-[#e7e9ea] font-medium hover:bg-black/[0.04] dark:hover:bg-white/[0.07]'
               }`}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="sidebar-active-pill"
-                  className="absolute inset-0 bg-[#EEECFF] dark:bg-[#1A1A24] rounded-xl"
-                  transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                />
-              )}
-              <div className="relative z-10 flex items-center justify-center">
-                <item.icon className="w-5 h-5" />
+              <div className="relative flex items-center justify-center shrink-0">
+                <item.icon className={`w-[22px] h-[22px] transition-transform group-hover:scale-105 ${isActive ? 'stroke-[2.6]' : 'stroke-[2]'}`} />
                 {item.name === 'Notifications' && unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-violet-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] h-[16px] flex items-center justify-center shadow-sm leading-none border-2 border-white dark:border-[#0B0A10] z-10">
-                    {unreadCount > 5 ? '5+' : unreadCount}
+                  <span className="absolute -top-1.5 -right-1.5 bg-violet-600 text-white text-[9.5px] font-bold px-1 rounded-full min-w-[17px] h-[17px] flex items-center justify-center shadow-xs leading-none border-2 border-white dark:border-black z-10">
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
                 {item.name === 'Messages' && unreadMessagesCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-violet-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] h-[16px] flex items-center justify-center shadow-sm leading-none border-2 border-white dark:border-[#0B0A10] z-10">
+                  <span className="absolute -top-1.5 -right-1.5 bg-violet-600 text-white text-[9.5px] font-bold px-1 rounded-full min-w-[17px] h-[17px] flex items-center justify-center shadow-xs leading-none border-2 border-white dark:border-black z-10">
                     {unreadMessagesCount}
                   </span>
                 )}
               </div>
-              <span className="relative z-10">{item.name}</span>
+              <span className="text-[18px] xl:text-[19px] tracking-tight">{item.name}</span>
             </Link>
           )
         })}
@@ -324,39 +317,44 @@ export function Sidebar({ profile }: { profile?: any }) {
         {/* Contact Button */}
         <button 
           onClick={() => setIsContactOpen(true)}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A24] hover:text-gray-900 dark:hover:text-white text-left cursor-pointer w-full"
+          className="flex items-center gap-4 px-3.5 py-2.5 xl:px-4 xl:py-3 rounded-full transition-all duration-150 text-[#0f1419] dark:text-[#e7e9ea] font-medium hover:bg-black/[0.04] dark:hover:bg-white/[0.07] text-left cursor-pointer w-fit min-w-[210px] group"
         >
-          <div className="relative flex items-center justify-center">
-            <MessageSquare className="w-5 h-5" />
+          <div className="relative flex items-center justify-center shrink-0">
+            <MessageSquare className="w-[22px] h-[22px] stroke-[2] group-hover:scale-105 transition-transform" />
           </div>
-          Contact
+          <span className="text-[18px] xl:text-[19px] tracking-tight">Contact</span>
         </button>
 
         {/* PWA Install Button */}
-        <InstallButton />
+        <div className="mt-1">
+          <InstallButton />
+        </div>
       </nav>
 
-      {/* Streak Widget */}
-      <div className="mb-4 px-2 shrink-0">
-        <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Keep your streak alive!</p>
-        <div className="flex items-end gap-2.5 mb-3">
-          <div className="text-3xl">{displayStreak > 0 ? '🔥' : '⏳'}</div>
-          <div className="flex flex-col">
-            <span className="text-xl font-bold leading-none text-gray-900 dark:text-white">{displayStreak}</span>
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">day streak</span>
+      {/* Streak Tracker - Minimal & Non-intrusive */}
+      <div className="my-2.5 p-3 rounded-2xl bg-[#f7f9f9] dark:bg-[#16181c] border border-[#eff3f4] dark:border-[#2f3336] shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{displayStreak > 0 ? '🔥' : '⏳'}</span>
+            <div>
+              <p className="text-xs font-bold text-[#0f1419] dark:text-[#e7e9ea]">
+                {displayStreak} Day Streak
+              </p>
+              <p className="text-[10.5px] text-[#536471] dark:text-[#71767b]">Keep learning daily</p>
+            </div>
           </div>
         </div>
-        <div className="flex gap-1">
+        <div className="flex justify-between items-center px-1">
           {days.map((day, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
-              <span className="text-[9px] font-bold text-gray-400">{day}</span>
+              <span className="text-[9px] font-semibold text-gray-400">{day}</span>
               {activeDays[i] ? (
-                <div className="w-5.5 h-5.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400 flex items-center justify-center">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                <div className="w-4.5 h-4.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                  <CheckCircle2 className="w-3 h-3 stroke-[3]" />
                 </div>
               ) : (
-                <div className="w-5.5 h-5.5 rounded-full bg-gray-100 dark:bg-[#1A1A24] flex items-center justify-center">
-                  <div className="w-1 h-1 rounded-full bg-gray-300 dark:bg-[#2D2B3B]"></div>
+                <div className="w-4.5 h-4.5 rounded-full bg-gray-200 dark:bg-[#25282c] flex items-center justify-center">
+                  <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-600"></div>
                 </div>
               )}
             </div>
@@ -364,21 +362,20 @@ export function Sidebar({ profile }: { profile?: any }) {
         </div>
       </div>
 
-      {/* Fixed Bottom Controls */}
-      <div className="mt-auto pt-3 border-t border-gray-100 dark:border-[#2D2B3B]/60 shrink-0">
-        <div className="mb-3 flex justify-center">
+      {/* Fixed Bottom Controls: Theme Toggle & Twitter-Style User Profile Pill */}
+      <div className="mt-auto pt-2 border-t border-[#eff3f4] dark:border-[#2f3336] shrink-0 space-y-2">
+        <div className="flex items-center justify-between px-2">
+          <span className="text-[12px] font-semibold text-[#536471] dark:text-[#71767b]">Appearance</span>
           <ThemeToggle />
         </div>
 
-        {/* Profile Info */}
-        <div className="flex items-center gap-2">
-          <Link 
-            href="/profile" 
-            prefetch={true}
-            onMouseEnter={() => { try { router.prefetch('/profile') } catch {} }}
-            onTouchStart={() => { try { router.prefetch('/profile') } catch {} }}
-            className="flex-1 flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-colors border border-gray-100 dark:border-[#2D2B3B] shadow-sm min-w-0"
-          >
+        {/* Twitter-Style User Profile Row */}
+        <div 
+          onClick={() => setIsLogoutModalOpen(true)}
+          className="flex items-center justify-between p-2 rounded-full hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors cursor-pointer w-full group"
+          title="Account options"
+        >
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <img 
               src={profileState?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileState?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} 
               alt="Profile" 
@@ -389,20 +386,18 @@ export function Sidebar({ profile }: { profile?: any }) {
               className="w-10 h-10 rounded-full object-cover shrink-0"
             />
             <div className="flex flex-col overflow-hidden min-w-0">
-              <span className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5 min-w-0">
+              <span className="text-[14.5px] font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-1 min-w-0 truncate">
                 <span className="truncate">{profileState?.full_name || 'Samir Alam'}</span>
                 <VerifiedBadge level={getBadgeLevel(profileState?.consistency_score)} />
               </span>
-              <span className="text-xs font-medium text-gray-400 dark:text-gray-500 truncate">{getUserHandle(profileState?.full_name)}</span>
+              <span className="text-[13px] text-[#536471] dark:text-[#71767b] font-normal truncate">
+                {getUserHandle(profileState?.full_name)}
+              </span>
             </div>
-          </Link>
-          <button 
-            onClick={() => setIsLogoutModalOpen(true)}
-            className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
-            title="Log out"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
+          </div>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-[#536471] dark:text-[#71767b] group-hover:text-red-500 transition-colors shrink-0">
+            <LogOut className="w-4 h-4" />
+          </div>
         </div>
       </div>
 

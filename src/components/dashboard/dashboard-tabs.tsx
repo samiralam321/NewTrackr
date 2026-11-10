@@ -65,39 +65,36 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
 
   return (
     <div className="w-full">
-      {/* Sliding Pill Navigation Bar (Matching Design) */}
-      <div className="flex items-center pb-4 mb-3 overflow-x-auto no-scrollbar">
-        <div className="inline-flex items-center gap-1 p-1 bg-[#F4F3F7] dark:bg-[#15141D] rounded-full border border-gray-200/70 dark:border-[#2D2B3B]/80 shadow-inner">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`relative px-4 sm:px-5 py-2 text-xs md:text-sm font-semibold rounded-full transition-colors duration-200 flex items-center gap-2 select-none shrink-0 cursor-pointer ${
-                  isActive
-                    ? "text-white"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
+      {/* Twitter-Style Sticky Top Navigation Bar */}
+      <div className="sticky top-0 z-20 backdrop-blur-md bg-white/85 dark:bg-black/85 border-b border-[#eff3f4] dark:border-[#2f3336] flex items-center overflow-x-auto no-scrollbar w-full">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className="flex-1 min-w-[70px] sm:min-w-[85px] h-[52px] flex items-center justify-center relative cursor-pointer hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition-colors select-none"
+            >
+              <div className="flex items-center justify-center h-full relative px-3">
+                <span className={`text-[14.5px] sm:text-[15px] transition-colors tracking-tight ${
+                  isActive 
+                    ? "font-bold text-[#0f1419] dark:text-[#e7e9ea]" 
+                    : "font-medium text-[#536471] dark:text-[#71767b]"
+                }`}>
+                  {tab.label}
+                </span>
+
                 {isActive && (
                   <motion.div
-                    layoutId="sliding-feed-pill"
-                    className="absolute inset-0 bg-[#7C3AED] rounded-full shadow-md shadow-violet-500/25"
-                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    layoutId="twitter-tab-indicator"
+                    className="absolute bottom-0 left-0 right-0 h-1 bg-[#7C3AED] rounded-full"
+                    transition={{ type: "spring", stiffness: 500, damping: 38 }}
                   />
                 )}
-                <Icon
-                  className={`w-4 h-4 relative z-10 transition-colors duration-200 ${
-                    isActive ? "text-white" : "text-gray-400 dark:text-gray-500"
-                  }`}
-                />
-                <span className="relative z-10">{tab.label}</span>
-              </button>
-            )
-          })}
-        </div>
+              </div>
+            </button>
+          )
+        })}
       </div>
 
       {/* When in Opportunities mode: Render the dedicated Opportunities Discovery Feed */}

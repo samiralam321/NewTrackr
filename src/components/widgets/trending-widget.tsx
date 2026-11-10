@@ -1,7 +1,6 @@
 'use client'
 
 import Link from "next/link"
-import { Flame, ArrowUpRight } from "lucide-react"
 
 interface TrendingTopic {
   rank: number
@@ -20,49 +19,48 @@ const TRENDING_TOPICS: TrendingTopic[] = [
 
 export function TrendingWidget() {
   return (
-    <div className="bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 shadow-sm transition-colors">
+    <div className="bg-[#f7f9f9] dark:bg-[#16181c] border border-[#eff3f4] dark:border-[#2f3336] rounded-2xl overflow-hidden transition-colors">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3.5">
-        <div className="flex items-center gap-2">
-          <Flame className="w-4 h-4 text-violet-600 dark:text-violet-400 fill-violet-600/20" />
-          <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-white">Trending Now</h3>
-        </div>
-        <Link
-          href="/explore"
-          className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors flex items-center gap-0.5"
-        >
-          See all →
-        </Link>
+      <div className="px-4 pt-3.5 pb-1 flex items-center justify-between">
+        <h3 className="text-[17px] font-extrabold text-[#0f1419] dark:text-[#e7e9ea]">
+          What&apos;s happening
+        </h3>
       </div>
 
       {/* List */}
-      <div className="space-y-3">
+      <div>
         {TRENDING_TOPICS.map((topic) => (
           <Link
             key={topic.rank}
             href={`/explore?tag=${encodeURIComponent(topic.tag.replace('#', ''))}`}
-            className="flex items-center justify-between group p-1.5 -mx-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-colors"
+            className="px-4 py-3 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors flex items-center justify-between group cursor-pointer"
           >
-            <div className="flex items-start gap-3 min-w-0">
-              <span className="text-[12px] font-bold text-gray-400 dark:text-gray-500 w-3 text-center mt-0.5">
-                {topic.rank}
-              </span>
-              <div className="min-w-0">
-                <p className="text-[13.5px] font-semibold text-gray-900 dark:text-gray-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors truncate">
-                  {topic.title}
-                </p>
-                <p className="text-[11.5px] text-gray-400 dark:text-gray-500 font-medium">
-                  {topic.postsCount}
-                </p>
-              </div>
+            <div className="min-w-0 pr-2">
+              <p className="text-[12px] text-[#536471] dark:text-[#71767b] font-normal leading-4">
+                Trending in Tech • {topic.tag}
+              </p>
+              <p className="text-[14.5px] font-bold text-[#0f1419] dark:text-[#e7e9ea] leading-5 mt-0.5 truncate group-hover:underline">
+                {topic.title}
+              </p>
+              <p className="text-[12px] text-[#536471] dark:text-[#71767b] font-normal leading-4 mt-0.5">
+                {topic.postsCount}
+              </p>
             </div>
 
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-100 dark:border-violet-800/40 shrink-0 group-hover:border-violet-300 dark:group-hover:border-violet-700 transition-colors">
-              {topic.tag}
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-100 dark:border-purple-800/40 shrink-0">
+              #{topic.rank}
             </span>
           </Link>
         ))}
       </div>
+
+      {/* Footer / Show more */}
+      <Link
+        href="/explore"
+        className="px-4 py-3.5 text-[14px] font-medium text-[#7C3AED] hover:bg-black/[0.03] dark:hover:bg-white/[0.03] block transition-colors"
+      >
+        Show more
+      </Link>
     </div>
   )
 }

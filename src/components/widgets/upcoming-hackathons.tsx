@@ -1,7 +1,6 @@
 'use client'
 
-import Link from "next/link"
-import { Calendar, ExternalLink } from "lucide-react"
+
 
 interface HackathonItem {
   id: string
@@ -63,42 +62,31 @@ function HackathonLogo({ type }: { type: HackathonItem['logoType'] }) {
 
 export function UpcomingHackathons() {
   return (
-    <div className="bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 shadow-sm transition-colors">
+    <div className="bg-[#f7f9f9] dark:bg-[#16181c] border border-[#eff3f4] dark:border-[#2f3336] rounded-2xl overflow-hidden transition-colors">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3.5">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-          <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-white">Upcoming Hackathons</h3>
-        </div>
-        <button
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new CustomEvent('switch-feed-tab', { detail: 'opportunities' }))
-            }
-          }}
-          className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors flex items-center gap-0.5 cursor-pointer"
-        >
-          See all →
-        </button>
+      <div className="px-4 pt-3.5 pb-1 flex items-center justify-between">
+        <h3 className="text-[17px] font-extrabold text-[#0f1419] dark:text-[#e7e9ea]">
+          Upcoming Hackathons
+        </h3>
       </div>
 
       {/* List */}
-      <div className="space-y-3">
+      <div>
         {HACKATHONS.map((hackathon) => (
           <a
             key={hackathon.id}
             href={hackathon.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between group p-1.5 -mx-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-colors"
+            className="px-4 py-3 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors flex items-center justify-between group cursor-pointer"
           >
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3 min-w-0 pr-2">
               <HackathonLogo type={hackathon.logoType} />
               <div className="min-w-0">
-                <p className="text-[13.5px] font-semibold text-gray-900 dark:text-gray-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors truncate">
+                <p className="text-[14.5px] font-bold text-[#0f1419] dark:text-[#e7e9ea] truncate group-hover:underline">
                   {hackathon.name}
                 </p>
-                <p className="text-[11.5px] text-gray-400 dark:text-gray-500 font-medium">
+                <p className="text-[12px] text-[#536471] dark:text-[#71767b] font-normal">
                   {hackathon.dates}
                 </p>
               </div>
@@ -110,6 +98,18 @@ export function UpcomingHackathons() {
           </a>
         ))}
       </div>
+
+      {/* Footer / Show more */}
+      <button
+        onClick={() => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('switch-feed-tab', { detail: 'opportunities' }))
+          }
+        }}
+        className="w-full text-left px-4 py-3.5 text-[14px] font-medium text-[#7C3AED] hover:bg-black/[0.03] dark:hover:bg-white/[0.03] block transition-colors cursor-pointer border-t border-[#eff3f4] dark:border-[#2f3336]/60"
+      >
+        Show all opportunities
+      </button>
     </div>
   )
 }

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Users } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
@@ -205,12 +204,12 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
 
   if (loading && users.length === 0) {
     return (
-      <div className="bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 shadow-sm animate-pulse">
+      <div className="bg-[#f7f9f9] dark:bg-[#16181c] border border-[#eff3f4] dark:border-[#2f3336] rounded-2xl p-4 animate-pulse">
         <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/3 mb-4"></div>
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
             <div key={i} className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800"></div>
               <div className="flex-1 space-y-1.5">
                 <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-3/4"></div>
                 <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-1/2"></div>
@@ -225,23 +224,16 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
   if (users.length === 0) return null
 
   return (
-    <div className="bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 shadow-sm transition-colors">
+    <div className="bg-[#f7f9f9] dark:bg-[#16181c] border border-[#eff3f4] dark:border-[#2f3336] rounded-2xl overflow-hidden transition-colors">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3.5">
-        <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-          <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-white">Most Active</h3>
-        </div>
-        <Link
-          href="/explore"
-          className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors flex items-center gap-0.5"
-        >
-          See all →
-        </Link>
+      <div className="px-4 pt-3.5 pb-1 flex items-center justify-between">
+        <h3 className="text-[17px] font-extrabold text-[#0f1419] dark:text-[#e7e9ea]">
+          Who to follow
+        </h3>
       </div>
 
-      {/* Top 5 most active users list */}
-      <div className="space-y-3">
+      {/* Top 5 most active users list (Samir Alam pinned at #1) */}
+      <div>
         {users.map((user) => {
           const isFollowing = !!followingMap[user.id]
           const isSelf = currentUserId === user.id
@@ -252,34 +244,34 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
           return (
             <div
               key={user.id}
-              className="flex items-center justify-between group p-1 -mx-1 rounded-xl hover:bg-gray-50/80 dark:hover:bg-[#1A1A24]/60 transition-colors"
+              className="px-4 py-3 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors flex items-center justify-between group"
             >
               <Link
                 href={`/profile/${user.id}`}
-                className="flex items-center gap-2.5 min-w-0 flex-1 mr-2"
+                className="flex items-center gap-3 min-w-0 flex-1 mr-2"
               >
                 <img
                   src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=7C3AED&color=fff&size=80`}
                   alt={user.full_name || "User"}
-                  width={36}
-                  height={36}
+                  width={40}
+                  height={40}
                   loading="lazy"
                   decoding="async"
-                  className="w-9 h-9 rounded-full object-cover shrink-0 border border-gray-100 dark:border-gray-800"
+                  className="w-10 h-10 rounded-full object-cover shrink-0"
                 />
                 <div className="min-w-0">
                   <div className="flex items-center gap-1">
-                    <p className="text-[13.5px] font-semibold text-gray-900 dark:text-gray-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors truncate">
+                    <p className="text-[14.5px] font-bold text-[#0f1419] dark:text-[#e7e9ea] truncate group-hover:underline">
                       {user.full_name || "Student"}
                     </p>
                     <VerifiedBadge level={badgeLevel} />
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <p className="text-[11.5px] text-gray-400 dark:text-gray-500 font-normal truncate">
+                    <p className="text-[13px] text-[#536471] dark:text-[#71767b] font-normal truncate">
                       {handle}
                     </p>
                     {streak > 0 && (
-                      <span className="text-[10.5px] font-bold text-orange-500 dark:text-orange-400 flex items-center gap-0.5 shrink-0">
+                      <span className="text-[11px] font-bold text-orange-500 dark:text-orange-400 flex items-center gap-0.5 shrink-0">
                         🔥{streak}
                       </span>
                     )}
@@ -289,16 +281,16 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
 
               {/* Follow Button or You Tag */}
               {isSelf ? (
-                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/60 dark:border-violet-800/40 select-none">
+                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40 select-none">
                   You
                 </span>
               ) : (
                 <button
                   onClick={() => handleToggleFollow(user.id)}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all shrink-0 select-none ${
+                  className={`px-4 py-1.5 text-[13px] font-bold rounded-full transition-all shrink-0 select-none ${
                     isFollowing
-                      ? "bg-gray-100 dark:bg-[#1A1A24] text-gray-700 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 border border-gray-200/60 dark:border-[#2D2B3B]"
-                      : "bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-300 hover:bg-violet-600 hover:text-white dark:hover:bg-violet-600 dark:hover:text-white border border-violet-200/60 dark:border-violet-800/40"
+                      ? "bg-transparent text-[#0f1419] dark:text-[#e7e9ea] border border-[#cfd9de] dark:border-[#536471] hover:border-red-500 hover:text-red-600 hover:bg-red-500/10"
+                      : "bg-[#0f1419] text-white dark:bg-[#eff3f4] dark:text-[#0f1419] hover:bg-[#272c30] dark:hover:bg-[#d7dbdc]"
                   }`}
                 >
                   {isFollowing ? "Following" : "Follow"}
@@ -308,6 +300,14 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
           )
         })}
       </div>
+
+      {/* Footer / Show more */}
+      <Link
+        href="/explore"
+        className="px-4 py-3.5 text-[14px] font-medium text-[#7C3AED] hover:bg-black/[0.03] dark:hover:bg-white/[0.03] block transition-colors border-t border-[#eff3f4] dark:border-[#2f3336]/60"
+      >
+        Show more
+      </Link>
     </div>
   )
 }
