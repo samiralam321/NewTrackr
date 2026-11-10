@@ -101,15 +101,20 @@ UPDATE public.profiles
 SET username = 'gravity' 
 WHERE lower(trim(full_name)) = 'gravity' AND (username IS NULL OR username = '');
 
--- Fallback for any other remaining user profiles:
+-- Fallback for any other remaining user profiles (safely limited to 15 chars to leave room for padding):
 UPDATE public.profiles 
-SET username = regexp_replace(lower(trim(coalesce(full_name, 'student'))), '[^a-z0-9_]', '_', 'g')
+SET username = substr(regexp_replace(lower(trim(coalesce(full_name, 'student'))), '[^a-z0-9_]', '_', 'g'), 1, 15)
 WHERE username IS NULL OR username = '';
 
 -- Ensure length is at least 3 characters
 UPDATE public.profiles 
 SET username = username || '_' || substr(id::text, 1, 4)
 WHERE length(username) < 3;
+
+-- Guarantee hard limit of maximum 20 characters
+UPDATE public.profiles 
+SET username = substr(username, 1, 20)
+WHERE length(username) > 20;
 
 -- 3. Create Case-Insensitive Unique Index (Twitter-style unique handles)
 DROP INDEX IF EXISTS public.profiles_username_unique_idx;
