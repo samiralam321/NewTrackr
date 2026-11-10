@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { z } from "zod"
 
 export const dynamic = 'force-dynamic'
+
+const BookmarkRequestSchema = z.object({
+  opportunityId: z.string().min(1).max(120),
+  action: z.enum(['add', 'remove']).default('add')
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,12 +24,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { opportunityId, action } = await request.json()
-    if (!opportunityId) {
-      return NextResponse.json({ error: "Missing opportunityId" }, { status: 400 })
+    const body = await request.json().catch(() => null)
+    const parsed = BookmarkRequestSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid request payload" }, { status: 400 })
     }
 
-    // Try saving in Supabase if opportunity_bookmarks table exists
+    const { opportunityId, action } = parsed.data
+
     try {
       if (action === 'remove') {
         await supabase
@@ -40,13 +49,14 @@ export async function POST(request: NextRequest) {
       console.warn("Database opportunity bookmark fallback:", dbErr)
     }
 
-    return NextResponse.json({ success: true, opportunityId, action: action || 'add' })
+    return NextResponse.json({ success: true, opportunityId, action })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error("Bookmark API error:", err)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient()
     let user = null
@@ -66,6 +76,7 @@ export async function GET(request: NextRequest) {
         .from('opportunity_bookmarks')
         .select('opportunity_id')
         .eq('user_id', user.id)
+        .limit(200)
 
       const ids = data?.map((b: any) => b.opportunity_id) || []
       return NextResponse.json({ bookmarkedIds: ids })

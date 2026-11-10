@@ -9,6 +9,12 @@ import { Label } from "@/components/ui/label"
 import { Loader2, Camera, UploadCloud, FileText, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { 
+  validateFileSecurity, 
+  IMAGE_UPLOAD_CONSTRAINTS, 
+  RESUME_UPLOAD_CONSTRAINTS,
+  sanitizeText
+} from "@/lib/security/api-security"
 
 type ProfileProps = {
   id: string
@@ -41,6 +47,11 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
+      const validation = validateFileSecurity(file, IMAGE_UPLOAD_CONSTRAINTS)
+      if (!validation.valid) {
+        alert(validation.error || "Please select a valid image (JPG, PNG, WEBP under 5MB)")
+        return
+      }
       setAvatarFile(file)
       setPreviewUrl(URL.createObjectURL(file))
     }
@@ -49,20 +60,25 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
   const handleSave = async () => {
     setIsLoading(true)
     try {
+      const { data: authData } = await supabase.auth.getUser()
+      if (!authData.user || authData.user.id !== profile.id) {
+        throw new Error("Unauthorized to edit this profile")
+      }
+
       let avatarUrl = profile.avatar_url
 
       if (avatarFile) {
-        const fileExt = avatarFile.name.split('.').pop()
-        const fileName = `${profile.id}-${Math.random()}.${fileExt}`
+        const fileExt = avatarFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const safeFileName = `${profile.id}-${Date.now()}.${fileExt}`
         const { error: uploadError } = await supabase.storage
           .from('avatars')
-          .upload(fileName, avatarFile, { upsert: true })
+          .upload(safeFileName, avatarFile, { upsert: true })
         
         if (uploadError) throw uploadError
 
         const { data: publicUrl } = supabase.storage
           .from('avatars')
-          .getPublicUrl(fileName)
+          .getPublicUrl(safeFileName)
         
         avatarUrl = publicUrl.publicUrl
       }
@@ -74,29 +90,33 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
         finalResumeUrl = null
         finalResumeName = null
       } else if (resumeFile) {
-        const fileExt = resumeFile.name.split('.').pop()
-        const fileName = `${profile.id}-resume-${Date.now()}.${fileExt}`
+        const fileExt = resumeFile.name.split('.').pop()?.toLowerCase() || 'pdf'
+        const safeResumeFileName = `${profile.id}-resume-${Date.now()}.${fileExt}`
         
         const { error: uploadError } = await supabase.storage
           .from('resumes')
-          .upload(fileName, resumeFile, { upsert: true })
+          .upload(safeResumeFileName, resumeFile, { upsert: true })
         
         if (uploadError) throw uploadError
 
         const { data: publicUrl } = supabase.storage
           .from('resumes')
-          .getPublicUrl(fileName)
+          .getPublicUrl(safeResumeFileName)
         
         finalResumeUrl = publicUrl.publicUrl
-        finalResumeName = resumeFile.name
+        finalResumeName = sanitizeText(resumeFile.name, 100)
       }
+
+      const cleanFullName = sanitizeText(fullName, 100)
+      const cleanBio = sanitizeText(bio, 500)
+      const cleanCollege = sanitizeText(college, 150)
 
       const { error } = await supabase
         .from('profiles')
         .update({
-          full_name: fullName,
-          bio,
-          college,
+          full_name: cleanFullName,
+          bio: cleanBio,
+          college: cleanCollege,
           avatar_url: avatarUrl,
           resume_url: finalResumeUrl,
           resume_name: finalResumeName
@@ -108,9 +128,9 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
       window.dispatchEvent(
         new CustomEvent('profile-updated', {
           detail: {
-            full_name: fullName,
-            bio,
-            college,
+            full_name: cleanFullName,
+            bio: cleanBio,
+            college: cleanCollege,
             avatar_url: avatarUrl,
             resume_url: finalResumeUrl,
             resume_name: finalResumeName
@@ -120,9 +140,9 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
 
       setOpen(false)
       router.refresh()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error)
-      alert("Failed to update profile.")
+      alert(error.message || "Failed to update profile.")
     } finally {
       setIsLoading(false)
     }
@@ -155,19 +175,19 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
               type="file" 
               ref={fileInputRef} 
               onChange={handleFileChange} 
-              accept="image/*" 
+              accept="image/jpeg,image/png,image/webp,image/jpg" 
               className="hidden" 
             />
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="rounded-xl border-gray-200" />
+            <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={100} className="rounded-xl border-gray-200" />
           </div>
           
           <div className="grid gap-2">
             <Label htmlFor="college">College / Organization</Label>
-            <Input id="college" value={college} onChange={(e) => setCollege(e.target.value)} placeholder="e.g. Stanford University" className="rounded-xl border-gray-200" />
+            <Input id="college" value={college} onChange={(e) => setCollege(e.target.value)} maxLength={150} placeholder="e.g. Stanford University" className="rounded-xl border-gray-200" />
           </div>
 
           <div className="grid gap-2">
@@ -177,6 +197,7 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
               value={bio} 
               onChange={(e) => setBio(e.target.value)} 
               placeholder="Tell us about yourself..."
+              maxLength={500}
               className="resize-none rounded-xl border-gray-200 h-24"
             />
           </div>
@@ -225,25 +246,28 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
                     const file = e.target.files[0]
-                    if (file.size > 5 * 1024 * 1024) {
-                      alert("File is too large. Max size is 5MB.")
+                    const validation = validateFileSecurity(file, RESUME_UPLOAD_CONSTRAINTS)
+                    if (!validation.valid) {
+                      alert(validation.error || "Please select a valid resume file (PDF or Word document under 5MB)")
                       return
                     }
                     setResumeFile(file)
                     setIsDeletingResume(false)
                   }
                 }} 
-                accept=".pdf,.doc,.docx" 
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
                 className="hidden" 
               />
             </div>
           </div>
         </div>
         <div className="flex justify-end gap-3">
-          <Button variant="ghost" onClick={() => setOpen(false)} className="rounded-xl">Cancel</Button>
-          <Button onClick={handleSave} disabled={isLoading} className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl shadow-sm">
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save changes
+          <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl border-gray-200">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={isLoading} className="rounded-xl bg-violet-600 hover:bg-violet-700 text-white">
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+            Save Changes
           </Button>
         </div>
       </DialogContent>

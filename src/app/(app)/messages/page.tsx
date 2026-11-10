@@ -24,6 +24,7 @@ import {
 import { usePresence } from "@/components/providers/presence-provider"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { validateFileSecurity, IMAGE_UPLOAD_CONSTRAINTS } from "@/lib/security/api-security"
 
 type Profile = {
   id: string
@@ -600,7 +601,14 @@ function MessagesContent() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !currentUser || !selectedUser) return
+    if (!file || !currentUser || !selectedUser) return
+
+    const validation = validateFileSecurity(file, IMAGE_UPLOAD_CONSTRAINTS)
+    if (!validation.valid) {
+      alert(validation.error || "Please select a valid image (JPG, PNG, WEBP under 5MB)")
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
+    }
     
     setIsUploading(true)
     const tempUrl = URL.createObjectURL(file)
@@ -1165,7 +1173,7 @@ function MessagesContent() {
                   className="hidden" 
                   ref={fileInputRef} 
                   onChange={handleFileUpload} 
-                  accept="image/*" 
+                  accept="image/jpeg,image/png,image/webp,image/jpg" 
                 />
                 
                 {/* Media Attachment Button */}

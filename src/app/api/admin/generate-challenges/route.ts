@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { validateAdminSecret } from '@/lib/security/api-security'
 
-// This should ideally be protected by a secure admin key or middleware
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const secret = searchParams.get('secret')
-    
-    if (secret !== (process.env.ADMIN_SECRET_KEY || 'trackr-admin-secret')) {
-      return NextResponse.json({ error: 'Unauthorized. Use ?secret=trackr-admin-secret' }, { status: 401 })
+    // Timing-safe administrative authentication via Authorization header or secret param
+    if (!validateAdminSecret(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Use Service Role Key to bypass RLS for administrative task
@@ -44,7 +44,11 @@ export async function GET(request: Request) {
 
     const usedIds = new Set<string>()
     if (recentChallenges) {
-      recentChallenges.forEach(c => c.question_ids.forEach((id: string) => usedIds.add(id)))
+      recentChallenges.forEach(c => {
+        if (Array.isArray(c.question_ids)) {
+          c.question_ids.forEach((id: string) => usedIds.add(id))
+        }
+      })
     }
 
     const generatedChallenges = []
@@ -69,7 +73,7 @@ export async function GET(request: Request) {
       if (mediumPool.length < 2 || hardPool.length < 3) {
          // Second fallback: Just grab any 5 questions if difficulty limits aren't met
          if (availableQuestions.length >= 5) {
-             const any5 = availableQuestions.sort(() => 0.5 - Math.random()).slice(0, 5)
+             const any5 = [...availableQuestions].sort(() => 0.5 - Math.random()).slice(0, 5)
              const ids = any5.map(q => q.id)
              generatedChallenges.push({ date, question_ids: ids })
              ids.forEach(id => usedIds.add(id))
@@ -78,7 +82,6 @@ export async function GET(request: Request) {
       }
 
       // Try to ensure topic diversity
-      // Simple strategy: shuffle, pick unique topics first
       const selectedMedium = selectDiverseQuestions(mediumPool, 2)
       const selectedHard = selectDiverseQuestions(hardPool, 3)
 
@@ -98,7 +101,8 @@ export async function GET(request: Request) {
         .insert(generatedChallenges)
 
       if (insertError) {
-        return NextResponse.json({ error: 'Failed to insert challenges', details: insertError }, { status: 500 })
+        console.error("Failed to insert generated challenges:", insertError)
+        return NextResponse.json({ error: 'Failed to insert challenges' }, { status: 500 })
       }
     }
 
@@ -109,14 +113,15 @@ export async function GET(request: Request) {
     })
 
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error("Admin challenge generation error:", err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 // Helper to pick n questions favoring diverse topics
 function selectDiverseQuestions(pool: any[], count: number) {
-  const shuffled = pool.sort(() => 0.5 - Math.random())
-  const selected = []
+  const shuffled = [...pool].sort(() => 0.5 - Math.random())
+  const selected: any[] = []
   const usedTopics = new Set<string>()
 
   // Try to pick unique topics
