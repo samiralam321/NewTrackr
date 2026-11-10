@@ -24,6 +24,7 @@ import { Opportunity, OpportunityCategory, OpportunityMode, OpportunityStats } f
 import { computeDaysRemaining } from "@/lib/opportunities/validators"
 import { getCacheEntry, setCacheEntry } from "@/lib/cache/client-cache"
 import { OpportunityDetailModal } from "./opportunity-detail-modal"
+import { OpportunityLogo } from "./opportunity-logo"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface OpportunitiesFeedProps {
@@ -482,19 +483,12 @@ export function OpportunitiesFeed({ currentUserId }: OpportunitiesFeedProps) {
                 {/* Top Row: Logo, Title, Organizer & Badges */}
                 <div className="flex items-start justify-between gap-3 mb-2.5">
                   <div className="flex items-start gap-3 min-w-0">
-                    {opp.organizer_logo ? (
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#1A1825] border border-gray-100 dark:border-[#2D2B3B] p-1.5 flex items-center justify-center shrink-0 shadow-xs">
-                        <img
-                          src={opp.organizer_logo}
-                          alt={opp.organizer}
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-300 font-bold text-sm flex items-center justify-center shrink-0 border border-violet-100 dark:border-violet-800/40">
-                        {opp.organizer.charAt(0)}
-                      </div>
-                    )}
+                    <OpportunityLogo
+                      src={opp.organizer_logo}
+                      alt={opp.organizer}
+                      category={opp.category}
+                      size="md"
+                    />
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap mb-0.5">

@@ -2,6 +2,7 @@
 
 import { Opportunity } from "@/lib/opportunities/types"
 import { computeDaysRemaining } from "@/lib/opportunities/validators"
+import { OpportunityLogo } from "./opportunity-logo"
 import { X, ExternalLink, Calendar, MapPin, Award, CheckCircle2, Bookmark, ShieldCheck, DollarSign, Users } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -48,19 +49,12 @@ export function OpportunityDetailModal({
           {/* Header */}
           <div className="p-5 sm:p-6 border-b border-gray-100 dark:border-[#1F1D2B] flex items-start justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
-              {opportunity.organizer_logo ? (
-                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-[#1A1825] border border-gray-100 dark:border-[#2D2B3B] p-2 flex items-center justify-center shrink-0 shadow-sm">
-                  <img
-                    src={opportunity.organizer_logo}
-                    alt={opportunity.organizer}
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-300 font-bold text-lg flex items-center justify-center shrink-0 border border-violet-100 dark:border-violet-800/40">
-                  {opportunity.organizer.charAt(0)}
-                </div>
-              )}
+              <OpportunityLogo
+                src={opportunity.organizer_logo}
+                alt={opportunity.organizer}
+                category={opportunity.category}
+                size="lg"
+              />
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-100 dark:border-violet-800/40">
