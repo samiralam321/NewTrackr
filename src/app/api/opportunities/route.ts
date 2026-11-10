@@ -30,7 +30,11 @@ export async function GET(request: NextRequest) {
       limit
     })
 
-    return NextResponse.json(result)
+    return NextResponse.json(result, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1800',
+      }
+    })
   } catch (err: any) {
     console.error("Opportunities API error:", err)
     return NextResponse.json(

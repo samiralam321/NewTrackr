@@ -10,6 +10,7 @@ import { RichTextRenderer } from "@/components/ui/rich-text-renderer"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { getBadgeLevel } from "@/lib/utils/streak"
 import { getUserHandle } from "@/lib/utils/user"
+import { getCacheEntry, setCacheEntry, mutateAllFeedCaches } from "@/lib/cache/client-cache"
 
 export function Feed({ 
   userIdFilter,
@@ -38,8 +39,14 @@ export function Feed({
   currentUserIdProp?: string,
   sortBy?: 'popular' | 'new' | 'relevant'
 }) {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const currentFeedKey = `feed_${userIdFilter || 'all'}_f${Boolean(followingOnlyFilter)}_c${Boolean(collegeOnlyFilter)}_o${Boolean(opportunitiesOnlyFilter)}_e${Boolean(eventsOnlyFilter)}_s${sortBy}_u${currentUserIdProp || 'anon'}`
+
+  // Synchronously initialize from client cache if available (0ms render on tab switch)
+  const [posts, setPosts] = useState<Post[]>(() => {
+    const entry = getCacheEntry<Post[]>(currentFeedKey, 45_000, currentUserIdProp)
+    return entry?.data || []
+  })
+  const [currentUserId, setCurrentUserId] = useState<string | null>(currentUserIdProp || null)
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({})
   const [repostedPosts, setRepostedPosts] = useState<Record<string, boolean>>({})
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({})
@@ -56,8 +63,12 @@ export function Feed({
   const [blockUser, setBlockUser] = useState<{id: string, name: string} | null>(null)
   const [hiddenUserIds, setHiddenUserIds] = useState<string[]>([])
   const [pinnedPostId, setPinnedPostId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(() => {
+    const entry = getCacheEntry<Post[]>(currentFeedKey, 45_000, currentUserIdProp)
+    return !entry
+  })
   const liveChannelRef = useRef<any>(null)
+  const realtimeDebounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   
   const supabase = createClient()
 
@@ -92,7 +103,17 @@ export function Feed({
   }, [userIdFilter, currentUserId])
 
   useEffect(() => {
-    fetchPosts()
+    // Check client cache on mount or filter switch
+    const entry = getCacheEntry<Post[]>(currentFeedKey, 45_000, currentUserIdProp || currentUserId)
+    if (entry) {
+      setPosts(entry.data)
+      setIsLoading(false)
+      if (entry.isStale) {
+        fetchPosts(false)
+      }
+    } else {
+      fetchPosts(true)
+    }
     
     // Instant local optimistic update when a post is created from right sidebar or mobile drawer
     const handlePostCreated = (e: Event) => {
@@ -108,6 +129,16 @@ export function Feed({
     }
 
     window.addEventListener('post-created', handlePostCreated)
+
+    // Debounced realtime refresh to prevent hammering the database on rapid events
+    const debouncedRealtimeRefresh = () => {
+      if (realtimeDebounceTimerRef.current) {
+        clearTimeout(realtimeDebounceTimerRef.current)
+      }
+      realtimeDebounceTimerRef.current = setTimeout(() => {
+        fetchPosts(false)
+      }, 1200)
+    }
     
     const uniqueChannelName = `trackr-feed-${Math.random().toString(36).substring(7)}`
     
@@ -155,13 +186,13 @@ export function Feed({
           return p
         }))
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => fetchPosts(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, () => fetchPosts(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookmarks' }, () => fetchPosts(false))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, debouncedRealtimeRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, debouncedRealtimeRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookmarks' }, debouncedRealtimeRefresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, (payload) => {
         const pid = (payload.new as any)?.post_id || (payload.old as any)?.post_id
         if (pid) fetchComments(pid)
-        fetchPosts(false)
+        debouncedRealtimeRefresh()
       })
       .subscribe()
 
@@ -169,9 +200,12 @@ export function Feed({
 
     return () => {
       window.removeEventListener('post-created', handlePostCreated)
+      if (realtimeDebounceTimerRef.current) {
+        clearTimeout(realtimeDebounceTimerRef.current)
+      }
       supabase.removeChannel(channel)
     }
-  }, [expandedComments, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter, opportunitiesOnlyFilter, eventsOnlyFilter, sortBy])
+  }, [currentFeedKey, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter, opportunitiesOnlyFilter, eventsOnlyFilter, sortBy, currentUserIdProp])
 
   
   const formatTimeCompact = (dateStr: string) => {
@@ -267,6 +301,7 @@ export function Feed({
         bookmarks(user_id)
       `)
       .order('created_at', { ascending: false })
+      .limit(30)
       
     if (userIdFilter) query = query.eq('user_id', userIdFilter)
 
@@ -397,13 +432,15 @@ export function Feed({
     }
 
     setPosts(formattedPosts)
+    // Save to client cache with current user isolation
+    setCacheEntry(currentFeedKey, formattedPosts, currentUid)
     if (showLoading) setIsLoading(false)
   }
 
   const fetchComments = async (postId: string) => {
     const { data, error } = await supabase
       .from('comments')
-      .select(`*, profiles(*)`)
+      .select(`*, profiles(id, full_name, avatar_url, bio, college, consistency_score, streak)`)
       .eq('post_id', postId)
       .order('created_at', { ascending: true })
     
@@ -503,6 +540,19 @@ export function Feed({
       return p
     }))
 
+    // Update client cache for all tabs optimistically
+    mutateAllFeedCaches(cachedPosts => cachedPosts.map(p => {
+      if (p.id === postId) {
+        const currentCount = (p as any).likes_count || 0
+        return {
+          ...p,
+          user_has_liked: !currentlyLiked,
+          likes_count: Math.max(0, currentCount + (currentlyLiked ? -1 : 1))
+        }
+      }
+      return p
+    }))
+
     // 2. Broadcast immediately to all connected clients
     try {
       liveChannelRef.current?.send({
@@ -558,6 +608,17 @@ export function Feed({
           ...p, 
           user_has_bookmarked: !currentlyBookmarked,
           bookmarks_count: (p as any).bookmarks_count + (currentlyBookmarked ? -1 : 1)
+        }
+      }
+      return p
+    }))
+
+    mutateAllFeedCaches(cachedPosts => cachedPosts.map(p => {
+      if (p.id === postId) {
+        return {
+          ...p,
+          user_has_bookmarked: !currentlyBookmarked,
+          bookmarks_count: ((p as any).bookmarks_count || 0) + (currentlyBookmarked ? -1 : 1)
         }
       }
       return p
@@ -785,9 +846,13 @@ export function Feed({
               <div className="flex items-center gap-3 min-w-0">
                 <Link href={`/profile/${post.user_id}`} className="shrink-0 group">
                   <img 
-                    src={post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.profiles?.full_name || 'User')}&background=7C3AED&color=fff`} 
+                    src={post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.profiles?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} 
                     className="w-10 h-10 rounded-full object-cover border border-gray-100 dark:border-gray-800 group-hover:opacity-90 transition-opacity" 
-                    alt="" 
+                    alt={post.profiles?.full_name || "Author"} 
+                    width={40} 
+                    height={40} 
+                    loading="lazy" 
+                    decoding="async" 
                   />
                 </Link>
                 <div className="min-w-0">
@@ -1008,7 +1073,7 @@ export function Feed({
           {/* Image Preview - Aspect ratio constrained for Android & desktop */}
           {post.image_url && (
             <div className="mb-3.5 md:mb-5 w-full max-w-lg aspect-[16/10] max-h-72 sm:max-h-80 bg-gray-100 dark:bg-[#1A1A24] rounded-xl overflow-hidden border border-gray-100 dark:border-[#2D2B3B] cursor-pointer hover:opacity-95 transition-all shadow-sm" onClick={() => window.open(post.image_url!, '_blank')}>
-               <img src={post.image_url} alt="Post attachment" className="w-full h-full object-cover" />
+               <img src={post.image_url} alt="Post attachment" className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
           )}
             
@@ -1098,7 +1163,7 @@ export function Feed({
                   ) : (
                     postComments[post.id].map(comment => (
                       <div key={comment.id} className="flex gap-3">
-                        <img src={comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${comment.profiles?.full_name || 'User'}&background=7C3AED&color=fff`} className="w-6 h-6 rounded-full object-cover shrink-0" alt="" />
+                        <img src={comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.profiles?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} className="w-6 h-6 rounded-full object-cover shrink-0" alt="" width={24} height={24} loading="lazy" decoding="async" />
                         <div className="bg-gray-50 dark:bg-[#1A1A24] rounded-2xl rounded-tl-none px-4 py-2 flex-1 transition-colors">
                           <p className="text-xs font-semibold text-gray-900 dark:text-white mb-0.5 flex items-center gap-1">
                             <span>{comment.profiles?.full_name}</span>

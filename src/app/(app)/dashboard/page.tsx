@@ -2,39 +2,17 @@ import { RightSidebar } from "@/components/layout/right-sidebar"
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs"
 import { MobileMenuDropdown } from "@/components/dashboard/mobile-menu-dropdown"
 import { Greeting } from "@/components/dashboard/greeting"
-import { createClient } from "@/lib/supabase/server"
+import { getAuthenticatedUserAndProfile } from "@/lib/auth/get-user-profile"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  let user = null
-  try {
-    const { data } = await supabase.auth.getUser()
-    user = data?.user || null
-  } catch (err) {
-    console.warn("Could not retrieve user in DashboardPage:", err)
-    user = null
-  }
+  const { user, profile } = await getAuthenticatedUserAndProfile()
 
   if (!user) {
     redirect('/auth')
-  }
-
-  // Safely fetch user profile for header greeting and sub-components
-  let profile = null
-  try {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle()
-    profile = data
-  } catch (err) {
-    console.warn("Could not load user profile:", err)
   }
 
   const displayName = profile?.full_name 
@@ -60,8 +38,12 @@ export default async function DashboardPage() {
                   className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 dark:border-[#2D2B3B] hover:ring-2 hover:ring-violet-500 transition-all shrink-0"
                 >
                   <img 
-                    src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=7C3AED&color=fff`} 
+                    src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=7C3AED&color=fff&size=80`} 
                     alt="Profile" 
+                    width={36}
+                    height={36}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover" 
                   />
                 </Link>

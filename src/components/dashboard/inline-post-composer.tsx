@@ -200,8 +200,12 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
       {/* Main Composer Row: Avatar + Text Input */}
       <div className="flex items-start gap-3">
         <img
-          src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Samir')}&background=7C3AED&color=fff`}
+          src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`}
           alt="You"
+          width={40}
+          height={40}
+          loading="lazy"
+          decoding="async"
           className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-100 dark:border-gray-800 mt-1"
         />
 

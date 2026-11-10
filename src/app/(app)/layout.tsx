@@ -1,7 +1,7 @@
 import { Sidebar } from "@/components/layout/sidebar"
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav"
 import { MobilePostDrawer } from "@/components/layout/mobile-post-drawer"
-import { createClient } from "@/lib/supabase/server"
+import { getAuthenticatedUserAndProfile } from "@/lib/auth/get-user-profile"
 import { PresenceProvider } from "@/components/providers/presence-provider"
 import { CongratulationsModal } from "@/components/ui/congratulations-modal"
 import { redirect } from "next/navigation"
@@ -13,27 +13,10 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  
-  let user = null
-  try {
-    const { data } = await supabase.auth.getUser()
-    user = data?.user || null
-  } catch (err) {
-    console.warn("Could not retrieve user in AppLayout:", err)
-    user = null
-  }
+  const { user, profile } = await getAuthenticatedUserAndProfile()
 
   if (!user) {
     redirect('/auth')
-  }
-
-  let profile = null
-  try {
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
-    profile = data
-  } catch (err) {
-    console.warn("Could not load user profile in AppLayout:", err)
   }
 
   return (

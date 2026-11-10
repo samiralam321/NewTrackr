@@ -3,6 +3,10 @@ import { VERIFIED_OPPORTUNITIES } from "../data/verified-opportunities"
 import { computeDaysRemaining, computeDynamicStatus } from "../validators"
 import { deduplicateOpportunities } from "../deduplication"
 
+// In-memory query cache for instant responses across concurrent requests
+const serverQueryCache = new Map<string, { data: any, timestamp: number }>()
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
 export async function getOpportunities(params: OpportunityFilterParams = {}): Promise<{
   opportunities: Opportunity[]
   total: number
@@ -10,6 +14,12 @@ export async function getOpportunities(params: OpportunityFilterParams = {}): Pr
   page: number
   limit: number
 }> {
+  const cacheKey = JSON.stringify(params)
+  const cached = serverQueryCache.get(cacheKey)
+  if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+    return cached.data
+  }
+
   const {
     search = '',
     category = 'All',
@@ -116,13 +126,27 @@ export async function getOpportunities(params: OpportunityFilterParams = {}): Pr
   const startIndex = (page - 1) * limit
   const paginated = filtered.slice(startIndex, startIndex + limit)
 
-  return {
+  const responseData = {
     opportunities: paginated,
     total,
     stats,
     page,
     limit
   }
+
+  // Cache in server memory
+  serverQueryCache.set(cacheKey, {
+    data: responseData,
+    timestamp: Date.now()
+  })
+
+  // Prevent memory unbounded growth
+  if (serverQueryCache.size > 200) {
+    const oldestKey = serverQueryCache.keys().next().value
+    if (oldestKey) serverQueryCache.delete(oldestKey)
+  }
+
+  return responseData
 }
 
 export async function getOpportunityById(id: string): Promise<Opportunity | null> {

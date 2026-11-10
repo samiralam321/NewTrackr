@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import { Opportunity, OpportunityCategory, OpportunityMode, OpportunityStats } from "@/lib/opportunities/types"
 import { computeDaysRemaining } from "@/lib/opportunities/validators"
+import { getCacheEntry, setCacheEntry } from "@/lib/cache/client-cache"
 import { OpportunityDetailModal } from "./opportunity-detail-modal"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -78,11 +79,26 @@ export function OpportunitiesFeed({ currentUserId }: OpportunitiesFeedProps) {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Fetch Opportunities from internal API
+  // Fetch Opportunities from internal API with Client-Side SWR Caching
   useEffect(() => {
     let isMounted = true
+    const oppCacheKey = `opps_${debouncedSearch}_${selectedCategory}_${selectedMode}_${selectedLocation}_${isPaidOnly}_${closingSoonOnly}_${sortBy}`
+    const cached = getCacheEntry<{ opportunities: Opportunity[], stats: OpportunityStats }>(oppCacheKey, 10 * 60 * 1000)
+
+    // Render immediately from cache if available (0ms perceived latency)
+    if (cached) {
+      setOpportunities(cached.data.opportunities || [])
+      if (cached.data.stats) setStats(cached.data.stats)
+      setIsLoading(false)
+      if (!cached.isStale) {
+        return // Fresh cache, skip background fetch
+      }
+    }
+
     const fetchOpportunities = async () => {
-      setIsLoading(true)
+      if (!cached) {
+        setIsLoading(true)
+      }
       try {
         const params = new URLSearchParams()
         if (debouncedSearch) params.set('q', debouncedSearch)
@@ -98,8 +114,16 @@ export function OpportunitiesFeed({ currentUserId }: OpportunitiesFeedProps) {
         const data = await res.json()
 
         if (isMounted) {
-          setOpportunities(data.opportunities || [])
+          const freshOpportunities = data.opportunities || []
+          const freshStats = data.stats || stats
+          setOpportunities(freshOpportunities)
           if (data.stats) setStats(data.stats)
+
+          // Save to client cache
+          setCacheEntry(oppCacheKey, {
+            opportunities: freshOpportunities,
+            stats: freshStats
+          })
         }
       } catch (err) {
         console.error("Failed to load opportunities:", err)

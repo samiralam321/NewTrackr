@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
 import { getUserHandle } from "@/lib/utils/user"
+import { getCacheEntry, setCacheEntry, mutateCacheEntry } from "@/lib/cache/client-cache"
 
 interface ProfileUser {
   id: string
@@ -16,18 +17,49 @@ interface ProfileUser {
   college?: string | null
 }
 
+interface WhoToFollowCacheData {
+  users: ProfileUser[]
+  followingMap: Record<string, boolean>
+}
+
+const CACHE_KEY_PREFIX = 'who_to_follow_'
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
 export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
-  const [users, setUsers] = useState<ProfileUser[]>([])
-  const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
-  const [loading, setLoading] = useState(true)
+  const cacheKey = `${CACHE_KEY_PREFIX}${currentUserId || 'anon'}`
+
+  // Initialize synchronously from in-memory cache if available (0ms render)
+  const [users, setUsers] = useState<ProfileUser[]>(() => {
+    const cached = getCacheEntry<WhoToFollowCacheData>(cacheKey, CACHE_TTL_MS, currentUserId)
+    return cached?.data?.users || []
+  })
+  const [followingMap, setFollowingMap] = useState<Record<string, boolean>>(() => {
+    const cached = getCacheEntry<WhoToFollowCacheData>(cacheKey, CACHE_TTL_MS, currentUserId)
+    return cached?.data?.followingMap || {}
+  })
+  const [loading, setLoading] = useState(() => {
+    const cached = getCacheEntry<WhoToFollowCacheData>(cacheKey, CACHE_TTL_MS, currentUserId)
+    return !cached
+  })
   const supabase = createClient()
 
   useEffect(() => {
     async function loadWhoToFollow() {
+      const cached = getCacheEntry<WhoToFollowCacheData>(cacheKey, CACHE_TTL_MS, currentUserId)
+      if (cached && !cached.isStale) {
+        // Cache is fresh, avoid unnecessary network roundtrips
+        return
+      }
+
       try {
-        setLoading(true)
+        if (!cached) {
+          setLoading(true)
+        }
+
         // 1. Fetch current user followings if logged in
         let followingIds: string[] = []
+        const initialMap: Record<string, boolean> = {}
+
         if (currentUserId) {
           const { data: followRows } = await supabase
             .from('follows')
@@ -35,14 +67,13 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
             .eq('follower_id', currentUserId)
           followingIds = followRows?.map(r => r.following_id) || []
           
-          const initialMap: Record<string, boolean> = {}
           followingIds.forEach(id => {
             initialMap[id] = true
           })
           setFollowingMap(initialMap)
         }
 
-        // 2. Fetch real active profiles from Supabase
+        // 2. Fetch real active profiles from Supabase (limiting to required columns only)
         let query = supabase
           .from('profiles')
           .select('id, full_name, avatar_url, consistency_score, college')
@@ -62,6 +93,13 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
           const alreadyFollowed = profiles.filter(p => followingIds.includes(p.id))
           const sorted = [...notFollowed, ...alreadyFollowed].slice(0, 4)
           setUsers(sorted)
+
+          // Save to client cache
+          setCacheEntry<WhoToFollowCacheData>(
+            cacheKey,
+            { users: sorted, followingMap: initialMap },
+            currentUserId
+          )
         }
       } catch (err) {
         console.error("Error loading who to follow:", err)
@@ -71,7 +109,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
     }
 
     loadWhoToFollow()
-  }, [currentUserId])
+  }, [currentUserId, cacheKey])
 
   const handleToggleFollow = async (targetUserId: string) => {
     if (!currentUserId) {
@@ -80,12 +118,17 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
     }
 
     const isCurrentlyFollowing = !!followingMap[targetUserId]
+    const nextFollowingState = !isCurrentlyFollowing
 
     // Optimistic UI update
-    setFollowingMap(prev => ({
-      ...prev,
-      [targetUserId]: !isCurrentlyFollowing
-    }))
+    setFollowingMap(prev => {
+      const next = { ...prev, [targetUserId]: nextFollowingState }
+      mutateCacheEntry<WhoToFollowCacheData>(cacheKey, current => ({
+        ...current,
+        followingMap: next
+      }))
+      return next
+    })
 
     try {
       if (isCurrentlyFollowing) {
@@ -121,10 +164,14 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
     } catch (err) {
       console.error("Failed to toggle follow:", err)
       // Rollback optimistic update
-      setFollowingMap(prev => ({
-        ...prev,
-        [targetUserId]: isCurrentlyFollowing
-      }))
+      setFollowingMap(prev => {
+        const rollback = { ...prev, [targetUserId]: isCurrentlyFollowing }
+        mutateCacheEntry<WhoToFollowCacheData>(cacheKey, current => ({
+          ...current,
+          followingMap: rollback
+        }))
+        return rollback
+      })
     }
   }
 
@@ -182,8 +229,12 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
                 className="flex items-center gap-2.5 min-w-0 flex-1 mr-2"
               >
                 <img
-                  src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=7C3AED&color=fff`}
+                  src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=7C3AED&color=fff&size=80`}
                   alt={user.full_name || "User"}
+                  width={36}
+                  height={36}
+                  loading="lazy"
+                  decoding="async"
                   className="w-9 h-9 rounded-full object-cover shrink-0 border border-gray-100 dark:border-gray-800"
                 />
                 <div className="min-w-0">

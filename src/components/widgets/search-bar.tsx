@@ -190,8 +190,12 @@ export function SearchBar({ userProfile }: SearchBarProps) {
         className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 dark:border-[#2D2B3B] hover:ring-2 hover:ring-violet-500 hover:ring-offset-2 dark:hover:ring-offset-black transition-all shrink-0"
       >
         <img
-          src={userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.full_name || 'Samir')}&background=7C3AED&color=fff`}
+          src={userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`}
           alt={userProfile?.full_name || "Profile"}
+          width={36}
+          height={36}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover"
         />
       </Link>

@@ -11,6 +11,7 @@ import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
 import { getUserHandle } from "@/lib/utils/user"
 import { InstallButton } from "@/components/pwa/InstallPWA"
+import { clearTrackrClientCaches } from "@/lib/cache/client-cache"
 
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
@@ -76,6 +77,11 @@ export function Sidebar({ profile }: { profile?: any }) {
   }, [profileState])
 
   const confirmLogout = async () => {
+    clearTrackrClientCaches()
+    try {
+      localStorage.removeItem('trackr_opp_bookmarks')
+      localStorage.removeItem('trackr_user_reposts')
+    } catch {}
     await supabase.auth.signOut()
     router.push('/')
     router.refresh()
@@ -321,8 +327,12 @@ export function Sidebar({ profile }: { profile?: any }) {
         <div className="flex items-center gap-2">
           <Link href="/profile" className="flex-1 flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-colors border border-gray-100 dark:border-[#2D2B3B] shadow-sm min-w-0">
             <img 
-              src={profileState?.avatar_url || `https://ui-avatars.com/api/?name=${profileState?.full_name || 'User'}&background=7C3AED&color=fff`} 
+              src={profileState?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileState?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} 
               alt="Profile" 
+              width={40}
+              height={40}
+              loading="lazy"
+              decoding="async"
               className="w-10 h-10 rounded-full object-cover shrink-0"
             />
             <div className="flex flex-col overflow-hidden min-w-0">
