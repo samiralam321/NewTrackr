@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Flame, Star, BookOpen, Share2, Puzzle, Trophy, MapPin, Calendar, Edit2, Users, Compass, FileText, MessageCircle, Bookmark, Heart, Award, ArrowLeft, Lock } from "lucide-react"
+import { Flame, Star, BookOpen, Share2, Puzzle, Trophy, MapPin, Calendar, Edit2, Users, Compass, FileText, MessageCircle, Bookmark, Heart, Award, ArrowLeft, Lock, Link2 } from "lucide-react"
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -353,13 +353,25 @@ export function ProfileDashboard({
                 </div>
               )}
               
-              <div className="flex items-center gap-6 mt-4 text-[14px] text-[#536471] dark:text-[#71767b] font-normal">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-[14px] text-[#536471] dark:text-[#71767b] font-normal">
+                {profileState?.website && (
+                  <a 
+                    href={profileState.website.startsWith('http://') || profileState.website.startsWith('https://') ? profileState.website : `https://${profileState.website}`}
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 hover:underline font-medium transition-colors cursor-pointer group"
+                    title={profileState.website}
+                  >
+                    <Link2 className="w-4 h-4 shrink-0 text-violet-500 transition-transform group-hover:rotate-[-20deg]" />
+                    <span className="truncate max-w-[220px]">{profileState.website.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                  </a>
+                )}
                 <div className="flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="w-4 h-4 shrink-0" />
                   India
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4" />
+                  <Calendar className="w-4 h-4 shrink-0" />
                   Joined {joinedDate}
                 </div>
               </div>

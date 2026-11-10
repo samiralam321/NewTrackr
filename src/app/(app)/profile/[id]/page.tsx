@@ -37,6 +37,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     notFound()
   }
 
+  profile = {
+    ...profile,
+    website: profile.website || (user?.id === profile.id ? user?.user_metadata?.website || user?.user_metadata?.link : null),
+    username: profile.username || (user?.id === profile.id ? user?.user_metadata?.username : null)
+  }
+
   const [postsCountRes, followersRes, followingRes, problemSolvedRes] = await Promise.all([
     supabase
       .from('posts')

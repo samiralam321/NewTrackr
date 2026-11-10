@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Loader2, Camera, UploadCloud, FileText, Trash2, Check } from "lucide-react"
+import { Loader2, Camera, UploadCloud, FileText, Trash2, Check, Link2 } from "lucide-react"
 import { cleanUsername, validateUsernameFormat, getUserHandle } from "@/lib/utils/user"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -23,6 +23,7 @@ type ProfileProps = {
   username?: string | null
   bio: string | null
   college: string | null
+  website?: string | null
   avatar_url: string | null
   resume_url?: string | null
   resume_name?: string | null
@@ -39,6 +40,7 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
     available: null
   })
   const usernameCheckTimeout = useRef<NodeJS.Timeout | null>(null)
+  const [website, setWebsite] = useState(profile.website || "")
   const [bio, setBio] = useState(profile.bio || "")
   const [college, setCollege] = useState(profile.college || "")
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -164,6 +166,7 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
       const cleanFullName = sanitizeText(fullName, 100)
       const cleanBio = sanitizeText(bio, 500)
       const cleanCollege = sanitizeText(college, 150)
+      const cleanWebsite = sanitizeText(website.trim(), 200)
 
       // Validate Twitter-style unique username
       const cleanU = cleanUsername(username)
@@ -197,6 +200,18 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
         }
       }
 
+      // Persist website to auth user metadata so it persists across sessions immediately
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            website: cleanWebsite,
+            link: cleanWebsite
+          }
+        })
+      } catch (authErr) {
+        console.warn("Could not update auth user_metadata:", authErr)
+      }
+
       const updatePayload: Record<string, any> = {
         full_name: cleanFullName,
         bio: cleanBio,
@@ -204,7 +219,8 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
         avatar_url: avatarUrl,
         resume_url: finalResumeUrl,
         resume_name: finalResumeName,
-        username: cleanU
+        username: cleanU,
+        website: cleanWebsite
       }
 
       let { error } = await supabase
@@ -212,8 +228,13 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
         .update(updatePayload)
         .eq('id', profile.id)
 
-      if (error && error.message?.includes('username does not exist')) {
-        delete updatePayload.username
+      if (error && (error.message?.includes('website does not exist') || error.message?.includes('username does not exist'))) {
+        if (error.message?.includes('website does not exist')) {
+          delete updatePayload.website
+        }
+        if (error.message?.includes('username does not exist')) {
+          delete updatePayload.username
+        }
         const res = await supabase.from('profiles').update(updatePayload).eq('id', profile.id)
         if (res.error) throw res.error
       } else if (error) {
@@ -232,7 +253,8 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
             college: cleanCollege,
             avatar_url: avatarUrl,
             resume_url: finalResumeUrl,
-            resume_name: finalResumeName
+            resume_name: finalResumeName,
+            website: cleanWebsite
           }
         })
       )
@@ -322,6 +344,24 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
           <div className="grid gap-2">
             <Label htmlFor="college">College / Organization</Label>
             <Input id="college" value={college} onChange={(e) => setCollege(e.target.value)} maxLength={150} placeholder="e.g. Stanford University" className="rounded-xl border-gray-200" />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="website" className="flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-300">
+              <span className="flex items-center gap-1.5">
+                <Link2 className="w-3.5 h-3.5 text-violet-500" />
+                <span>Link / Website</span>
+              </span>
+              <span className="text-[11px] text-gray-400 font-normal">{website.length}/200</span>
+            </Label>
+            <Input 
+              id="website" 
+              value={website} 
+              onChange={(e) => setWebsite(e.target.value)} 
+              maxLength={200} 
+              placeholder="e.g. github.com/yourhandle, portfolio, or any link" 
+              className="rounded-xl border-gray-200 dark:border-gray-700" 
+            />
           </div>
 
           <div className="grid gap-2">

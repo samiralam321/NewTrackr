@@ -6,9 +6,11 @@ export interface AuthenticatedUserSession {
   profile: {
     id: string
     full_name: string | null
+    username?: string | null
     avatar_url: string | null
     bio?: string | null
     college?: string | null
+    website?: string | null
     consistency_score?: number | null
     streak?: number | null
     last_post_date?: string | null
@@ -48,7 +50,11 @@ export const getAuthenticatedUserAndProfile = cache(async (): Promise<Authentica
       .maybeSingle()
 
     if (!error && data) {
-      profile = data
+      profile = {
+        ...data,
+        website: data.website || user.user_metadata?.website || user.user_metadata?.link || null,
+        username: data.username || user.user_metadata?.username || null
+      }
     } else if (error) {
       console.warn("Supabase profile load warning:", error.message)
     }
@@ -62,9 +68,11 @@ export const getAuthenticatedUserAndProfile = cache(async (): Promise<Authentica
     profile = {
       id: user.id,
       full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student',
+      username: user.user_metadata?.username || null,
       avatar_url: user.user_metadata?.avatar_url || null,
       bio: '',
       college: '',
+      website: user.user_metadata?.website || user.user_metadata?.link || null,
       consistency_score: 0,
       streak: 0,
       last_post_date: null,

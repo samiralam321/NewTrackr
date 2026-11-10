@@ -39,9 +39,11 @@ export default async function ProfilePage() {
   const resolvedProfile = profile || {
     id: user.id,
     full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student',
+    username: user.user_metadata?.username || null,
     avatar_url: user.user_metadata?.avatar_url || null,
     bio: '',
     college: '',
+    website: user.user_metadata?.website || user.user_metadata?.link || null,
     consistency_score: 0,
     streak: 0,
     last_post_date: null,
