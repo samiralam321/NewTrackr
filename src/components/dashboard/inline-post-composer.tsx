@@ -101,6 +101,16 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
     return () => window.removeEventListener('focus-post-composer', handleFocusTrigger)
   }, [])
 
+  // Auto-resize textarea to fit content snugly without excessive vertical gap
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      const minH = imagePreview ? 48 : (isFocused ? 64 : 48)
+      const calculatedHeight = Math.max(textareaRef.current.scrollHeight, minH)
+      textareaRef.current.style.height = `${calculatedHeight}px`
+    }
+  }, [content, imagePreview, isFocused])
+
   // Debounced search for registered users when @ is typed
   useEffect(() => {
     if (mentionQuery === null) {
@@ -417,12 +427,12 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
         <div className="flex-1 min-w-0 relative">
           <textarea
             ref={textareaRef}
-            rows={isFocused || content.length > 50 ? 3 : 2}
+            rows={imagePreview ? 2 : (isFocused || content.length > 50 ? 3 : 2)}
             value={content}
             onChange={handleTextChange}
             onFocus={() => setIsFocused(true)}
             placeholder={`What's on your mind, ${firstName}?`}
-            className="w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-relaxed min-h-[48px]"
+            className="w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-relaxed min-h-[48px] overflow-hidden transition-[height] duration-75"
           />
 
           {/* User @Mention Autocomplete Dropdown Popover */}

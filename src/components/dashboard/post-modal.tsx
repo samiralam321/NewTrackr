@@ -114,6 +114,16 @@ export function PostModal({ user, profile }: PostModalProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  // Auto-resize textarea to fit content snugly without leaving excessive empty vertical space
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      const minHeight = imagePreview ? 48 : 96
+      const calculatedHeight = Math.max(textareaRef.current.scrollHeight, minHeight)
+      textareaRef.current.style.height = `${calculatedHeight}px`
+    }
+  }, [content, imagePreview, isOpen])
+
   const handleClose = () => {
     if (isSubmitting) return
     setIsOpen(false)
@@ -457,7 +467,7 @@ export function PostModal({ user, profile }: PostModalProps) {
         )}
 
         {/* Main Content Area: Avatar + Text Input */}
-        <div className="flex-1 overflow-y-auto p-4 flex items-start gap-3 relative min-h-[220px]">
+        <div className="flex-1 overflow-y-auto p-4 flex items-start gap-3 relative min-h-[140px]">
           <img
             src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`}
             alt="You"
@@ -469,11 +479,13 @@ export function PostModal({ user, profile }: PostModalProps) {
           <div className="flex-1 min-w-0 relative">
             <textarea
               ref={textareaRef}
-              rows={5}
+              rows={imagePreview ? 2 : 4}
               value={content}
               onChange={handleTextChange}
               placeholder={`What's on your mind, ${firstName}?`}
-              className="w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-relaxed min-h-[130px]"
+              className={`w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-relaxed overflow-hidden transition-[height] duration-75 ${
+                imagePreview ? 'min-h-[48px]' : 'min-h-[96px]'
+              }`}
             />
 
             {/* User @Mention Autocomplete Dropdown Popover */}
