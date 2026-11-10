@@ -512,9 +512,11 @@ export function ProfileDashboard({
             </div>
 
             {/* Verification Progress Card */}
-            <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/5 shadow-md rounded-3xl p-6 relative overflow-hidden transition-all duration-300 hover:shadow-lg">
-              {/* Background gradient glow */}
-              <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/5 shadow-md rounded-3xl p-6 relative transition-all duration-300 hover:shadow-lg">
+              {/* Background gradient glow (confined inside rounded border) */}
+              <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+                <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />
+              </div>
               
               <h2 className="text-[15px] font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
                 <Award className="w-4 h-4 text-violet-500" /> Verification Progress
@@ -534,7 +536,7 @@ export function ProfileDashboard({
                   </div>
                   <div>
                     {currentBadgeLevel > 0 ? (
-                      <VerifiedBadge level={currentBadgeLevel} size="md" />
+                      <VerifiedBadge level={currentBadgeLevel} size="md" tooltipAlign="right" />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-gray-600">
                         <Lock className="w-4 h-4" />
@@ -574,7 +576,7 @@ export function ProfileDashboard({
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mr-1.5">Preview:</span>
-                        <VerifiedBadge level={nextTierBadgeLevel} size="sm" />
+                        <VerifiedBadge level={nextTierBadgeLevel} size="sm" tooltipAlign="right" />
                       </div>
                     </div>
                   </div>

@@ -10,9 +10,17 @@ export type VerifiedBadgeProps = {
   nameOrHandle?: string | null
   className?: string
   showTooltip?: boolean
+  tooltipAlign?: 'center' | 'left' | 'right'
 }
 
-export function VerifiedBadge({ level, size = 'sm', nameOrHandle, className = '', showTooltip = true }: VerifiedBadgeProps) {
+export function VerifiedBadge({ 
+  level, 
+  size = 'sm', 
+  nameOrHandle, 
+  className = '', 
+  showTooltip = true,
+  tooltipAlign = 'center'
+}: VerifiedBadgeProps) {
   const [hovered, setHovered] = useState(false)
 
   const isAdmin = isUserAdmin(nameOrHandle)
@@ -96,13 +104,25 @@ export function VerifiedBadge({ level, size = 'sm', nameOrHandle, className = ''
 
       {/* Modern Tooltip - strictly scoped to direct badge hover */}
       {showTooltip && (
-        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 scale-95 group-hover/badge:opacity-100 group-hover/badge:scale-100 pointer-events-none transition-all duration-150 z-50">
+        <div className={`absolute bottom-full mb-2 ${
+          tooltipAlign === 'right' 
+            ? 'right-0 translate-x-0' 
+            : tooltipAlign === 'left' 
+            ? 'left-0 translate-x-0' 
+            : 'left-1/2 -translate-x-1/2'
+        } opacity-0 scale-95 group-hover/badge:opacity-100 group-hover/badge:scale-100 pointer-events-none transition-all duration-150 z-50`}>
           <div className="bg-gray-900 dark:bg-[#1A1A24] text-white py-1.5 px-3 rounded-xl shadow-md border border-white/10 dark:border-gray-800 text-[11px] whitespace-nowrap text-center">
             <p className="font-bold text-[#1D9BF0] flex items-center justify-center gap-1">
               <span>{details.title}</span>
             </p>
             <p className="text-gray-300 text-[10px] font-normal mt-0.5">{details.desc}</p>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-[#1A1A24]" />
+            <div className={`absolute top-full ${
+              tooltipAlign === 'right'
+                ? 'right-2 translate-x-0'
+                : tooltipAlign === 'left'
+                ? 'left-2 translate-x-0'
+                : 'left-1/2 -translate-x-1/2'
+            } border-4 border-transparent border-t-gray-900 dark:border-t-[#1A1A24]`} />
           </div>
         </div>
       )}
