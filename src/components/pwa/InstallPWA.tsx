@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react'
 import { usePWA } from '@/lib/hooks/use-pwa'
 import { Download, Share, PlusSquare, X, Smartphone, Sparkles, MoreVertical } from 'lucide-react'
 
+const PWA_PROMPT_COUNT_KEY = 'trackr_pwa_prompt_count'
+const PWA_INSTALLED_KEY = 'trackr_pwa_installed'
+const PWA_SESSION_DISMISSED_KEY = 'trackr_pwa_dismissed_session'
+const MAX_PROMPT_COUNT = 3
+
 export function InstallPWA() {
   const { isMounted, isStandalone, isIOS, isAndroid, canInstall, promptInstall } = usePWA()
   const [isVisible, setIsVisible] = useState(false)
@@ -20,11 +25,38 @@ export function InstallPWA() {
       return
     }
 
-    // Show INSTANTLY on screen when page loads (0 delay)
-    setIsVisible(true)
+    try {
+      // 1. Don't show if already installed
+      if (localStorage.getItem(PWA_INSTALLED_KEY) === 'true') {
+        setIsVisible(false)
+        return
+      }
+
+      // 2. Don't show if dismissed in this browsing session
+      if (sessionStorage.getItem(PWA_SESSION_DISMISSED_KEY) === 'true') {
+        setIsVisible(false)
+        return
+      }
+
+      // 3. Limit to maximum 3 times total
+      const promptCount = parseInt(localStorage.getItem(PWA_PROMPT_COUNT_KEY) || '0', 10)
+      if (promptCount >= MAX_PROMPT_COUNT) {
+        setIsVisible(false)
+        return
+      }
+
+      // Increment count (max 3 times) and show banner
+      localStorage.setItem(PWA_PROMPT_COUNT_KEY, String(promptCount + 1))
+      setIsVisible(true)
+    } catch {
+      setIsVisible(false)
+    }
   }, [isMounted, isStandalone])
 
   const handleDismiss = () => {
+    try {
+      sessionStorage.setItem(PWA_SESSION_DISMISSED_KEY, 'true')
+    } catch {}
     setIsVisible(false)
     setShowIOSGuide(false)
     setShowAndroidGuide(false)
@@ -42,6 +74,9 @@ export function InstallPWA() {
       try {
         const installed = await promptInstall()
         if (installed) {
+          try {
+            localStorage.setItem(PWA_INSTALLED_KEY, 'true')
+          } catch {}
           setIsVisible(false)
         }
       } finally {
