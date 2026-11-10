@@ -58,6 +58,8 @@ function MessagesContent() {
   const [latestMessages, setLatestMessages] = useState<Record<string, Message>>({})
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
   const [wsConnected, setWsConnected] = useState(true)
+  const [isLoadingConvos, setIsLoadingConvos] = useState(true)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   
   // Real-Time Typing Indicators & Modals
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false)
@@ -79,6 +81,29 @@ function MessagesContent() {
   const targetUserId = searchParams.get('userId')
   
   
+  // Immediate cache hydration on mount so convos render with 0ms delay
+  useEffect(() => {
+    try {
+      const lastUserId = localStorage.getItem('trackr_last_user_id')
+      if (lastUserId) {
+        const cached = localStorage.getItem(`trackr_recent_convos_${lastUserId}`)
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setUsers(parsed)
+            setIsLoadingConvos(false)
+            if (targetUserId) {
+              const found = parsed.find((u: Profile) => u.id === targetUserId)
+              if (found) setSelectedUser(found)
+            } else if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+              setSelectedUser(parsed[0])
+            }
+          }
+        }
+      }
+    } catch (e) {}
+  }, [targetUserId])
+
   // Hardware Android back button sync
   useEffect(() => {
     const handlePopState = () => {
@@ -86,17 +111,47 @@ function MessagesContent() {
       const uId = p.get('userId')
       if (!uId) {
         setSelectedUser(null)
+        setMessages([])
+        setIsLoadingMessages(false)
       } else {
         const found = users.find(u => u.id === uId) || allProfiles.find(u => u.id === uId)
-        if (found) setSelectedUser(found)
+        if (found) selectUserAndUrl(found)
       }
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [users, allProfiles])
 
-const selectUserAndUrl = (user: Profile | null) => {
+  const selectUserAndUrl = (user: Profile | null) => {
+    if (selectedUser?.id === user?.id) return
     setSelectedUser(user)
+
+    if (user && currentUser) {
+      const chatCacheKey = `trackr_chat_cache_${currentUser.id}_${user.id}`
+      try {
+        const cached = localStorage.getItem(chatCacheKey)
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed)
+            setIsLoadingMessages(false)
+          } else {
+            setMessages([])
+            setIsLoadingMessages(true)
+          }
+        } else {
+          setMessages([])
+          setIsLoadingMessages(true)
+        }
+      } catch {
+        setMessages([])
+        setIsLoadingMessages(true)
+      }
+    } else {
+      setMessages([])
+      setIsLoadingMessages(false)
+    }
+
     if (typeof window !== 'undefined') {
       if (user) {
         window.history.pushState(null, '', `/messages?userId=${user.id}`)
@@ -147,7 +202,10 @@ const selectUserAndUrl = (user: Profile | null) => {
 
   // Load previous conversations and auth state
   const loadConversations = async (user: any) => {
-    if (!user) return
+    if (!user) {
+      setIsLoadingConvos(false)
+      return
+    }
 
     // 1. Load cached conversations from localStorage for instantaneous rendering
     const cacheKey = `trackr_recent_convos_${user.id}`
@@ -241,6 +299,8 @@ const selectUserAndUrl = (user: Profile | null) => {
       }
     } catch (err) {
       console.error("Failed to load conversations:", err)
+    } finally {
+      setIsLoadingConvos(false)
     }
   }
 
@@ -252,17 +312,25 @@ const selectUserAndUrl = (user: Profile | null) => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!isMounted) return
 
-      if (user) {
-        setCurrentUser(user)
-        await loadConversations(user)
-        await fetchDirectoryProfiles(user.id)
-      } else {
-        // Retry session retrieval
-        const { data: sessionData } = await supabase.auth.getSession()
-        if (sessionData.session?.user && isMounted) {
-          setCurrentUser(sessionData.session.user)
-          await loadConversations(sessionData.session.user)
-          await fetchDirectoryProfiles(sessionData.session.user.id)
+      try {
+        if (user) {
+          localStorage.setItem('trackr_last_user_id', user.id)
+          setCurrentUser(user)
+          await loadConversations(user)
+          await fetchDirectoryProfiles(user.id)
+        } else {
+          // Retry session retrieval
+          const { data: sessionData } = await supabase.auth.getSession()
+          if (sessionData.session?.user && isMounted) {
+            localStorage.setItem('trackr_last_user_id', sessionData.session.user.id)
+            setCurrentUser(sessionData.session.user)
+            await loadConversations(sessionData.session.user)
+            await fetchDirectoryProfiles(sessionData.session.user.id)
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingConvos(false)
         }
       }
     }
@@ -365,16 +433,24 @@ const selectUserAndUrl = (user: Profile | null) => {
     const chatCacheKey = `trackr_chat_cache_${currentUser.id}_${selectedUser.id}`
 
     // 1. Instant Cache Hydration: Never show blank chat if previously cached
+    let hasCached = false
     try {
       const cached = localStorage.getItem(chatCacheKey)
       if (cached) {
         const parsed = JSON.parse(cached)
         if (Array.isArray(parsed) && parsed.length > 0) {
           setMessages(parsed)
+          setIsLoadingMessages(false)
+          hasCached = true
           scrollToBottom('auto')
         }
       }
     } catch (e) {}
+
+    if (!hasCached) {
+      setMessages([])
+      setIsLoadingMessages(true)
+    }
 
     // 2. Fetch fresh messages from Database with fallback recovery
     const fetchMessages = async () => {
@@ -413,6 +489,8 @@ const selectUserAndUrl = (user: Profile | null) => {
         scrollToBottom('auto')
       } catch (err) {
         console.error("Failed to fetch messages:", err)
+      } finally {
+        setIsLoadingMessages(false)
       }
     }
 
@@ -852,9 +930,21 @@ const selectUserAndUrl = (user: Profile | null) => {
 
         {/* Continuous Conversation Stream & Directory Matches */}
         <div className="flex-1 overflow-y-auto divide-y divide-gray-50 dark:divide-[#181724]">
-          
-          {/* Active Conversations */}
-          {filteredUsers.length > 0 && (
+          {/* Loading Skeleton */}
+          {isLoadingConvos ? (
+            <div className="p-3 space-y-2 animate-in fade-in duration-200">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-2.5 rounded-2xl animate-pulse">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-[#1E1D2A] shrink-0" />
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <div className="h-3.5 bg-gray-200 dark:bg-[#1E1D2A] rounded-md w-28" />
+                    <div className="h-2.5 bg-gray-100 dark:bg-[#161522] rounded-md w-40" />
+                  </div>
+                  <div className="w-8 h-2.5 bg-gray-100 dark:bg-[#161522] rounded-md shrink-0" />
+                </div>
+              ))}
+            </div>
+          ) : filteredUsers.length > 0 ? (
             <div>
               {searchQuery.trim() && directoryMatches.length > 0 && (
                 <div className="px-3.5 py-1.5 bg-gray-50/60 dark:bg-[#12111A] text-[10px] font-bold text-gray-400 uppercase tracking-wider">
@@ -878,9 +968,9 @@ const selectUserAndUrl = (user: Profile | null) => {
                   <button
                     key={user.id}
                     onClick={() => selectUserAndUrl(user)}
-                    className={`w-full flex items-center gap-3 px-3.5 py-3 text-left transition-colors relative ${
+                    className={`w-full flex items-center gap-3 px-3.5 py-3 text-left transition-all duration-150 ease-out active:scale-[0.99] cursor-pointer relative ${
                       isSelected 
-                        ? 'bg-violet-50/80 dark:bg-violet-950/30 border-l-[3px] border-violet-600' 
+                        ? 'bg-violet-50/80 dark:bg-violet-950/30 border-l-[3px] border-violet-600 shadow-2xs' 
                         : 'hover:bg-gray-50/80 dark:hover:bg-[#14131D]'
                     }`}
                   >
@@ -932,7 +1022,7 @@ const selectUserAndUrl = (user: Profile | null) => {
                 )
               })}
             </div>
-          )}
+          ) : null}
 
           {/* Directory Search Matches: Click to message any student */}
           {directoryMatches.length > 0 && (
@@ -969,7 +1059,7 @@ const selectUserAndUrl = (user: Profile | null) => {
           )}
 
           {/* Empty Conversation State: Suggest popular students to message */}
-          {filteredUsers.length === 0 && directoryMatches.length === 0 && (
+          {!isLoadingConvos && filteredUsers.length === 0 && directoryMatches.length === 0 && (
             <div className="p-6 text-center space-y-4">
               <div className="w-12 h-12 bg-violet-50 dark:bg-violet-950/40 rounded-full flex items-center justify-center mx-auto text-violet-600 dark:text-violet-400">
                 <MessageCircle className="w-6 h-6" />
@@ -1022,7 +1112,7 @@ const selectUserAndUrl = (user: Profile | null) => {
           ────────────────────────────────────────────────────────────────── */}
       <main className={`
         ${selectedUser 
-          ? 'fixed inset-0 z-40 flex flex-col h-[100dvh] w-full md:relative md:inset-auto md:z-auto md:h-full md:w-auto md:flex-1' 
+          ? 'fixed inset-0 z-40 flex flex-col h-[100dvh] w-full md:relative md:inset-auto md:z-auto md:h-full md:w-auto md:flex-1 animate-in fade-in max-md:slide-in-from-right-3 duration-200' 
           : 'hidden md:flex md:flex-1 md:h-full flex-col'
         }
         bg-[#FCFBFE] dark:bg-[#07060A] overflow-hidden
@@ -1084,10 +1174,27 @@ const selectUserAndUrl = (user: Profile | null) => {
             {/* Message Stream */}
             <div 
               ref={messagesContainerRef} 
-              className="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 space-y-2.5 overscroll-contain"
+              className="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 space-y-2.5 overscroll-contain transition-opacity duration-150"
             >
-              {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400">
+              {isLoadingMessages ? (
+                <div className="h-full flex flex-col justify-end space-y-3.5 p-4 animate-in fade-in duration-150">
+                  <div className="flex items-start gap-2.5 max-w-[70%]">
+                    <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-[#1E1D2A] animate-pulse shrink-0" />
+                    <div className="h-9 w-44 bg-gray-200 dark:bg-[#1E1D2A] rounded-2xl rounded-tl-xs animate-pulse" />
+                  </div>
+                  <div className="flex items-end justify-end">
+                    <div className="h-10 w-52 bg-violet-200/50 dark:bg-violet-900/30 rounded-2xl rounded-tr-xs animate-pulse" />
+                  </div>
+                  <div className="flex items-start gap-2.5 max-w-[65%]">
+                    <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-[#1E1D2A] animate-pulse shrink-0" />
+                    <div className="h-14 w-60 bg-gray-200 dark:bg-[#1E1D2A] rounded-2xl rounded-tl-xs animate-pulse" />
+                  </div>
+                  <div className="flex items-end justify-end">
+                    <div className="h-9 w-40 bg-violet-200/50 dark:bg-violet-900/30 rounded-2xl rounded-tr-xs animate-pulse" />
+                  </div>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400 animate-in fade-in duration-200">
                   <div className="w-12 h-12 bg-violet-50 dark:bg-violet-950/30 rounded-full flex items-center justify-center mb-2.5">
                     <MessageCircle className="w-6 h-6 text-violet-600 dark:text-violet-400" />
                   </div>
