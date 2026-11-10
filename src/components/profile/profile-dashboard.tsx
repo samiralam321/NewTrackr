@@ -480,17 +480,19 @@ export function ProfileDashboard({
                 </div>
               </div>
               
-              <div className={`space-y-0 mt-0 ${activeTab === 'posts' ? 'block' : 'hidden'}`}>
-                <Feed userIdFilter={profileState?.id} currentUserIdProp={currentUserId} sortBy="new" />
-              </div>
-              <div className={`space-y-0 mt-0 ${activeTab === 'likes' ? 'block' : 'hidden'}`}>
-                <Feed likedByFilter={profileState?.id} currentUserIdProp={currentUserId} sortBy="new" />
-              </div>
-              <div className={`space-y-0 mt-0 ${activeTab === 'replies' ? 'block' : 'hidden'}`}>
-                <Feed commentedByFilter={profileState?.id} currentUserIdProp={currentUserId} sortBy="new" />
-              </div>
-              <div className={`space-y-0 mt-0 ${activeTab === 'highlights' ? 'block' : 'hidden'}`}>
-                <Feed userIdFilter={profileState?.id} highlightsOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
+              <div className="space-y-0 mt-0">
+                {activeTab === 'posts' && (
+                  <Feed userIdFilter={profileState?.id} currentUserIdProp={currentUserId} sortBy="new" />
+                )}
+                {activeTab === 'likes' && (
+                  <Feed likedByFilter={profileState?.id} currentUserIdProp={currentUserId} sortBy="new" />
+                )}
+                {activeTab === 'replies' && (
+                  <Feed commentedByFilter={profileState?.id} currentUserIdProp={currentUserId} sortBy="new" />
+                )}
+                {activeTab === 'highlights' && (
+                  <Feed userIdFilter={profileState?.id} highlightsOnlyFilter={true} currentUserIdProp={currentUserId} sortBy="new" />
+                )}
               </div>
             </div>
 

@@ -47,11 +47,11 @@ export function Feed({
   currentUserIdProp?: string,
   sortBy?: 'popular' | 'new' | 'relevant'
 }) {
-  const currentFeedKey = `feed_${userIdFilter || 'all'}_f${Boolean(followingOnlyFilter)}_c${Boolean(collegeOnlyFilter)}_o${Boolean(opportunitiesOnlyFilter)}_e${Boolean(eventsOnlyFilter)}_s${sortBy}_u${currentUserIdProp || 'anon'}`
+  const currentFeedKey = `feed_${userIdFilter || 'all'}_sv${Boolean(savedOnlyFilter)}_lk${likedByFilter || 'none'}_cm${commentedByFilter || 'none'}_hl${Boolean(highlightsOnlyFilter)}_f${Boolean(followingOnlyFilter)}_c${Boolean(collegeOnlyFilter)}_o${Boolean(opportunitiesOnlyFilter)}_e${Boolean(eventsOnlyFilter)}_s${sortBy}_u${currentUserIdProp || 'anon'}`
 
   // Synchronously initialize from client cache if available (0ms render on tab switch)
   const [posts, setPosts] = useState<Post[]>(() => {
-    const entry = getCacheEntry<Post[]>(currentFeedKey, 45_000, currentUserIdProp)
+    const entry = getCacheEntry<Post[]>(currentFeedKey, 30_000, currentUserIdProp)
     return entry?.data || []
   })
   const [currentUserId, setCurrentUserId] = useState<string | null>(currentUserIdProp || null)
@@ -83,7 +83,7 @@ export function Feed({
   const [copiedPostId, setCopiedPostId] = useState<string | null>(null)
   const [copiedToast, setCopiedToast] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(() => {
-    const entry = getCacheEntry<Post[]>(currentFeedKey, 45_000, currentUserIdProp)
+    const entry = getCacheEntry<Post[]>(currentFeedKey, 30_000, currentUserIdProp)
     return !entry
   })
   const liveChannelRef = useRef<any>(null)
@@ -123,11 +123,13 @@ export function Feed({
 
   useEffect(() => {
     // Check client cache on mount or filter switch
-    const entry = getCacheEntry<Post[]>(currentFeedKey, 45_000, currentUserIdProp || currentUserId)
-    if (entry) {
+    const entry = getCacheEntry<Post[]>(currentFeedKey, 30_000, currentUserIdProp || currentUserId)
+    const isMainTimeline = !userIdFilter && !savedOnlyFilter && !likedByFilter && !commentedByFilter && !followingOnlyFilter && !collegeOnlyFilter && !opportunitiesOnlyFilter && !eventsOnlyFilter
+    if (entry && entry.data && entry.data.length > 0) {
       setPosts(entry.data)
       setIsLoading(false)
-      if (entry.isStale) {
+      // If stale or if this is the main feed and has suspiciously few posts (< 4), revalidate in background
+      if (entry.isStale || (isMainTimeline && entry.data.length < 4)) {
         fetchPosts(false)
       }
     } else {
@@ -409,6 +411,57 @@ export function Feed({
       
     if (userIdFilter) query = query.eq('user_id', userIdFilter)
 
+    if (likedByFilter) {
+      const { data: likedRows } = await supabase
+        .from('likes')
+        .select('post_id')
+        .eq('user_id', likedByFilter)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      const postIds = likedRows?.map((r: any) => r.post_id).filter(Boolean) || []
+      if (postIds.length > 0) {
+        query = query.in('id', postIds)
+      } else {
+        setPosts([])
+        if (showLoading) setIsLoading(false)
+        return
+      }
+    }
+
+    if (commentedByFilter) {
+      const { data: commentRows } = await supabase
+        .from('comments')
+        .select('post_id')
+        .eq('user_id', commentedByFilter)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      const postIds = Array.from(new Set((commentRows?.map((r: any) => r.post_id) || []).filter(Boolean)))
+      if (postIds.length > 0) {
+        query = query.in('id', postIds)
+      } else {
+        setPosts([])
+        if (showLoading) setIsLoading(false)
+        return
+      }
+    }
+
+    if (savedOnlyFilter && currentUid) {
+      const { data: bookmarkRows } = await supabase
+        .from('bookmarks')
+        .select('post_id')
+        .eq('user_id', currentUid)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      const postIds = bookmarkRows?.map((r: any) => r.post_id).filter(Boolean) || []
+      if (postIds.length > 0) {
+        query = query.in('id', postIds)
+      } else {
+        setPosts([])
+        if (showLoading) setIsLoading(false)
+        return
+      }
+    }
+
     if (followingOnlyFilter && currentUid) {
       const { data: followData } = await supabase
         .from('follows')
@@ -626,11 +679,11 @@ export function Feed({
     }
     
     if (likedByFilter) {
-      formattedPosts = formattedPosts.filter(p => (p as any).likes.some((l: any) => l.user_id === likedByFilter))
+      formattedPosts = formattedPosts.filter(p => (p as any).likes?.some((l: any) => l.user_id === likedByFilter) ?? true)
     }
 
     if (commentedByFilter) {
-      formattedPosts = formattedPosts.filter(p => (p as any).comments.some((c: any) => c.user_id === commentedByFilter))
+      formattedPosts = formattedPosts.filter(p => (p as any).comments?.some((c: any) => c.user_id === commentedByFilter) ?? true)
     }
 
     if (highlightsOnlyFilter && formattedPosts.length > 0) {

@@ -1,8 +1,13 @@
 import { Feed } from "@/components/dashboard/feed"
 import { Bookmark, ChevronLeft } from "lucide-react"
 import Link from "next/link"
+import { getAuthenticatedUserAndProfile } from "@/lib/auth/get-user-profile"
 
-export default function SavedPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function SavedPage() {
+  const { user } = await getAuthenticatedUserAndProfile()
+
   return (
     <div className="h-full w-full overflow-y-auto px-4 md:px-10 py-6 md:py-8 bg-[#FCFBFF] dark:bg-[#050505] transition-colors duration-300">
       <div className="max-w-2xl mx-auto">
@@ -20,7 +25,7 @@ export default function SavedPage() {
         </div>
 
         <div className="bg-white dark:bg-[#0B0A10] rounded-3xl border border-gray-100 dark:border-[#2D2B3B] p-6 shadow-sm min-h-[500px] transition-colors duration-300">
-          <Feed savedOnlyFilter={true} />
+          <Feed savedOnlyFilter={true} currentUserIdProp={user?.id} />
         </div>
       </div>
     </div>
