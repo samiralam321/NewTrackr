@@ -8,9 +8,15 @@ type RichTextRendererProps = {
   content: string
 }
 
+// List of recognized domain extensions for bare URLs (e.g. zenvora-platform.vercel.app, github.com, trackr.in)
+const TLD_LIST = 'com|org|net|edu|gov|app|dev|io|ai|tech|xyz|me|co|in|to|cc|tv|gg|site|online|live|store|shop|pro|cloud|digital|space|agency|design|media|news|link|world|club|sh|run|is|so|fm|ly|page|bio|us|uk|ca|au|de|fr|it|es|nl|se|no|ch|br|jp|kr|cn|tw|hk|sg|ae|eu'
+
+const BARE_DOMAIN_PATTERN = `(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+(?:${TLD_LIST})(?::[0-9]{1,5})?(?:\\/(?:[^\\s<]*[a-zA-Z0-9\\/_~#?&=%+-])?)?`
+const URL_PATTERN = `https?:\\/\\/[^\\s<]+[a-zA-Z0-9\\/_~#?&=%+-]|www\\.[^\\s<]+[a-zA-Z0-9\\/_~#?&=%+-]|${BARE_DOMAIN_PATTERN}`
+
 // Regex to capture URLs and @mentions
-const TOKEN_REGEX = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s]|www\.[^\s<]+[^<.,:;"')\]\s]|@[a-zA-Z0-9_]+)/gi
-const URL_REGEX = /^(https?:\/\/[^\s<]+|www\.[^\s<]+)/i
+const TOKEN_REGEX = new RegExp(`(${URL_PATTERN}|@[a-zA-Z0-9_]+)`, 'gi')
+const URL_REGEX = new RegExp(`^(https?:\\/\\/|www\\.|${BARE_DOMAIN_PATTERN})`, 'i')
 const MENTION_REGEX = /^@([a-zA-Z0-9_]+)$/
 const CODE_BLOCK_REGEX = /```([a-zA-Z0-9_#+-]+)?(?::([a-zA-Z0-9_-]+))?(?::([^\n\r]+))?[\r\n]+([\s\S]*?)```/g
 
