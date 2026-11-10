@@ -25,7 +25,7 @@ export default async function AppLayout({
         <div className="hidden md:block shrink-0">
           <Sidebar profile={profile} />
         </div>
-        <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="flex-1 min-w-0 h-full overflow-hidden flex flex-col">
           {children}
         </div>
         <MobileBottomNav profile={profile} />

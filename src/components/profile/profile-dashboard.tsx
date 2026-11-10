@@ -245,8 +245,8 @@ export function ProfileDashboard({
   const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1 // 0-6 where 0 is Monday
   
   return (
-    <div className="flex min-h-screen w-full bg-[#FAFAFA] dark:bg-[#050505] transition-colors duration-300 pb-20">
-      <main className="flex-1 px-4 md:px-8 py-6 md:py-10 max-w-6xl mx-auto w-full flex flex-col gap-6 md:gap-8">
+    <div className="h-full w-full overflow-y-auto bg-[#FAFAFA] dark:bg-[#050505] transition-colors duration-300 pb-20">
+      <main className="px-4 md:px-8 py-6 md:py-10 max-w-6xl mx-auto w-full flex flex-col gap-6 md:gap-8">
         
         {/* HERO SECTION */}
         <div className="bg-white dark:bg-[#0B0A10] rounded-3xl border border-gray-100 dark:border-[#2D2B3B] shadow-sm overflow-hidden relative">

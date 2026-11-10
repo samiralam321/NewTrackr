@@ -2,7 +2,7 @@ import { Compass, Sparkles, Rocket } from "lucide-react"
 
 export default function ExplorePage() {
   return (
-    <div className="flex h-screen w-full bg-[#FCFBFF] dark:bg-[#050505] transition-colors duration-300">
+    <div className="flex h-full w-full bg-[#FCFBFF] dark:bg-[#050505] transition-colors duration-300">
       <main className="flex-1 overflow-y-auto px-4 md:px-10 py-6 md:py-8 flex flex-col items-center justify-center text-center">
         
         <div className="max-w-xl mx-auto space-y-8 flex flex-col items-center">

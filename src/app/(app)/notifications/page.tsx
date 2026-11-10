@@ -142,7 +142,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 md:px-10 py-6 md:py-8 bg-gray-50/30 dark:bg-[#050505] transition-colors duration-300">
+    <div className="h-full w-full overflow-y-auto px-4 md:px-10 py-6 md:py-8 bg-gray-50/30 dark:bg-[#050505] transition-colors duration-300">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Link href="/dashboard" prefetch={true} className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A24] transition-colors">

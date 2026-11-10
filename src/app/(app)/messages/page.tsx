@@ -760,7 +760,7 @@ function MessagesContent() {
   )
 
   return (
-    <div className="flex h-screen bg-[#FDFCFE] dark:bg-[#07060A] text-gray-900 dark:text-white transition-colors overflow-hidden">
+    <div className="flex h-full w-full bg-[#FDFCFE] dark:bg-[#07060A] text-gray-900 dark:text-white transition-colors overflow-hidden">
       
       {/* ──────────────────────────────────────────────────────────────────
           PANEL 1: CONVERSATION LIST & DIRECTORY SEARCH
