@@ -10,6 +10,7 @@ import { RichTextRenderer } from "@/components/ui/rich-text-renderer"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { getBadgeLevel } from "@/lib/utils/streak"
 import { getUserHandle } from "@/lib/utils/user"
+import { extractCleanPlainText } from "@/lib/utils/text"
 import { formatTimeCompact, formatFullDateTime } from "@/lib/utils/date"
 import { getCacheEntry, setCacheEntry, mutateAllFeedCaches } from "@/lib/cache/client-cache"
 import { ImagePreviewModal } from "@/components/ui/image-preview-modal"
@@ -691,7 +692,8 @@ export function Feed({
 
   const handleCopyPost = async (post: Post) => {
     try {
-      await navigator.clipboard.writeText(post.content)
+      const cleanText = extractCleanPlainText(post.content)
+      await navigator.clipboard.writeText(cleanText)
       setCopiedPostId(post.id)
       setCopiedToast("Post text copied to clipboard! 📋")
       setTimeout(() => {
@@ -728,7 +730,7 @@ export function Feed({
     const postUrl = `${window.location.origin}/profile/${post.user_id}?postId=${post.id}`
     const shareData = {
       title: `${post.profiles?.full_name || 'A user'} shared a progress update on Trackr`,
-      text: post.content.substring(0, 100) + '...',
+      text: extractCleanPlainText(post.content).substring(0, 100) + '...',
       url: postUrl
     }
     
