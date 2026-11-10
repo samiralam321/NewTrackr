@@ -34,7 +34,7 @@ const HACKATHONS: HackathonItem[] = [
     name: "Flipkart Grid 6.0",
     dates: "Feb 5 - Mar 5, 2026",
     prize: "₹30 Lakh",
-    url: "https://unstop.com/hackathons/flipkart-grid-60-flipkart-1002341",
+    url: "https://www.flipkartcareers.com/students",
     logoType: "flipkart"
   }
 ]

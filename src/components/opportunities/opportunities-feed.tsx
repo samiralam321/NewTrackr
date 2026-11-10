@@ -83,7 +83,7 @@ export function OpportunitiesFeed({ currentUserId }: OpportunitiesFeedProps) {
   // Fetch Opportunities from internal API with Client-Side SWR Caching
   useEffect(() => {
     let isMounted = true
-    const oppCacheKey = `opps_${debouncedSearch}_${selectedCategory}_${selectedMode}_${selectedLocation}_${isPaidOnly}_${closingSoonOnly}_${sortBy}`
+    const oppCacheKey = `opps_v2_${debouncedSearch}_${selectedCategory}_${selectedMode}_${selectedLocation}_${isPaidOnly}_${closingSoonOnly}_${sortBy}`
     const cached = getCacheEntry<{ opportunities: Opportunity[], stats: OpportunityStats }>(oppCacheKey, 10 * 60 * 1000)
 
     // Render immediately from cache if available (0ms perceived latency)
