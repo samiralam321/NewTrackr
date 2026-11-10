@@ -132,7 +132,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
         })
         .select(`
           *,
-          profiles:user_id (*)
+          profiles:user_id (id, full_name, avatar_url, bio, college, consistency_score, streak)
         `)
         .single()
 

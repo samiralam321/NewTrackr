@@ -15,7 +15,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .from('profiles')
     .select('*')
     .eq('id', resolvedParams.id)
-    .single()
+    .maybeSingle()
 
   if (!profile) {
     notFound()

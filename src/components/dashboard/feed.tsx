@@ -237,7 +237,7 @@ export function Feed({
           type: post.type || 'Other',
           image_url: post.image_url,
           tags: post.tags || []
-        }).select(`*, profiles:user_id(*)`).single()
+        }).select(`*, profiles:user_id(id, full_name, avatar_url, bio, college, consistency_score, streak)`).single()
 
         if (newRepostPost) {
           window.dispatchEvent(new CustomEvent('post-created', { detail: newRepostPost }))
@@ -261,7 +261,7 @@ export function Feed({
       .from('posts')
       .select(`
         *,
-        profiles!posts_user_id_fkey(*),
+        profiles!posts_user_id_fkey(id, full_name, avatar_url, bio, college, consistency_score, streak),
         likes(user_id),
         comments(user_id, id),
         bookmarks(user_id)

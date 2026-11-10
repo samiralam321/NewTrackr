@@ -110,7 +110,7 @@ function MessagesContent() {
     try {
       let query = supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, college, consistency_score, badge_level')
+        .select('id, full_name, avatar_url, college, consistency_score')
         .order('consistency_score', { ascending: false })
         .limit(60)
       
@@ -189,7 +189,7 @@ function MessagesContent() {
       if (activeUserIds.size > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, college, consistency_score, badge_level')
+          .select('id, full_name, avatar_url, college, consistency_score')
           .in('id', Array.from(activeUserIds))
         
         if (profilesData && profilesData.length > 0) {
@@ -212,7 +212,7 @@ function MessagesContent() {
         // Query target user profile directly if no previous messages exist
         const { data: targetProfile } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, college, consistency_score, badge_level')
+          .select('id, full_name, avatar_url, college, consistency_score')
           .eq('id', targetUserId)
           .single()
         
@@ -309,7 +309,7 @@ function MessagesContent() {
             if (!exists) {
               supabase
                 .from('profiles')
-                .select('id, full_name, avatar_url, college, consistency_score, badge_level')
+                .select('id, full_name, avatar_url, college, consistency_score')
                 .eq('id', otherId)
                 .single()
                 .then(({ data }) => {

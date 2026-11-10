@@ -3,13 +3,16 @@ import { Trophy, Clock, Flame, ShieldAlert, Play, Target, ChevronLeft } from "lu
 import Link from "next/link"
 import { QuizScreen } from "@/components/challenges/quiz-screen"
 import { ResultScreen } from "@/components/challenges/result-screen"
+import { redirect } from "next/navigation"
+
+export const dynamic = 'force-dynamic'
 
 export default async function ChallengesPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return <div>Please log in to view challenges.</div>
+    redirect('/auth')
   }
 
   const today = new Date().toISOString().split('T')[0]
@@ -19,7 +22,7 @@ export default async function ChallengesPage() {
     .from('daily_challenges')
     .select('question_ids, date')
     .eq('date', today)
-    .single()
+    .maybeSingle()
   
   if (todayChallenge) {
     dailyChallenge = todayChallenge
@@ -41,7 +44,7 @@ export default async function ChallengesPage() {
           question_ids: selectedIds
         })
         .select('question_ids, date')
-        .single()
+        .maybeSingle()
         
       if (error) {
         // If it failed (e.g. concurrent insert from another user), just fetch the newly created one
@@ -49,7 +52,7 @@ export default async function ChallengesPage() {
           .from('daily_challenges')
           .select('question_ids, date')
           .eq('date', today)
-          .single()
+          .maybeSingle()
         dailyChallenge = concurrentChallenge
       } else {
         dailyChallenge = newChallenge
@@ -61,7 +64,7 @@ export default async function ChallengesPage() {
         .select('question_ids, date')
         .order('date', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
       dailyChallenge = latest
     }
   }
@@ -73,7 +76,7 @@ export default async function ChallengesPage() {
     .from('profiles')
     .select('streak, challenge_rank, full_name')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   let attempt = null
   let isFirstAttempt = false
@@ -83,7 +86,7 @@ export default async function ChallengesPage() {
       .select('*')
       .eq('user_id', user.id)
       .eq('challenge_date', challengeDate)
-      .single()
+      .maybeSingle()
     attempt = existingAttempt
 
     if (attempt) {

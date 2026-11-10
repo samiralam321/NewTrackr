@@ -3,16 +3,35 @@ import { DashboardTabs } from "@/components/dashboard/dashboard-tabs"
 import { MobileMenuDropdown } from "@/components/dashboard/mobile-menu-dropdown"
 import { Greeting } from "@/components/dashboard/greeting"
 import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
 import Link from "next/link"
+
+export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
-  // Fetch user profile for the header greeting and sub-components
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user?.id).single()
 
-  const displayName = profile?.full_name ? profile.full_name.split(' ')[0] : 'Samir'
+  if (!user) {
+    redirect('/auth')
+  }
+
+  // Safely fetch user profile for header greeting and sub-components
+  let profile = null
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle()
+    profile = data
+  } catch (err) {
+    console.warn("Could not load user profile:", err)
+  }
+
+  const displayName = profile?.full_name 
+    ? profile.full_name.split(' ')[0] 
+    : (user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0] : 'Samir')
 
   return (
     <div className="flex min-h-screen w-full">

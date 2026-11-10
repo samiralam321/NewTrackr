@@ -8,7 +8,7 @@ export default async function ProfilePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return <div>Please log in</div>
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
   const { data: posts } = await supabase.from('posts').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
 
   const { count: followersCount } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id)

@@ -29,7 +29,7 @@ export const api = {
         .from('posts')
         .select(`
           *,
-          profiles!posts_user_id_fkey (*),
+          profiles!posts_user_id_fkey (id, full_name, avatar_url, bio, college, consistency_score, streak),
           likes (user_id),
           comments (id, user_id),
           bookmarks (user_id)
@@ -146,7 +146,7 @@ export const api = {
         tags,
         type,
         created_at,
-        profiles!posts_user_id_fkey (*)
+        profiles!posts_user_id_fkey (id, full_name, avatar_url, bio, college, consistency_score, streak)
       `)
       .single()
 
@@ -245,7 +245,7 @@ export const api = {
     const { data, error } = await supabase
       .from('comments')
       .insert({ post_id: postId, user_id: currentUid, content })
-      .select('*, profiles!comments_user_id_fkey(*)')
+      .select('*, profiles!comments_user_id_fkey(id, full_name, avatar_url, bio, college, consistency_score, streak)')
       .single()
 
     if (error) throw new Error(error.message)
@@ -279,8 +279,8 @@ export const api = {
         .from('messages')
         .select(`
           *,
-          sender:profiles!messages_sender_id_fkey(*),
-          receiver:profiles!messages_receiver_id_fkey(*)
+          sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url, bio, college, consistency_score, streak),
+          receiver:profiles!messages_receiver_id_fkey(id, full_name, avatar_url, bio, college, consistency_score, streak)
         `)
         .or(`sender_id.eq.${currentUid},receiver_id.eq.${currentUid}`)
         .order('created_at', { ascending: false })

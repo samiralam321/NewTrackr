@@ -73,7 +73,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
         image_url: imageUrl
       }).select(`
         *,
-        profiles!posts_user_id_fkey(*),
+        profiles!posts_user_id_fkey(id, full_name, avatar_url, bio, college, consistency_score, streak),
         likes(user_id),
         comments(user_id, id),
         bookmarks(user_id)
