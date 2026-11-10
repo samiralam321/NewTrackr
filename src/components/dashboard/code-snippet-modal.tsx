@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Code2, Eye, PenLine, Sparkles, Check, Hash } from 'lucide-react'
+import { Code2, Eye, PenLine, Sparkles, Check, Hash, ChevronDown } from 'lucide-react'
 import { CarbonCodeBlock, THEME_CONFIGS, CarbonTheme, LANGUAGE_LABELS } from '@/components/ui/carbon-code-block'
 
 export interface CodeSnippetData {
@@ -49,6 +49,21 @@ export function CodeSnippetModal({
   const [title, setTitle] = useState(initialData?.title || '')
   const [showLineNumbers, setShowLineNumbers] = useState(initialData?.showLineNumbers ?? true)
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false)
+  const langDropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close custom language dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
+        setIsLangDropdownOpen(false)
+      }
+    }
+    if (isLangDropdownOpen) {
+      document.addEventListener('mousedown', handleOutsideClick)
+    }
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [isLangDropdownOpen])
 
   useEffect(() => {
     if (open) {
@@ -143,22 +158,58 @@ export function CodeSnippetModal({
         <div className="p-5 flex-1 overflow-y-auto space-y-4">
           {/* Controls Bar: Language, Title, Theme */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Language Selector */}
-            <div className="space-y-1.5">
+            {/* Custom Aesthetic Language Selector */}
+            <div className="space-y-1.5 relative" ref={langDropdownRef}>
               <Label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                 Language
               </Label>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#161420] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-violet-500 cursor-pointer"
+              <button
+                type="button"
+                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                className={`w-full h-10 px-3.5 rounded-xl border text-sm font-semibold flex items-center justify-between transition-all duration-150 cursor-pointer ${
+                  isLangDropdownOpen
+                    ? 'border-violet-500 ring-2 ring-violet-500/20 bg-white dark:bg-[#1A1A24]'
+                    : 'border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-[#161420] hover:bg-gray-100/70 dark:hover:bg-[#1A1A26]'
+                } text-gray-900 dark:text-white`}
               >
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                  <option key={lang.id} value={lang.id}>
-                    {lang.name}
-                  </option>
-                ))}
-              </select>
+                <span className="flex items-center gap-2 truncate">
+                  <span className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />
+                  <span className="truncate">{SUPPORTED_LANGUAGES.find(l => l.id === language)?.name || 'C++'}</span>
+                </span>
+                <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${isLangDropdownOpen ? 'rotate-180 text-violet-500' : ''}`} />
+              </button>
+
+              {/* Custom Dropdown Menu */}
+              {isLangDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1.5 p-1.5 rounded-xl border border-gray-100 dark:border-white/10 bg-white/95 dark:bg-[#161420]/95 backdrop-blur-md shadow-2xl z-40 max-h-56 overflow-y-auto no-scrollbar animate-in fade-in zoom-in-95 duration-150">
+                  <div className="space-y-0.5">
+                    {SUPPORTED_LANGUAGES.map((lang) => {
+                      const isSelected = language === lang.id
+                      return (
+                        <button
+                          key={lang.id}
+                          type="button"
+                          onClick={() => {
+                            setLanguage(lang.id)
+                            setIsLangDropdownOpen(false)
+                          }}
+                          className={`w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
+                            isSelected
+                              ? 'bg-violet-600 text-white font-bold shadow-xs'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:text-violet-600 dark:hover:text-violet-400'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-gray-400 dark:bg-gray-600'}`} />
+                            <span>{lang.name}</span>
+                          </span>
+                          {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Filename / Title */}
