@@ -342,7 +342,6 @@ export function Sidebar({ profile }: { profile?: any }) {
             onMouseEnter={() => { try { router.prefetch('/profile') } catch {} }}
             onTouchStart={() => { try { router.prefetch('/profile') } catch {} }}
             className="flex items-center gap-2.5 min-w-0 flex-1 p-2 rounded-full hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors group cursor-pointer"
-            title="View your profile"
           >
             <img 
               src={profileState?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileState?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} 
