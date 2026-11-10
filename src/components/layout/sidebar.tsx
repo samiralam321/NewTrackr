@@ -312,7 +312,7 @@ export function Sidebar({ profile }: { profile?: any }) {
                   </span>
                 )}
               </div>
-              <span className="text-[19.5px] xl:text-[20.5px] 2xl:text-[21px] tracking-tight">{item.name}</span>
+              <span className="text-[19px] xl:text-[20px] font-medium xl:font-semibold tracking-tight">{item.name}</span>
             </Link>
           )
         })}
@@ -325,7 +325,7 @@ export function Sidebar({ profile }: { profile?: any }) {
           <div className="relative flex items-center justify-center shrink-0">
             <MessageSquare className="w-[24px] h-[24px] stroke-[2] group-hover:scale-105 transition-transform" />
           </div>
-          <span className="text-[19.5px] xl:text-[20.5px] 2xl:text-[21px] tracking-tight">Contact</span>
+          <span className="text-[19px] xl:text-[20px] font-medium xl:font-semibold tracking-tight">Contact</span>
         </button>
 
         {/* PWA Install Button */}
@@ -333,7 +333,7 @@ export function Sidebar({ profile }: { profile?: any }) {
           <InstallButton 
             className="flex items-center gap-4 px-4 py-2.5 xl:px-4.5 xl:py-2.5 rounded-full font-medium text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors text-left cursor-pointer w-fit min-w-[210px]" 
             iconClassName="w-[24px] h-[24px]"
-            textClassName="text-[19.5px] xl:text-[20.5px] 2xl:text-[21px] tracking-tight"
+            textClassName="text-[19px] xl:text-[20px] font-medium xl:font-semibold tracking-tight"
           />
         </div>
       </nav>
@@ -375,7 +375,7 @@ export function Sidebar({ profile }: { profile?: any }) {
                 <span className="truncate">{profileState?.full_name || 'Samir Alam'}</span>
                 <VerifiedBadge level={getBadgeLevel(profileState?.consistency_score)} />
               </span>
-              <span className="text-[13px] text-[#536471] dark:text-[#71767b] font-normal truncate">
+              <span className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal truncate">
                 {getUserHandle(profileState?.full_name)}
               </span>
             </div>
@@ -397,8 +397,8 @@ export function Sidebar({ profile }: { profile?: any }) {
       {isLogoutModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-white dark:bg-[#1A1A24] rounded-[2rem] p-8 md:p-10 max-w-[400px] w-full shadow-2xl border border-gray-100 dark:border-[#2D2B3B] flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
-            <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">Leaving so soon?</h3>
-            <p className="text-base text-gray-500 dark:text-gray-400 mb-8 px-2 leading-relaxed">
+            <h3 className="text-2xl font-bold text-[#0f1419] dark:text-[#e7e9ea] mb-3 tracking-tight">Leaving so soon?</h3>
+            <p className="text-[15px] text-[#536471] dark:text-[#71767b] mb-8 px-2 leading-relaxed">
               We're sad to see you go. Are you sure you want to log out of your session?
             </p>
             

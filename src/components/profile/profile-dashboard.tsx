@@ -304,18 +304,18 @@ export function ProfileDashboard({
             </div>
 
             <div className="mt-4">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-2">
                 {profileState?.full_name || 'Anonymous User'}
                 {getBadgeLevel(profileState?.consistency_score) > 0 && (
                   <VerifiedBadge level={getBadgeLevel(profileState?.consistency_score)} size="md" />
                 )}
               </h1>
               
-              <p className="text-[15px] text-gray-600 dark:text-gray-300 font-medium mt-1.5 flex items-center gap-2">
+              <p className="text-[15px] text-[#536471] dark:text-[#71767b] font-normal mt-1.5 flex items-center gap-2">
                 {profileState?.college || 'Trackr Member'} 🎓
               </p>
               
-              <p className="text-[15px] text-gray-700 dark:text-gray-200 mt-4 max-w-2xl leading-relaxed">
+              <p className="text-[15px] text-[#0f1419] dark:text-[#e7e9ea] font-normal mt-4 max-w-2xl leading-relaxed">
                 {profileState?.bio || 'Learning. Building. Sharing. 🚀'}
               </p>
               
@@ -333,7 +333,7 @@ export function ProfileDashboard({
                 </div>
               )}
               
-              <div className="flex items-center gap-6 mt-4 text-sm text-gray-500 dark:text-gray-400 font-medium">
+              <div className="flex items-center gap-6 mt-4 text-[14px] text-[#536471] dark:text-[#71767b] font-normal">
                 <div className="flex items-center gap-1.5">
                   <MapPin className="w-4 h-4" />
                   India

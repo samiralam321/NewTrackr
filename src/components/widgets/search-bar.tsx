@@ -109,7 +109,7 @@ export function SearchBar({ userProfile }: SearchBarProps) {
           onKeyDown={handleKeyDown}
           onFocus={() => query.trim() && setShowDropdown(true)}
           placeholder="Search"
-          className="w-full h-[44px] pl-11 pr-8 text-[15px] rounded-full bg-[#eff3f4] dark:bg-[#202327] border border-transparent text-[#0f1419] dark:text-[#e7e9ea] placeholder-[#536471] dark:placeholder-[#71767b] focus:bg-white dark:focus:bg-black focus:border-[#7C3AED] focus:outline-none transition-all"
+          className="w-full h-[44px] pl-11 pr-8 text-[15px] font-normal rounded-full bg-[#eff3f4] dark:bg-[#202327] border border-transparent text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder-[#536471] dark:placeholder-[#71767b] focus:bg-white dark:focus:bg-black focus:border-[#7C3AED] focus:outline-none transition-all"
         />
         {query && (
           <button
@@ -140,14 +140,14 @@ export function SearchBar({ userProfile }: SearchBarProps) {
                     <p className="text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] truncate">
                       {user.full_name || "Student"}
                     </p>
-                    <p className="text-[13px] text-[#536471] dark:text-[#71767b] truncate">
+                    <p className="text-[13px] font-normal text-[#536471] dark:text-[#71767b] truncate">
                       {user.college || "Trackr Student"}
                     </p>
                   </div>
                 </Link>
               ))
             ) : (
-              <div className="px-4 py-3 text-center text-sm text-[#536471] dark:text-[#71767b]">
+              <div className="px-4 py-3 text-center text-[14px] font-normal text-[#536471] dark:text-[#71767b]">
                 {isSearching ? "Searching..." : `No students found for "${query}"`}
               </div>
             )}

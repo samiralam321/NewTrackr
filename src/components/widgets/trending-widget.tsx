@@ -22,7 +22,7 @@ export function TrendingWidget() {
     <div className="bg-[#f7f9f9] dark:bg-[#16181c] border border-[#eff3f4] dark:border-[#2f3336] rounded-2xl overflow-hidden transition-colors">
       {/* Header */}
       <div className="px-4 pt-3.5 pb-1 flex items-center justify-between">
-        <h3 className="text-[18.5px] font-extrabold text-[#0f1419] dark:text-[#e7e9ea]">
+        <h3 className="text-[18px] font-bold text-[#0f1419] dark:text-[#e7e9ea]">
           What&apos;s happening
         </h3>
       </div>
@@ -39,7 +39,7 @@ export function TrendingWidget() {
               <p className="text-[13px] text-[#536471] dark:text-[#71767b] font-normal leading-4">
                 Trending in Tech • {topic.tag}
               </p>
-              <p className="text-[15.5px] font-bold text-[#0f1419] dark:text-[#e7e9ea] leading-5 mt-0.5 truncate group-hover:underline">
+              <p className="text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] leading-5 mt-0.5 truncate group-hover:underline">
                 {topic.title}
               </p>
               <p className="text-[13px] text-[#536471] dark:text-[#71767b] font-normal leading-4 mt-0.5">
@@ -47,7 +47,7 @@ export function TrendingWidget() {
               </p>
             </div>
 
-            <span className="text-[12px] font-semibold px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-100 dark:border-purple-800/40 shrink-0">
+            <span className="text-[12px] font-semibold px-2.5 py-0.5 rounded-md bg-purple-50 text-[#7C3AED] dark:bg-purple-950/40 dark:text-purple-300 border border-purple-100 dark:border-purple-800/40 shrink-0">
               #{topic.rank}
             </span>
           </Link>
@@ -57,7 +57,7 @@ export function TrendingWidget() {
       {/* Footer / Show more */}
       <Link
         href="/explore"
-        className="px-4 py-3.5 text-[15px] font-semibold text-[#7C3AED] hover:bg-black/[0.03] dark:hover:bg-white/[0.03] block transition-colors"
+        className="px-4 py-3.5 text-[14px] font-semibold text-[#7C3AED] hover:bg-black/[0.03] dark:hover:bg-white/[0.03] block transition-colors"
       >
         Show more
       </Link>

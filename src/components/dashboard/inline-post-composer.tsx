@@ -409,10 +409,10 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
             key={cat.type}
             type="button"
             onClick={() => setProgressType(cat.type)}
-            className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-all flex items-center gap-1 shrink-0 select-none ${
+            className={`px-3 py-1 rounded-full text-[13px] font-medium transition-all flex items-center gap-1.5 shrink-0 select-none ${
               progressType === cat.type
-                ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 border border-violet-200 dark:border-violet-700'
-                : 'bg-gray-100/70 text-gray-600 dark:bg-[#1A1A24] dark:text-gray-400 hover:bg-gray-200/60 dark:hover:bg-[#252330]'
+                ? 'bg-violet-100 text-[#7C3AED] dark:bg-violet-950/60 dark:text-violet-300 border border-violet-200 dark:border-violet-700'
+                : 'bg-gray-100/80 text-[#536471] dark:bg-[#1A1A24] dark:text-[#71767b] hover:bg-gray-200/60 dark:hover:bg-[#252330]'
             }`}
           >
             <span>{cat.icon}</span>
@@ -441,7 +441,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
             onChange={handleTextChange}
             onFocus={() => setIsFocused(true)}
             placeholder={`What's on your mind, ${firstName}?`}
-            className="w-full text-[17px] sm:text-[18px] text-[#0f1419] dark:text-[#e7e9ea] placeholder-[#536471] dark:placeholder-[#71767b] bg-transparent outline-none border-none resize-none leading-relaxed min-h-[48px]"
+            className="w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-relaxed min-h-[48px]"
           />
 
           {/* User @Mention Autocomplete Dropdown Popover */}

@@ -114,7 +114,7 @@ export function RichTextRenderer({ content }: RichTextRendererProps) {
 
             if (tagName === "strong" || tagName === "b") {
               return (
-                <strong key={currentKey} className="font-extrabold text-gray-900 dark:text-white">
+                <strong key={currentKey} className="font-bold text-[#0f1419] dark:text-[#e7e9ea]">
                   {parseNodes(el.childNodes, currentKey)}
                 </strong>
               )
@@ -143,7 +143,7 @@ export function RichTextRenderer({ content }: RichTextRendererProps) {
 
             if (tagName === "div" || tagName === "p") {
               return (
-                <div key={currentKey} className="block mb-1.5 last:mb-0 leading-relaxed">
+                <div key={currentKey} className="block mb-1.5 last:mb-0 leading-[1.5]">
                   {parseNodes(el.childNodes, currentKey)}
                 </div>
               )
@@ -167,5 +167,5 @@ export function RichTextRenderer({ content }: RichTextRendererProps) {
     }
   }
 
-  return <div className="text-[14.5px] leading-relaxed text-gray-800 dark:text-gray-200">{htmlToReact(htmlContent)}</div>
+  return <div className="text-[16px] leading-[1.5] text-[#0f1419] dark:text-[#e7e9ea] font-normal">{htmlToReact(htmlContent)}</div>
 }

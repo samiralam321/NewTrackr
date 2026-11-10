@@ -8,6 +8,7 @@ import { InstallPWA } from "@/components/pwa/InstallPWA";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {

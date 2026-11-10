@@ -16,10 +16,10 @@ export function CollegeCommunitiesWidget() {
             <Users className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <h4 className="text-[13.5px] font-bold text-gray-900 dark:text-white leading-tight">
+            <h4 className="text-[14px] font-bold text-[#0f1419] dark:text-[#e7e9ea] leading-tight">
               Join College Communities
             </h4>
-            <p className="text-[11.5px] text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5">
+            <p className="text-[12px] text-[#536471] dark:text-[#71767b] font-normal truncate mt-0.5">
               Connect with students from your college
             </p>
           </div>

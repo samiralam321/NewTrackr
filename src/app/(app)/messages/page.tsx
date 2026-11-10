@@ -899,7 +899,7 @@ const selectUserAndUrl = (user: Profile | null) => {
                     {/* Name, Preview, and Metadata */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <h3 className={`text-xs font-semibold truncate ${
+                        <h3 className={`text-[14.5px] font-semibold truncate ${
                           isSelected 
                             ? 'text-violet-950 dark:text-violet-200 font-bold' 
                             : 'text-gray-900 dark:text-white'
@@ -907,14 +907,14 @@ const selectUserAndUrl = (user: Profile | null) => {
                           {user.full_name}
                         </h3>
                         {timeText && (
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
+                          <span className="text-[12px] text-[#536471] dark:text-[#71767b] font-normal shrink-0">
                             {timeText}
                           </span>
                         )}
                       </div>
 
                       <div className="flex items-center justify-between gap-1">
-                        <p className={`text-[11.5px] truncate pr-1 ${
+                        <p className={`text-[13px] truncate pr-1 ${
                           unread > 0 
                             ? 'text-gray-900 dark:text-white font-bold' 
                             : 'text-gray-500 dark:text-gray-400'
@@ -1119,7 +1119,7 @@ const selectUserAndUrl = (user: Profile | null) => {
 
                       {/* Message Bubble Row */}
                       <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} ${isSameSenderAsPrev ? 'mt-1' : 'mt-2.5'}`}>
-                        <div className={`max-w-[82%] sm:max-w-[70%] px-3.5 py-2 text-[13.5px] leading-relaxed break-words rounded-2xl shadow-2xs ${
+                        <div className={`max-w-[82%] sm:max-w-[70%] px-3.5 py-2 text-[15px] leading-[1.45] break-words rounded-2xl shadow-2xs ${
                           isMe 
                             ? msg.status === 'error'
                               ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-800'
