@@ -227,7 +227,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
     <div className="bg-[#f7f9f9] dark:bg-[#16181c] border border-[#eff3f4] dark:border-[#2f3336] rounded-2xl overflow-hidden transition-colors">
       {/* Header */}
       <div className="px-4 pt-3.5 pb-1 flex items-center justify-between">
-        <h3 className="text-[17px] font-extrabold text-[#0f1419] dark:text-[#e7e9ea]">
+        <h3 className="text-[18.5px] font-extrabold text-[#0f1419] dark:text-[#e7e9ea]">
           Who to follow
         </h3>
       </div>
@@ -253,25 +253,25 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
                 <img
                   src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=7C3AED&color=fff&size=80`}
                   alt={user.full_name || "User"}
-                  width={40}
-                  height={40}
+                  width={42}
+                  height={42}
                   loading="lazy"
                   decoding="async"
-                  className="w-10 h-10 rounded-full object-cover shrink-0"
+                  className="w-10.5 h-10.5 rounded-full object-cover shrink-0"
                 />
                 <div className="min-w-0">
                   <div className="flex items-center gap-1">
-                    <p className="text-[14.5px] font-bold text-[#0f1419] dark:text-[#e7e9ea] truncate group-hover:underline">
+                    <p className="text-[15.5px] font-bold text-[#0f1419] dark:text-[#e7e9ea] truncate group-hover:underline">
                       {user.full_name || "Student"}
                     </p>
                     <VerifiedBadge level={badgeLevel} />
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <p className="text-[13px] text-[#536471] dark:text-[#71767b] font-normal truncate">
+                    <p className="text-[13.5px] text-[#536471] dark:text-[#71767b] font-normal truncate">
                       {handle}
                     </p>
                     {streak > 0 && (
-                      <span className="text-[11px] font-bold text-orange-500 dark:text-orange-400 flex items-center gap-0.5 shrink-0">
+                      <span className="text-[12px] font-bold text-orange-500 dark:text-orange-400 flex items-center gap-0.5 shrink-0">
                         🔥{streak}
                       </span>
                     )}
@@ -281,13 +281,13 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
 
               {/* Follow Button or You Tag */}
               {isSelf ? (
-                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40 select-none">
+                <span className="px-3.5 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40 select-none">
                   You
                 </span>
               ) : (
                 <button
                   onClick={() => handleToggleFollow(user.id)}
-                  className={`px-4 py-1.5 text-[13px] font-bold rounded-full transition-all shrink-0 select-none ${
+                  className={`px-4 py-1.5 text-[13.5px] font-bold rounded-full transition-all shrink-0 select-none ${
                     isFollowing
                       ? "bg-transparent text-[#0f1419] dark:text-[#e7e9ea] border border-[#cfd9de] dark:border-[#536471] hover:border-red-500 hover:text-red-600 hover:bg-red-500/10"
                       : "bg-[#0f1419] text-white dark:bg-[#eff3f4] dark:text-[#0f1419] hover:bg-[#272c30] dark:hover:bg-[#d7dbdc]"
@@ -304,7 +304,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
       {/* Footer / Show more */}
       <Link
         href="/explore"
-        className="px-4 py-3.5 text-[14px] font-medium text-[#7C3AED] hover:bg-black/[0.03] dark:hover:bg-white/[0.03] block transition-colors border-t border-[#eff3f4] dark:border-[#2f3336]/60"
+        className="px-4 py-3.5 text-[15px] font-semibold text-[#7C3AED] hover:bg-black/[0.03] dark:hover:bg-white/[0.03] block transition-colors border-t border-[#eff3f4] dark:border-[#2f3336]/60"
       >
         Show more
       </Link>

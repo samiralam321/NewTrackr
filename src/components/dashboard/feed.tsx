@@ -854,25 +854,25 @@ export function Feed({
               {/* Right Column: Post Body, Header, Media, Actions */}
               <div className="flex-1 min-w-0">
                 {/* Twitter-style Header Line: Name · @Handle · Time · Category */}
-                <div className="flex items-center justify-between gap-1 mb-1">
+                <div className="flex items-center justify-between gap-1 mb-1.5">
                   <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                     <Link 
                       href={`/profile/${post.user_id}`} 
-                      className="text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] hover:underline transition-colors truncate"
+                      className="text-[16px] sm:text-[16.5px] font-bold text-[#0f1419] dark:text-[#e7e9ea] hover:underline transition-colors truncate"
                     >
                       {post.profiles?.full_name || 'Anonymous User'}
                     </Link>
                     <VerifiedBadge level={getBadgeLevel(post.profiles?.consistency_score)} />
-                    <span className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal truncate">
+                    <span className="text-[14.5px] text-[#536471] dark:text-[#71767b] font-normal truncate">
                       {getUserHandle(post.profiles?.full_name)}
                     </span>
                     <span className="text-[#536471] dark:text-[#71767b] text-xs font-normal">·</span>
-                    <span className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal hover:underline shrink-0">
+                    <span className="text-[14.5px] text-[#536471] dark:text-[#71767b] font-normal hover:underline shrink-0">
                       {formatTimeCompact(post.created_at)}
                     </span>
 
                     {post.type && (
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                      <span className={`text-[12px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${
                         post.type === 'Learned' ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/50 dark:border-violet-800/40' :
                         post.type === 'Built' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40' :
                         post.type === 'Practiced' ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/40' :
@@ -887,7 +887,7 @@ export function Feed({
                     )}
 
                     {post.time_spent && (
-                      <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#1A1A24] px-1.5 py-0.5 rounded-md inline-flex items-center gap-1">
+                      <span className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#1A1A24] px-2 py-0.5 rounded-md inline-flex items-center gap-1">
                         ⏱️ {Math.floor(post.time_spent/60)}h {post.time_spent%60}m
                       </span>
                     )}
@@ -1021,7 +1021,7 @@ export function Feed({
                       </div>
                     </div>
                   ) : (
-                    <div className="text-[15px] sm:text-[15.5px] text-[#0f1419] dark:text-[#e7e9ea] leading-[1.45] whitespace-pre-wrap font-normal max-w-2xl">
+                    <div className="text-[16px] sm:text-[16.5px] md:text-[17px] text-[#0f1419] dark:text-[#e7e9ea] leading-[1.5] whitespace-pre-wrap font-normal max-w-2xl">
                       <RichTextRenderer content={post.content} />
                     </div>
                   )}
@@ -1047,14 +1047,14 @@ export function Feed({
                 )}
                   
                 {/* Twitter Action Bar: Comment, Repost, Like, Bookmark, Share */}
-                <div className="flex items-center justify-between pt-1 text-[#536471] dark:text-[#71767b] max-w-md -ml-2">
+                <div className="flex items-center justify-between pt-1.5 text-[#536471] dark:text-[#71767b] max-w-md -ml-2">
                   {/* Comment */}
                   <button 
                     onClick={() => toggleComments(post.id)} 
-                    className="flex items-center gap-1 text-xs sm:text-[13px] hover:text-violet-600 dark:hover:text-violet-400 group/btn transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 text-[13.5px] sm:text-[14px] hover:text-violet-600 dark:hover:text-violet-400 group/btn transition-colors cursor-pointer"
                   >
                     <div className="p-2 rounded-full group-hover/btn:bg-violet-50 dark:group-hover/btn:bg-violet-950/40 transition-colors">
-                      <MessageCircle className="w-[18px] h-[18px]" />
+                      <MessageCircle className="w-[19px] h-[19px]" />
                     </div>
                     <span>{(post as any).comments_count || 0}</span>
                   </button>
@@ -1062,13 +1062,13 @@ export function Feed({
                   {/* Repost */}
                   <button 
                     onClick={() => handleRepost(post)} 
-                    className={`flex items-center gap-1 text-xs sm:text-[13px] hover:text-emerald-600 dark:hover:text-emerald-400 group/btn transition-colors cursor-pointer ${
+                    className={`flex items-center gap-1.5 text-[13.5px] sm:text-[14px] hover:text-emerald-600 dark:hover:text-emerald-400 group/btn transition-colors cursor-pointer ${
                       repostedPosts[post.id] ? 'text-emerald-600 dark:text-emerald-400' : ''
                     }`}
                     title="Repost"
                   >
                     <div className="p-2 rounded-full group-hover/btn:bg-emerald-50 dark:group-hover/btn:bg-emerald-950/40 transition-colors">
-                      <Repeat2 className="w-[18px] h-[18px]" />
+                      <Repeat2 className="w-[19px] h-[19px]" />
                     </div>
                     <span>{((post as any).reposts_count || 0) + (repostedPosts[post.id] ? 1 : 0)}</span>
                   </button>
@@ -1076,12 +1076,12 @@ export function Feed({
                   {/* Like */}
                   <button 
                     onClick={() => toggleLike(post.id, post.user_has_liked || false)} 
-                    className={`flex items-center gap-1 text-xs sm:text-[13px] hover:text-rose-600 dark:hover:text-rose-500 group/btn transition-colors cursor-pointer ${
+                    className={`flex items-center gap-1.5 text-[13.5px] sm:text-[14px] hover:text-rose-600 dark:hover:text-rose-500 group/btn transition-colors cursor-pointer ${
                       post.user_has_liked ? 'text-rose-600 dark:text-rose-500' : ''
                     }`}
                   >
                     <div className="p-2 rounded-full group-hover/btn:bg-rose-50 dark:group-hover/btn:bg-rose-950/40 transition-colors">
-                      <Heart className={`w-[18px] h-[18px] transition-transform ${post.user_has_liked ? 'fill-current scale-110' : ''}`} />
+                      <Heart className={`w-[19px] h-[19px] transition-transform ${post.user_has_liked ? 'fill-current scale-110' : ''}`} />
                     </div>
                     <span>{(post as any).likes_count || 0}</span>
                   </button>
@@ -1089,24 +1089,24 @@ export function Feed({
                   {/* Bookmark */}
                   <button 
                     onClick={() => toggleBookmark(post.id, post.user_has_bookmarked || false)} 
-                    className={`flex items-center gap-1 text-xs sm:text-[13px] hover:text-violet-600 dark:hover:text-violet-400 group/btn transition-colors cursor-pointer ${
+                    className={`flex items-center gap-1.5 text-[13.5px] sm:text-[14px] hover:text-violet-600 dark:hover:text-violet-400 group/btn transition-colors cursor-pointer ${
                       post.user_has_bookmarked ? 'text-violet-600 dark:text-violet-400' : ''
                     }`}
                     title="Save post"
                   >
                     <div className="p-2 rounded-full group-hover/btn:bg-violet-50 dark:group-hover/btn:bg-violet-950/40 transition-colors">
-                      <Bookmark className={`w-[18px] h-[18px] ${post.user_has_bookmarked ? 'fill-current' : ''}`} />
+                      <Bookmark className={`w-[19px] h-[19px] ${post.user_has_bookmarked ? 'fill-current' : ''}`} />
                     </div>
                   </button>
 
                   {/* Share */}
                   <button 
                     onClick={() => handleSharePost(post)} 
-                    className="flex items-center gap-1 text-xs sm:text-[13px] hover:text-violet-600 dark:hover:text-violet-400 group/btn transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 text-[13.5px] sm:text-[14px] hover:text-violet-600 dark:hover:text-violet-400 group/btn transition-colors cursor-pointer"
                     title="Share post"
                   >
                     <div className="p-2 rounded-full group-hover/btn:bg-violet-50 dark:group-hover/btn:bg-violet-950/40 transition-colors">
-                      <Share2 className="w-[18px] h-[18px]" />
+                      <Share2 className="w-[19px] h-[19px]" />
                     </div>
                   </button>
 
