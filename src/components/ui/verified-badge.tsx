@@ -1,7 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { useState } from 'react'
+import React from 'react'
 import { isUserAdmin } from '@/lib/utils/streak'
 
 export type VerifiedBadgeProps = {
@@ -21,8 +20,6 @@ export function VerifiedBadge({
   showTooltip = true,
   tooltipAlign = 'center'
 }: VerifiedBadgeProps) {
-  const [hovered, setHovered] = useState(false)
-
   const isAdmin = isUserAdmin(nameOrHandle)
   const effectiveLevel = isAdmin ? 1 : (level || 0)
 
@@ -69,17 +66,8 @@ export function VerifiedBadge({
   return (
     <div
       className={`relative inline-flex items-center justify-center cursor-pointer select-none group/badge shrink-0 ${className}`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      title={details.title}
     >
-      <motion.div
-        animate={{
-          scale: hovered ? 1.15 : 1,
-        }}
-        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-        className="flex items-center justify-center shrink-0 bg-transparent"
-      >
+      <div className="flex items-center justify-center shrink-0 bg-transparent">
         {/* Authentic Twitter Verified Seal & Checkmark (Clean SVG, 0 outer shadow, 0 border, 0 background) */}
         <svg
           viewBox="0 0 22 22"
@@ -100,7 +88,7 @@ export function VerifiedBadge({
             />
           </g>
         </svg>
-      </motion.div>
+      </div>
 
       {/* Modern Tooltip - strictly scoped to direct badge hover */}
       {showTooltip && (
