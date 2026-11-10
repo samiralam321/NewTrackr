@@ -359,7 +359,7 @@ export function ProfileDashboard({
                     href={profileState.website.startsWith('http://') || profileState.website.startsWith('https://') ? profileState.website : `https://${profileState.website}`}
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 hover:underline font-medium transition-colors cursor-pointer group"
+                    className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 hover:underline decoration-[1px] underline-offset-2 hover:decoration-violet-400/80 dark:hover:decoration-violet-400/80 font-medium transition-colors cursor-pointer group"
                     title={profileState.website}
                   >
                     <Link2 className="w-4 h-4 shrink-0 text-violet-500 transition-transform group-hover:rotate-[-20deg]" />

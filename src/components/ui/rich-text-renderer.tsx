@@ -47,7 +47,7 @@ function renderFormattedText(text: string, baseKey: string | number): React.Reac
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-violet-600 dark:text-violet-400 font-medium hover:underline inline-flex items-center gap-0.5 break-all hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
+          className="text-violet-600 dark:text-violet-400 font-medium hover:underline decoration-[1px] underline-offset-2 hover:decoration-violet-400/80 dark:hover:decoration-violet-400/80 inline-flex items-center gap-0.5 break-all hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
           {part}
@@ -182,7 +182,7 @@ export function RichTextRenderer({ content }: RichTextRendererProps) {
                   href={href}
                   target={isExternal ? "_blank" : undefined}
                   rel={isExternal ? "noopener noreferrer" : undefined}
-                  className="text-violet-600 dark:text-violet-400 font-medium hover:underline inline-flex items-center gap-0.5 break-all"
+                  className="text-violet-600 dark:text-violet-400 font-medium hover:underline decoration-[1px] underline-offset-2 hover:decoration-violet-400/80 dark:hover:decoration-violet-400/80 inline-flex items-center gap-0.5 break-all transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {parseNodes(el.childNodes, currentKey)}
