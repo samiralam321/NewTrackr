@@ -6,10 +6,13 @@ import {
   Image as ImageIcon, 
   AtSign, 
   Smile, 
+  Code2,
   Loader2, 
   CheckCircle2, 
   AlertCircle 
 } from "lucide-react"
+import { CodeSnippetModal, CodeSnippetData } from "@/components/dashboard/code-snippet-modal"
+import { LANGUAGE_LABELS } from "@/components/ui/carbon-code-block"
 import { createClient } from "@/lib/supabase/client"
 import { updateUserStreakAndBadge } from "@/lib/utils/streak"
 import { getUserHandle } from "@/lib/utils/user"
@@ -59,6 +62,10 @@ export function PostModal({ user, profile }: PostModalProps) {
 
   // Emoji Picker State
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+
+  // Code Snippet Modal & Attachment State
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false)
+  const [attachedSnippet, setAttachedSnippet] = useState<CodeSnippetData | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -307,7 +314,7 @@ export function PostModal({ user, profile }: PostModalProps) {
   // Publish Post
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!content.trim() && !imageFile) return
+    if (!content.trim() && !imageFile && !attachedSnippet) return
 
     if (!user) {
       window.location.href = '/login'
@@ -345,19 +352,27 @@ export function PostModal({ user, profile }: PostModalProps) {
         setIsUploadingImage(false)
       }
 
-      // 2. Auto-extract hashtags from content
+      // 2. Prepare post content and append code snippet if attached
+      let finalContent = content.trim()
+      if (attachedSnippet) {
+        const header = `${attachedSnippet.language}:${attachedSnippet.theme}${attachedSnippet.title ? `:${attachedSnippet.title}` : ''}`
+        const snippetBlock = `\`\`\`${header}\n${attachedSnippet.code}\n\`\`\``
+        finalContent = finalContent ? `${finalContent}\n\n${snippetBlock}` : snippetBlock
+      }
+
+      // 3. Auto-extract hashtags from content
       const tagRegex = /#[\w-]+/g
-      const extractedTags: string[] = content.match(tagRegex) || []
+      const extractedTags: string[] = finalContent.match(tagRegex) || []
       if (!extractedTags.some(t => t.toLowerCase() === `#${progressType.toLowerCase()}`)) {
         extractedTags.push(`#${progressType}`)
       }
 
-      // 3. Insert post into Supabase posts table
+      // 4. Insert post into Supabase posts table
       const { data: newPost, error: postError } = await supabase
         .from('posts')
         .insert({
           user_id: user.id,
-          content: content.trim(),
+          content: finalContent,
           type: progressType,
           image_url: imageUrl,
           tags: extractedTags,
@@ -414,6 +429,7 @@ export function PostModal({ user, profile }: PostModalProps) {
       // Reset form and close modal
       setContent("")
       removeImage()
+      setAttachedSnippet(null)
       setTrackedMentions([])
       setShowEmojiPicker(false)
       setMentionQuery(null)
@@ -557,6 +573,50 @@ export function PostModal({ user, profile }: PostModalProps) {
                 </button>
               </div>
             )}
+
+            {/* Attached Code Snippet Card */}
+            {attachedSnippet && (
+              <div className="mt-2 mb-2 rounded-2xl border border-violet-200/80 dark:border-violet-900/60 bg-gradient-to-r from-violet-50/80 via-purple-50/40 to-indigo-50/60 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-indigo-950/20 p-3 flex items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                    <Code2 className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-[13px] text-gray-900 dark:text-gray-100 truncate">
+                        {attachedSnippet.title || `${LANGUAGE_LABELS[attachedSnippet.language] || attachedSnippet.language.toUpperCase()} Snippet`}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 uppercase">
+                        {LANGUAGE_LABELS[attachedSnippet.language] || attachedSnippet.language}
+                      </span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                        {attachedSnippet.code.split('\n').length} {attachedSnippet.code.split('\n').length === 1 ? 'line' : 'lines'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 font-mono truncate max-w-md mt-0.5">
+                      {attachedSnippet.code.split('\n')[0] || '// Empty snippet'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsCodeModalOpen(true)}
+                    className="px-2.5 py-1 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-950/60 rounded-lg transition-colors cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAttachedSnippet(null)}
+                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg transition-colors cursor-pointer"
+                    title="Remove snippet"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -599,6 +659,18 @@ export function PostModal({ user, profile }: PostModalProps) {
               <Smile className="w-[19px] h-[19px]" />
             </button>
 
+            {/* Code Snippet Button (immediately beside Emoji button) */}
+            <button
+              type="button"
+              onClick={() => setIsCodeModalOpen(true)}
+              className={`w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer ${
+                attachedSnippet ? 'bg-violet-100 dark:bg-violet-950/60 ring-1 ring-violet-300 dark:ring-violet-700' : ''
+              }`}
+              title="Add code snippet"
+            >
+              <Code2 className="w-[19px] h-[19px]" />
+            </button>
+
             {/* Emoji Popover */}
             {showEmojiPicker && (
               <div
@@ -625,7 +697,7 @@ export function PostModal({ user, profile }: PostModalProps) {
                             key={emoji}
                             type="button"
                             onClick={() => handleInsertEmoji(emoji)}
-                            className="w-8 h-8 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-950/40 text-base flex items-center justify-center transition-transform active:scale-125 select-none"
+                            className="w-8 h-8 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-950/40 text-base flex items-center justify-center transition-transform active:scale-125 select-none cursor-pointer"
                           >
                             {emoji}
                           </button>
@@ -651,7 +723,7 @@ export function PostModal({ user, profile }: PostModalProps) {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isSubmitting || (!content.trim() && !imageFile)}
+              disabled={isSubmitting || (!content.trim() && !imageFile && !attachedSnippet)}
               className="px-5 py-2 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-[15px] disabled:opacity-50 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-none"
             >
               {isSubmitting ? (
@@ -666,6 +738,14 @@ export function PostModal({ user, profile }: PostModalProps) {
           </div>
         </div>
       </div>
+
+      {/* Code Snippet Modal */}
+      <CodeSnippetModal
+        open={isCodeModalOpen}
+        onOpenChange={setIsCodeModalOpen}
+        initialData={attachedSnippet}
+        onSaveSnippet={(snippet) => setAttachedSnippet(snippet)}
+      />
     </div>
   )
 }

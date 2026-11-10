@@ -2,6 +2,7 @@
 
 import React from "react"
 import Link from "next/link"
+import { CarbonCodeBlock } from "@/components/ui/carbon-code-block"
 
 type RichTextRendererProps = {
   content: string
@@ -11,6 +12,7 @@ type RichTextRendererProps = {
 const TOKEN_REGEX = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s]|www\.[^\s<]+[^<.,:;"')\]\s]|@[a-zA-Z0-9_]+)/gi
 const URL_REGEX = /^(https?:\/\/[^\s<]+|www\.[^\s<]+)/i
 const MENTION_REGEX = /^@([a-zA-Z0-9_]+)$/
+const CODE_BLOCK_REGEX = /```([a-zA-Z0-9_#+-]+)?(?::([a-zA-Z0-9_-]+))?(?::([^\n\r]+))?[\r\n]+([\s\S]*?)```/g
 
 function renderFormattedText(text: string, baseKey: string | number): React.ReactNode[] {
   if (!text) return []
@@ -82,24 +84,65 @@ function renderFormattedText(text: string, baseKey: string | number): React.Reac
   }).filter(Boolean)
 }
 
+interface ContentSegment {
+  type: 'text' | 'code'
+  text?: string
+  code?: string
+  language?: string
+  theme?: string
+  title?: string
+}
+
+function parseSegments(rawContent: string): ContentSegment[] {
+  if (!rawContent || !rawContent.includes('```')) {
+    return [{ type: 'text', text: rawContent }]
+  }
+
+  const segments: ContentSegment[] = []
+  let lastIndex = 0
+  const regex = /```([a-zA-Z0-9_#+-]+)?(?::([a-zA-Z0-9_-]+))?(?::([^\n\r]+))?[\r\n]+([\s\S]*?)```/g
+  let match: RegExpExecArray | null
+
+  while ((match = regex.exec(rawContent)) !== null) {
+    if (match.index > lastIndex) {
+      const textPart = rawContent.substring(lastIndex, match.index)
+      if (textPart.trim()) {
+        segments.push({ type: 'text', text: textPart })
+      }
+    }
+
+    segments.push({
+      type: 'code',
+      language: match[1] || 'cpp',
+      theme: match[2] || 'trackr',
+      title: match[3]?.trim() || undefined,
+      code: match[4] || ''
+    })
+
+    lastIndex = regex.lastIndex
+  }
+
+  if (lastIndex < rawContent.length) {
+    const remaining = rawContent.substring(lastIndex)
+    if (remaining.trim()) {
+      segments.push({ type: 'text', text: remaining })
+    }
+  }
+
+  return segments.length > 0 ? segments : [{ type: 'text', text: rawContent }]
+}
+
 export function RichTextRenderer({ content }: RichTextRendererProps) {
   if (!content) return null
 
-  // Strip leaked CSS block comments (e.g. "/* Top Section */")
-  const sanitized = content.replace(/\/\*[\s\S]*?\*\//g, '').trim()
-  if (!sanitized) return null
+  const segments = parseSegments(content)
 
-  // Convert legacy markdown **bold** to <strong> HTML tags for unified rendering
-  const htmlContent = sanitized.includes("**") 
-    ? sanitized.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    : sanitized
-
-  const htmlToReact = (html: string): React.ReactNode[] => {
+  const htmlToReact = (html: string, baseParentKey: string): React.ReactNode[] => {
     try {
       const parser = new DOMParser()
       const doc = parser.parseFromString(html, "text/html")
 
-      const parseNodes = (nodes: NodeList, parentKey = "root"): React.ReactNode[] => {
+      const parseNodes = (nodes: NodeList, parentKey = baseParentKey): React.ReactNode[] => {
         return Array.from(nodes).map((node, index) => {
           const currentKey = `${parentKey}-${index}`
 
@@ -162,10 +205,43 @@ export function RichTextRenderer({ content }: RichTextRendererProps) {
 
       return parseNodes(doc.body.childNodes)
     } catch (e) {
-      // Fallback in case of SSR or DOMParser error
-      return renderFormattedText(content, "fallback")
+      return renderFormattedText(html, "fallback")
     }
   }
 
-  return <div className="text-[16px] leading-[1.5] text-[#0f1419] dark:text-[#e7e9ea] font-normal">{htmlToReact(htmlContent)}</div>
+  const renderTextSegment = (textChunk: string, segKey: string) => {
+    // Strip leaked CSS block comments (e.g. "/* Top Section */")
+    const sanitized = textChunk.replace(/\/\*[\s\S]*?\*\//g, '').trim()
+    if (!sanitized) return null
+
+    // Convert legacy markdown **bold** to <strong> HTML tags for unified rendering
+    const htmlContent = sanitized.includes("**") 
+      ? sanitized.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      : sanitized
+
+    return (
+      <div key={segKey} className="text-[16px] leading-[1.5] text-[#0f1419] dark:text-[#e7e9ea] font-normal">
+        {htmlToReact(htmlContent, segKey)}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      {segments.map((seg, idx) => {
+        if (seg.type === 'code' && seg.code) {
+          return (
+            <CarbonCodeBlock
+              key={`code-block-${idx}`}
+              code={seg.code}
+              language={seg.language}
+              theme={seg.theme}
+              title={seg.title}
+            />
+          )
+        }
+        return renderTextSegment(seg.text || '', `seg-${idx}`)
+      })}
+    </div>
+  )
 }

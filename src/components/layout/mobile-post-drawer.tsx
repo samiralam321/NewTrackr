@@ -3,7 +3,9 @@
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
-import { X, Image as ImageIcon, Loader2, PenLine, Smile, ChevronDown, Check, AtSign } from "lucide-react"
+import { X, Image as ImageIcon, Loader2, PenLine, Smile, ChevronDown, Check, AtSign, Code2 } from "lucide-react"
+import { CodeSnippetModal, CodeSnippetData } from "@/components/dashboard/code-snippet-modal"
+import { LANGUAGE_LABELS } from "@/components/ui/carbon-code-block"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter, usePathname } from "next/navigation"
 import { updateUserStreakAndBadge } from "@/lib/utils/streak"
@@ -17,6 +19,8 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [showEmojis, setShowEmojis] = useState(false)
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false)
+  const [attachedSnippet, setAttachedSnippet] = useState<CodeSnippetData | null>(null)
   const quickEmojis = ["🚀", "🔥", "💡", "💻", "🐛", "✅", "🎉", "👀", "🙌", "🧠"]
   
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -40,7 +44,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
   }
 
   const handlePost = async () => {
-    if (!content.trim()) return
+    if (!content.trim() && !imageFile && !attachedSnippet) return
 
     setIsSubmitting(true)
     try {
@@ -65,9 +69,16 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
         imageUrl = publicUrl.publicUrl
       }
 
+      const finalSnippetBlock = attachedSnippet 
+        ? `\`\`\`${attachedSnippet.language}:${attachedSnippet.theme}${attachedSnippet.title ? `:${attachedSnippet.title}` : ''}\n${attachedSnippet.code}\n\`\`\`` 
+        : null
+      const finalPostContent = finalSnippetBlock 
+        ? (content.trim() ? `${content.trim()}\n\n${finalSnippetBlock}` : finalSnippetBlock) 
+        : content.trim()
+
       const { data: insertedPost, error } = await supabase.from('posts').insert({
         user_id: userData.user.id,
-        content,
+        content: finalPostContent,
         tags: [],
         type: progressType,
         image_url: imageUrl
@@ -126,6 +137,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
       // Reset form
       setContent("")
       setImageFile(null)
+      setAttachedSnippet(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
       
       setIsOpen(false)
@@ -304,6 +316,16 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
 
               <button 
                 type="button"
+                onClick={() => setIsCodeModalOpen(true)}
+                className={`w-9 h-9 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-100/50 dark:hover:bg-violet-950/40 active:scale-90 transition-all ${attachedSnippet ? 'bg-violet-100 dark:bg-violet-950/60 ring-1 ring-violet-500' : ''}`}
+                title="Code Snippet"
+                aria-label="Code snippet"
+              >
+                <Code2 className="w-4.5 h-4.5 stroke-[2.2]" />
+              </button>
+
+              <button 
+                type="button"
                 onClick={toggleBold}
                 className="w-9 h-9 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-100/50 dark:hover:bg-violet-950/40 font-black text-sm active:scale-90 transition-all"
                 title="Bold Text"
@@ -349,6 +371,46 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
                 className="w-full text-[16px] leading-relaxed bg-transparent mobile-rich-editor text-gray-900 dark:text-white border-none p-1 focus-visible:ring-0 min-h-[140px]"
               />
 
+              {/* Attached Code Snippet Card */}
+              {attachedSnippet && (
+                <div className="mt-3 rounded-2xl border border-violet-200/80 dark:border-violet-900/60 bg-gradient-to-r from-violet-50/80 via-purple-50/40 to-indigo-50/60 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-indigo-950/20 p-2.5 flex items-center justify-between gap-2 shadow-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-violet-600 text-white flex items-center justify-center shrink-0">
+                      <Code2 className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-semibold text-xs text-gray-900 dark:text-gray-100 truncate">
+                          {attachedSnippet.title || `${LANGUAGE_LABELS[attachedSnippet.language] || attachedSnippet.language.toUpperCase()} Snippet`}
+                        </span>
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 uppercase">
+                          {LANGUAGE_LABELS[attachedSnippet.language] || attachedSnippet.language}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                        {attachedSnippet.code.split('\n').length} lines
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsCodeModalOpen(true)}
+                      className="px-2 py-0.5 text-[11px] font-semibold text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-950/60 rounded-md transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAttachedSnippet(null)}
+                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-md transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Attached Image Preview Card */}
               {imageFile && (
                 <div className="relative mt-3 rounded-2xl overflow-hidden border border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900 max-h-60">
@@ -371,6 +433,14 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
               )}
             </div>
           </div>
+
+          {/* Code Snippet Modal */}
+          <CodeSnippetModal
+            open={isCodeModalOpen}
+            onOpenChange={setIsCodeModalOpen}
+            initialData={attachedSnippet}
+            onSaveSnippet={(snippet) => setAttachedSnippet(snippet)}
+          />
         </div>
       )}
     </>
