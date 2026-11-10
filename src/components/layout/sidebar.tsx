@@ -2,11 +2,11 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Home, Compass, Trophy, Medal, Bookmark, Mail, Bell, CheckCircle2, LogOut, MessageSquare } from "lucide-react"
+import { Home, Compass, Trophy, Medal, Bookmark, Mail, Bell, CheckCircle2, LogOut, MessageSquare, Sun, Moon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { useTheme } from "@/components/theme-provider"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
 import { getUserHandle } from "@/lib/utils/user"
@@ -16,6 +16,8 @@ import { clearTrackrClientCaches } from "@/lib/cache/client-cache"
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
+  const isDark = theme === 'dark'
   const [profileState, setProfileState] = useState(profile)
   const [unreadCount, setUnreadCount] = useState(0)
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0)
@@ -267,20 +269,20 @@ export function Sidebar({ profile }: { profile?: any }) {
   }
 
   return (
-    <aside className="w-[260px] xl:w-[285px] 2xl:w-[320px] h-screen sticky top-0 z-30 border-r border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] flex flex-col pt-2 pb-3 px-3 shrink-0 overflow-y-auto no-scrollbar transition-colors select-none">
+    <aside className="w-[245px] xl:w-[270px] 2xl:w-[290px] h-screen sticky top-0 z-30 border-r border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] flex flex-col pt-1.5 pb-2 px-2 xl:px-3 shrink-0 overflow-y-auto no-scrollbar transition-colors select-none">
       {/* Logo */}
       <Link 
         href="/dashboard" 
         prefetch={true} 
         onMouseEnter={() => { try { router.prefetch('/dashboard') } catch {} }}
-        className="flex items-center gap-3 px-3 py-2.5 mb-1 shrink-0 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors w-fit group"
+        className="flex items-center gap-3 px-3 py-2 mb-0.5 shrink-0 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors w-fit group"
       >
-        <img src="/logo.png" alt="Trackr Logo" className="w-10 h-10 object-contain drop-shadow-xs group-hover:scale-105 transition-transform" />
+        <img src="/logo.png" alt="Trackr Logo" className="w-9 h-9 object-contain drop-shadow-xs group-hover:scale-105 transition-transform" />
         <span className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Trackr</span>
       </Link>
 
-      {/* Nav Items - Twitter Navigation Rhythm (20px typography, 22px icons, rounded-full hover) */}
-      <nav className="flex flex-col gap-0.5 my-1 shrink-0">
+      {/* Nav Items - Twitter Navigation Rhythm (18px typography, 21px icons, rounded-full hover) */}
+      <nav className="flex flex-col gap-0.5 my-0.5 shrink-0">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -290,14 +292,14 @@ export function Sidebar({ profile }: { profile?: any }) {
               prefetch={true}
               onMouseEnter={() => { try { router.prefetch(item.href) } catch {} }}
               onTouchStart={() => { try { router.prefetch(item.href) } catch {} }}
-              className={`flex items-center gap-4 px-3.5 py-2.5 xl:px-4 xl:py-3 rounded-full transition-all duration-150 relative select-none w-fit min-w-[210px] group ${
+              className={`flex items-center gap-3.5 px-3 py-2 xl:px-3.5 xl:py-2.5 rounded-full transition-all duration-150 relative select-none w-fit min-w-[200px] group ${
                 isActive 
                   ? 'text-[#7C3AED] dark:text-[#A78BFA] font-bold bg-violet-50/80 dark:bg-violet-950/30' 
                   : 'text-[#0f1419] dark:text-[#e7e9ea] font-medium hover:bg-black/[0.04] dark:hover:bg-white/[0.07]'
               }`}
             >
               <div className="relative flex items-center justify-center shrink-0">
-                <item.icon className={`w-[22px] h-[22px] transition-transform group-hover:scale-105 ${isActive ? 'stroke-[2.6]' : 'stroke-[2]'}`} />
+                <item.icon className={`w-[21px] h-[21px] transition-transform group-hover:scale-105 ${isActive ? 'stroke-[2.6]' : 'stroke-[2]'}`} />
                 {item.name === 'Notifications' && unreadCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-violet-600 text-white text-[9.5px] font-bold px-1 rounded-full min-w-[17px] h-[17px] flex items-center justify-center shadow-xs leading-none border-2 border-white dark:border-black z-10">
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -309,7 +311,7 @@ export function Sidebar({ profile }: { profile?: any }) {
                   </span>
                 )}
               </div>
-              <span className="text-[18px] xl:text-[19px] tracking-tight">{item.name}</span>
+              <span className="text-[17px] xl:text-[18px] tracking-tight">{item.name}</span>
             </Link>
           )
         })}
@@ -317,43 +319,43 @@ export function Sidebar({ profile }: { profile?: any }) {
         {/* Contact Button */}
         <button 
           onClick={() => setIsContactOpen(true)}
-          className="flex items-center gap-4 px-3.5 py-2.5 xl:px-4 xl:py-3 rounded-full transition-all duration-150 text-[#0f1419] dark:text-[#e7e9ea] font-medium hover:bg-black/[0.04] dark:hover:bg-white/[0.07] text-left cursor-pointer w-fit min-w-[210px] group"
+          className="flex items-center gap-3.5 px-3 py-2 xl:px-3.5 xl:py-2.5 rounded-full transition-all duration-150 text-[#0f1419] dark:text-[#e7e9ea] font-medium hover:bg-black/[0.04] dark:hover:bg-white/[0.07] text-left cursor-pointer w-fit min-w-[200px] group"
         >
           <div className="relative flex items-center justify-center shrink-0">
-            <MessageSquare className="w-[22px] h-[22px] stroke-[2] group-hover:scale-105 transition-transform" />
+            <MessageSquare className="w-[21px] h-[21px] stroke-[2] group-hover:scale-105 transition-transform" />
           </div>
-          <span className="text-[18px] xl:text-[19px] tracking-tight">Contact</span>
+          <span className="text-[17px] xl:text-[18px] tracking-tight">Contact</span>
         </button>
 
         {/* PWA Install Button */}
-        <div className="mt-1">
-          <InstallButton />
+        <div className="mt-0.5">
+          <InstallButton className="flex items-center gap-3.5 px-3 py-2 xl:px-3.5 xl:py-2.5 rounded-full font-medium text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors text-left cursor-pointer w-fit min-w-[200px]" />
         </div>
       </nav>
 
-      {/* Streak Tracker - Minimal & Non-intrusive */}
-      <div className="my-2.5 p-3 rounded-2xl bg-[#f7f9f9] dark:bg-[#16181c] border border-[#eff3f4] dark:border-[#2f3336] shrink-0">
-        <div className="flex items-center justify-between mb-2">
+      {/* Streak Tracker - Compact & Minimal */}
+      <div className="my-1.5 p-2.5 rounded-2xl bg-[#f7f9f9] dark:bg-[#16181c] border border-[#eff3f4] dark:border-[#2f3336] shrink-0">
+        <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-2">
-            <span className="text-xl">{displayStreak > 0 ? '🔥' : '⏳'}</span>
+            <span className="text-lg">{displayStreak > 0 ? '🔥' : '⏳'}</span>
             <div>
               <p className="text-xs font-bold text-[#0f1419] dark:text-[#e7e9ea]">
                 {displayStreak} Day Streak
               </p>
-              <p className="text-[10.5px] text-[#536471] dark:text-[#71767b]">Keep learning daily</p>
+              <p className="text-[10px] text-[#536471] dark:text-[#71767b]">Keep learning daily</p>
             </div>
           </div>
         </div>
         <div className="flex justify-between items-center px-1">
           {days.map((day, i) => (
-            <div key={i} className="flex flex-col items-center gap-1">
-              <span className="text-[9px] font-semibold text-gray-400">{day}</span>
+            <div key={i} className="flex flex-col items-center gap-0.5">
+              <span className="text-[8.5px] font-semibold text-gray-400">{day}</span>
               {activeDays[i] ? (
-                <div className="w-4.5 h-4.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
-                  <CheckCircle2 className="w-3 h-3 stroke-[3]" />
+                <div className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                  <CheckCircle2 className="w-2.5 h-2.5 stroke-[3]" />
                 </div>
               ) : (
-                <div className="w-4.5 h-4.5 rounded-full bg-gray-200 dark:bg-[#25282c] flex items-center justify-center">
+                <div className="w-4 h-4 rounded-full bg-gray-200 dark:bg-[#25282c] flex items-center justify-center">
                   <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-600"></div>
                 </div>
               )}
@@ -362,40 +364,64 @@ export function Sidebar({ profile }: { profile?: any }) {
         </div>
       </div>
 
-      {/* Fixed Bottom Controls: Theme Toggle & Twitter-Style User Profile Pill */}
-      <div className="mt-auto pt-2 border-t border-[#eff3f4] dark:border-[#2f3336] shrink-0 space-y-2">
-        <div className="flex items-center justify-between px-2">
-          <span className="text-[12px] font-semibold text-[#536471] dark:text-[#71767b]">Appearance</span>
-          <ThemeToggle />
-        </div>
+      {/* Fixed Bottom Controls: Balanced Theme Switcher & Twitter-Style User Profile Pill */}
+      <div className="mt-auto pt-1.5 pb-1 border-t border-[#eff3f4] dark:border-[#2f3336] shrink-0 space-y-1">
+        {/* Sleek Native Theme Switcher */}
+        <button
+          type="button"
+          onClick={() => setTheme(isDark ? 'light' : 'dark')}
+          className="flex items-center justify-between w-full px-3 py-1.5 rounded-full hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors cursor-pointer group select-none"
+          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-5 h-5 flex items-center justify-center shrink-0">
+              {isDark ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-violet-600" />
+              )}
+            </div>
+            <span className="text-[14px] font-medium text-[#0f1419] dark:text-[#e7e9ea] truncate">
+              {isDark ? "Dark Theme" : "Light Theme"}
+            </span>
+          </div>
 
-        {/* Twitter-Style User Profile Row */}
+          <div className="w-8 h-4.5 rounded-full bg-violet-600/20 dark:bg-violet-500/30 p-0.5 flex items-center transition-colors shrink-0">
+            <div
+              className={`w-3.5 h-3.5 rounded-full bg-[#7C3AED] shadow-xs transition-transform duration-200 ${
+                isDark ? 'translate-x-3.5' : 'translate-x-0'
+              }`}
+            />
+          </div>
+        </button>
+
+        {/* Twitter-Style User Profile Pill - Always visible with clean padding */}
         <div 
           onClick={() => setIsLogoutModalOpen(true)}
-          className="flex items-center justify-between p-2 rounded-full hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors cursor-pointer w-full group"
+          className="flex items-center justify-between p-2 rounded-full hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors cursor-pointer w-full group select-none"
           title="Account options"
         >
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <img 
               src={profileState?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileState?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} 
               alt="Profile" 
-              width={40}
-              height={40}
+              width={38}
+              height={38}
               loading="lazy"
               decoding="async"
-              className="w-10 h-10 rounded-full object-cover shrink-0"
+              className="w-9 h-9 rounded-full object-cover shrink-0"
             />
             <div className="flex flex-col overflow-hidden min-w-0">
-              <span className="text-[14.5px] font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-1 min-w-0 truncate">
+              <span className="text-[14px] font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-1 min-w-0 truncate">
                 <span className="truncate">{profileState?.full_name || 'Samir Alam'}</span>
                 <VerifiedBadge level={getBadgeLevel(profileState?.consistency_score)} />
               </span>
-              <span className="text-[13px] text-[#536471] dark:text-[#71767b] font-normal truncate">
+              <span className="text-[12px] text-[#536471] dark:text-[#71767b] font-normal truncate">
                 {getUserHandle(profileState?.full_name)}
               </span>
             </div>
           </div>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-[#536471] dark:text-[#71767b] group-hover:text-red-500 transition-colors shrink-0">
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[#536471] dark:text-[#71767b] group-hover:text-red-500 transition-colors shrink-0">
             <LogOut className="w-4 h-4" />
           </div>
         </div>

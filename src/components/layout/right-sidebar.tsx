@@ -12,7 +12,7 @@ interface RightSidebarProps {
 
 export function RightSidebar({ profile, currentUserId }: RightSidebarProps) {
   return (
-    <aside className="w-[340px] xl:w-[370px] min-h-full py-3 px-3 xl:px-4 flex flex-col gap-4 shrink-0 bg-transparent self-start">
+    <aside className="w-full min-h-full py-3 px-3 xl:px-4 flex flex-col gap-4 shrink-0 bg-transparent self-start">
       {/* Top Search & Actions Bar (Sticky) */}
       <div className="sticky top-0 z-20 bg-white/85 dark:bg-black/85 backdrop-blur-md pt-0.5 pb-2">
         <SearchBar userProfile={profile} />
