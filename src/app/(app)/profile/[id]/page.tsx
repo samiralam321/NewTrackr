@@ -23,14 +23,28 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       .maybeSingle()
     profile = data
   } else {
-    const cleanSearch = rawId.replace(/^@/, '').replace(/_/g, ' ')
-    const { data } = await supabase
+    const cleanHandle = rawId.replace(/^@/, '')
+    // 1. Prioritize exact username match (e.g. /profile/samCPer or /profile/rohit)
+    const { data: userByHandle } = await supabase
       .from('profiles')
       .select('*')
-      .ilike('full_name', `%${cleanSearch}%`)
+      .ilike('username', cleanHandle)
       .limit(1)
       .maybeSingle()
-    profile = data
+
+    if (userByHandle) {
+      profile = userByHandle
+    } else {
+      // 2. Fallback to full_name search
+      const cleanSearch = cleanHandle.replace(/_/g, ' ')
+      const { data: userByName } = await supabase
+        .from('profiles')
+        .select('*')
+        .ilike('full_name', `%${cleanSearch}%`)
+        .limit(1)
+        .maybeSingle()
+      profile = userByName
+    }
   }
 
   if (!profile) {

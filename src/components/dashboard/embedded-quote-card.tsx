@@ -31,7 +31,7 @@ export function EmbeddedQuoteCard({
   }
 
   const authorName = quotedPost.profiles?.full_name || 'Student'
-  const handle = getUserHandle(quotedPost.profiles?.full_name)
+  const handle = getUserHandle(quotedPost.profiles)
   const badgeLevel = getBadgeLevel(quotedPost.profiles?.consistency_score, quotedPost.profiles?.full_name)
   const avatarUrl = quotedPost.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=7C3AED&color=fff&size=80`
 

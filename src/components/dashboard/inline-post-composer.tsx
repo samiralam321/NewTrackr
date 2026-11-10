@@ -27,6 +27,7 @@ interface InlinePostComposerProps {
 interface MentionUser {
   id: string
   full_name: string | null
+  username?: string | null
   avatar_url: string | null
   consistency_score?: number | null
   college?: string | null
@@ -174,13 +175,14 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
       try {
         let query = supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, consistency_score, college')
-          .not('full_name', 'is', null)
-          .order('consistency_score', { ascending: false })
-          .limit(6)
+          .select('id, full_name, username, avatar_url, consistency_score, college')
+          .limit(8)
 
-        if (mentionQuery.trim().length > 0) {
-          query = query.ilike('full_name', `%${mentionQuery.trim()}%`)
+        const cleanQ = mentionQuery.trim().replace(/^@/, '')
+        if (cleanQ.length > 0) {
+          query = query.or(`username.ilike.%${cleanQ}%,full_name.ilike.%${cleanQ}%`)
+        } else {
+          query = query.order('consistency_score', { ascending: false })
         }
 
         if (user?.id) {
@@ -189,14 +191,15 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
 
         const { data, error } = await query
         if (!error && data) {
-          setMentionResults(data)
+          const filtered = data.filter((p: any) => p.full_name || p.username)
+          setMentionResults(filtered)
         }
       } catch (err) {
         console.warn("Error searching users for mention:", err)
       } finally {
         setIsSearchingUsers(false)
       }
-    }, 180)
+    }, 100)
 
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
@@ -221,12 +224,13 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
     }
   }
 
-  // Insert selected user mention
+  // Insert selected user mention using their exact username
   const handleSelectMention = (targetUser: MentionUser) => {
     if (!textareaRef.current) return
-    const rawHandle = getUserHandle(targetUser.full_name)
-    const handleClean = rawHandle.replace(/^@/, '')
-    const mentionText = `@${handleClean} `
+    const rawHandle = targetUser.username
+      ? targetUser.username.replace(/^@/, '')
+      : getUserHandle(targetUser).replace(/^@/, '')
+    const mentionText = `@${rawHandle} `
 
     const textBefore = content.slice(0, mentionIndex)
     const textAfter = content.slice(textareaRef.current.selectionStart)
@@ -235,7 +239,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
     setContent(newContent)
     setTrackedMentions(prev => [
       ...prev.filter(m => m.id !== targetUser.id),
-      { id: targetUser.id, handle: handleClean, name: targetUser.full_name || 'User' }
+      { id: targetUser.id, handle: rawHandle, name: targetUser.full_name || targetUser.username || 'User' }
     ])
     setMentionQuery(null)
 
@@ -410,6 +414,24 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
         }
       })
 
+      // Also match manually typed @username mentions
+      const typedMatches = Array.from(content.matchAll(/@([a-zA-Z0-9_]+)/g)).map(m => m[1].toLowerCase())
+      if (typedMatches.length > 0) {
+        try {
+          const { data: matchedProfiles } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .in('username', typedMatches)
+          if (matchedProfiles) {
+            matchedProfiles.forEach((p: any) => {
+              if (p.id !== user.id) mentionedUserIds.add(p.id)
+            })
+          }
+        } catch (e) {
+          console.warn("Typed mention notification resolution failed:", e)
+        }
+      }
+
       // Send mention notifications in background
       if (mentionedUserIds.size > 0 && newPost) {
         const notifPayloads = Array.from(mentionedUserIds).map(targetId => ({
@@ -496,7 +518,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
           {mentionQuery !== null && (
             <div 
               ref={mentionDropdownRef}
-              className="absolute left-0 top-full mt-1 w-72 max-h-56 overflow-y-auto no-scrollbar bg-white dark:bg-[#1A1A24] rounded-2xl shadow-xl border border-gray-100 dark:border-[#2D2B3B] p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+              className="absolute left-0 top-full mt-1 w-72 max-h-56 overflow-y-auto no-scrollbar bg-white dark:bg-[#1A1A24] rounded-2xl shadow-xl border border-gray-100 dark:border-[#2D2B3B] p-1.5 z-[100] animate-in fade-in zoom-in-95 duration-150"
             >
               <div className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 flex items-center justify-between">
                 <span>Mention student</span>
@@ -505,7 +527,9 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
 
               {mentionResults.length > 0 ? (
                 mentionResults.map((u) => {
-                  const handle = getUserHandle(u.full_name)
+                  const handle = u.username 
+                    ? `@${u.username.replace(/^@/, '')}` 
+                    : getUserHandle(u)
                   const badgeLevel = getBadgeLevel(u.consistency_score, u.full_name)
                   return (
                     <button

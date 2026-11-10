@@ -191,7 +191,7 @@ export function PostDetailClient({
   }
 
   const authorName = post.profiles?.full_name || 'User'
-  const handle = getUserHandle(post.profiles?.full_name)
+  const handle = getUserHandle(post.profiles)
   const badgeLevel = getBadgeLevel(post.profiles?.consistency_score, post.profiles?.full_name)
   const avatarUrl = post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=7C3AED&color=fff&size=80`
 

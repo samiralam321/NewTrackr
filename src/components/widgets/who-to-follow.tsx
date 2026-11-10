@@ -11,6 +11,7 @@ import { getCacheEntry, setCacheEntry, mutateCacheEntry } from "@/lib/cache/clie
 interface ProfileUser {
   id: string
   full_name: string | null
+  username?: string | null
   avatar_url: string | null
   consistency_score?: number | null
   college?: string | null
@@ -89,12 +90,12 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
         const [samirRes, othersRes] = await Promise.all([
           supabase
             .from('profiles')
-            .select('id, full_name, avatar_url, consistency_score, college')
+            .select('id, full_name, username, avatar_url, consistency_score, college')
             .eq('id', SAMIR_PINNED_USER_ID)
             .maybeSingle(),
           supabase
             .from('profiles')
-            .select('id, full_name, avatar_url, consistency_score, college')
+            .select('id, full_name, username, avatar_url, consistency_score, college')
             .not('full_name', 'is', null)
             .neq('id', SAMIR_PINNED_USER_ID)
             .order('consistency_score', { ascending: false })
@@ -237,7 +238,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
         {users.map((user) => {
           const isFollowing = !!followingMap[user.id]
           const isSelf = currentUserId === user.id
-          const handle = getUserHandle(user.full_name)
+          const handle = getUserHandle(user)
           const badgeLevel = getBadgeLevel(user.consistency_score, user.full_name)
           const streak = user.consistency_score || 0
 

@@ -27,6 +27,7 @@ interface PostModalProps {
 interface MentionUser {
   id: string
   full_name: string | null
+  username?: string | null
   avatar_url: string | null
   consistency_score?: number | null
   college?: string | null
@@ -241,7 +242,7 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
     }
   }
 
-  // Search profiles in Supabase for mention suggestions
+  // Search profiles in Supabase for mention suggestions by both username and full_name
   const searchUsers = (query: string) => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
 
@@ -250,11 +251,12 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
       try {
         let queryBuilder = supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, consistency_score, college')
-          .limit(5)
+          .select('id, full_name, username, avatar_url, consistency_score, college')
+          .limit(8)
 
-        if (query.trim().length > 0) {
-          queryBuilder = queryBuilder.ilike('full_name', `%${query.trim()}%`)
+        const cleanQ = query.trim().replace(/^@/, '')
+        if (cleanQ.length > 0) {
+          queryBuilder = queryBuilder.or(`username.ilike.%${cleanQ}%,full_name.ilike.%${cleanQ}%`)
         } else {
           queryBuilder = queryBuilder.order('consistency_score', { ascending: false })
         }
@@ -262,7 +264,7 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
         const { data, error } = await queryBuilder
 
         if (!error && data) {
-          const filtered = data.filter((p: any) => p.id !== user?.id && p.full_name)
+          const filtered = data.filter((p: any) => p.id !== user?.id && (p.full_name || p.username))
           setMentionResults(filtered)
         }
       } catch (err) {
@@ -270,14 +272,18 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
       } finally {
         setIsSearchingUsers(false)
       }
-    }, 180)
+    }, 100)
   }
 
-  // Select mention user and insert into content
+  // Select mention user and insert into content using their username
   const handleSelectMention = (selectedUser: MentionUser) => {
-    if (mentionIndex === -1 || !selectedUser.full_name) return
+    if (mentionIndex === -1) return
 
-    const handle = selectedUser.full_name.replace(/\s+/g, '').toLowerCase()
+    // Prefer exact unique username if available, fallback to computed handle
+    const handle = selectedUser.username 
+      ? selectedUser.username.replace(/^@/, '') 
+      : getUserHandle(selectedUser).replace(/^@/, '')
+
     const cursorPos = textareaRef.current ? textareaRef.current.selectionStart : content.length
     const before = content.slice(0, mentionIndex)
     const after = content.slice(cursorPos)
@@ -289,7 +295,7 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
       setTrackedMentions(prev => [...prev, {
         id: selectedUser.id,
         handle,
-        name: selectedUser.full_name || 'User'
+        name: selectedUser.full_name || selectedUser.username || 'User'
       }])
     }
 
@@ -478,6 +484,24 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
         }
       })
 
+      // Also detect manually typed @username mentions
+      const typedMatches = Array.from(content.matchAll(/@([a-zA-Z0-9_]+)/g)).map(m => m[1].toLowerCase())
+      if (typedMatches.length > 0) {
+        try {
+          const { data: matchedProfiles } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .in('username', typedMatches)
+          if (matchedProfiles) {
+            matchedProfiles.forEach((p: any) => {
+              if (p.id !== user.id) mentionedUserIds.add(p.id)
+            })
+          }
+        } catch (e) {
+          console.warn("Typed mention notification resolution failed:", e)
+        }
+      }
+
       if (mentionedUserIds.size > 0 && newPost) {
         const notifPayloads = Array.from(mentionedUserIds).map(targetId => ({
           user_id: targetId,
@@ -562,7 +586,13 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
           )}
 
           {/* Main Content Area: Avatar + Text Input */}
-          <div className="flex-1 overflow-y-auto p-4 flex items-start gap-3 relative min-h-[70px]">
+          <div className={`flex-1 p-4 flex items-start gap-3 relative min-h-[140px] ${
+            mentionQuery !== null 
+              ? 'overflow-visible' 
+              : (imagePreview || attachedSnippet) 
+              ? 'max-h-[55vh] overflow-y-auto' 
+              : 'overflow-visible'
+          }`}>
             <img
               src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`}
               alt="You"
@@ -588,7 +618,7 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
                 <div 
                   ref={mentionDropdownRef}
                   style={{ top: `${getMentionTopOffset()}px` }}
-                  className="absolute left-0 w-80 max-h-60 overflow-y-auto no-scrollbar bg-white dark:bg-[#1A1A24] rounded-2xl shadow-2xl border border-gray-100 dark:border-[#2D2B3B] py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute left-0 w-80 max-h-60 overflow-y-auto no-scrollbar bg-white dark:bg-[#1A1A24] rounded-2xl shadow-2xl border border-gray-100 dark:border-[#2D2B3B] py-1.5 z-[100] animate-in fade-in zoom-in-95 duration-150"
                 >
                   <div className="px-3 py-1 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                     Mention someone
@@ -604,7 +634,9 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
                     </div>
                   ) : (
                     mentionResults.map((u) => {
-                      const handle = getUserHandle(u.full_name)
+                      const handle = u.username 
+                        ? `@${u.username.replace(/^@/, '')}` 
+                        : getUserHandle(u)
                       const badgeLevel = getBadgeLevel(u.consistency_score, u.full_name)
                       return (
                         <button

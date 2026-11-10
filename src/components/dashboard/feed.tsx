@@ -399,7 +399,7 @@ export function Feed({
       .from('posts')
       .select(`
         *,
-        profiles!posts_user_id_fkey(id, full_name, avatar_url, bio, college, consistency_score, streak),
+        profiles!posts_user_id_fkey(id, full_name, username, avatar_url, bio, college, consistency_score, streak),
         likes(user_id),
         comments(user_id, id),
         bookmarks(user_id)
@@ -475,7 +475,7 @@ export function Feed({
           .from('posts')
           .select(`
             *,
-            profiles!posts_user_id_fkey(id, full_name, avatar_url, bio, college, consistency_score, streak),
+            profiles!posts_user_id_fkey(id, full_name, username, avatar_url, bio, college, consistency_score, streak),
             likes(user_id),
             comments(user_id, id),
             bookmarks(user_id)
@@ -1139,7 +1139,7 @@ export function Feed({
                     </Link>
                     <VerifiedBadge level={getBadgeLevel(post.profiles?.consistency_score, post.profiles?.full_name)} nameOrHandle={post.profiles?.full_name} />
                     <span className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal truncate">
-                      {getUserHandle(post.profiles?.full_name)}
+                      {getUserHandle(post.profiles)}
                     </span>
                     <span className="text-[#536471] dark:text-[#71767b] text-[14px] font-normal">·</span>
                     <span 

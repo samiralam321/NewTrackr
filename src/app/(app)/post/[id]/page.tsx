@@ -22,11 +22,11 @@ export default async function PostDetailPage({
     .from('posts')
     .select(`
       *,
-      profiles!posts_user_id_fkey(id, full_name, avatar_url, bio, college, consistency_score, streak),
+      profiles!posts_user_id_fkey(id, full_name, username, avatar_url, bio, college, consistency_score, streak),
       likes(user_id),
       comments(
         *,
-        profiles(id, full_name, avatar_url, bio, college, consistency_score, streak)
+        profiles(id, full_name, username, avatar_url, bio, college, consistency_score, streak)
       ),
       bookmarks(user_id)
     `)
@@ -47,7 +47,7 @@ export default async function PostDetailPage({
       .from('posts')
       .select(`
         *,
-        profiles!posts_user_id_fkey(id, full_name, avatar_url, bio, college, consistency_score, streak)
+        profiles!posts_user_id_fkey(id, full_name, username, avatar_url, bio, college, consistency_score, streak)
       `)
       .eq('id', quotedPostId)
       .maybeSingle()
