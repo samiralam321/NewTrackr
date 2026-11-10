@@ -2,11 +2,10 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Home, Compass, Trophy, Medal, Bookmark, Mail, Bell, CheckCircle2, LogOut, MessageSquare, Sun, Moon } from "lucide-react"
+import { Home, Compass, Trophy, Medal, Bookmark, Mail, Bell, CheckCircle2, LogOut, MessageSquare } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { useTheme } from "@/components/theme-provider"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
 import { getUserHandle } from "@/lib/utils/user"
@@ -16,8 +15,6 @@ import { clearTrackrClientCaches } from "@/lib/cache/client-cache"
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { theme, setTheme } = useTheme()
-  const isDark = theme === 'dark'
   const [profileState, setProfileState] = useState(profile)
   const [unreadCount, setUnreadCount] = useState(0)
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0)
@@ -368,44 +365,18 @@ export function Sidebar({ profile }: { profile?: any }) {
         </div>
       </div>
 
-      {/* Fixed Bottom Controls: Balanced Theme Switcher & Twitter-Style User Profile Pill */}
-      <div className="mt-auto pt-1.5 pb-1 border-t border-[#eff3f4] dark:border-[#2f3336] shrink-0 space-y-1">
-        {/* Sleek Native Theme Switcher */}
-        <button
-          type="button"
-          onClick={() => setTheme(isDark ? 'light' : 'dark')}
-          className="flex items-center justify-between w-full px-3.5 py-2 rounded-full hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors cursor-pointer group select-none"
-          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        >
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-5 h-5 flex items-center justify-center shrink-0">
-              {isDark ? (
-                <Sun className="w-5 h-5 text-amber-400" />
-              ) : (
-                <Moon className="w-5 h-5 text-violet-600" />
-              )}
-            </div>
-            <span className="text-[16px] font-medium text-[#0f1419] dark:text-[#e7e9ea] truncate">
-              {isDark ? "Dark Theme" : "Light Theme"}
-            </span>
-          </div>
-
-          <div className="w-8 h-4.5 rounded-full bg-violet-600/20 dark:bg-violet-500/30 p-0.5 flex items-center transition-colors shrink-0">
-            <div
-              className={`w-3.5 h-3.5 rounded-full bg-[#7C3AED] shadow-xs transition-transform duration-200 ${
-                isDark ? 'translate-x-3.5' : 'translate-x-0'
-              }`}
-            />
-          </div>
-        </button>
-
-        {/* Twitter-Style User Profile Pill - Always visible with clean padding */}
-        <div 
-          onClick={() => setIsLogoutModalOpen(true)}
-          className="flex items-center justify-between p-2 rounded-full hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors cursor-pointer w-full group select-none"
-          title="Account options"
-        >
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+      {/* Fixed Bottom Profile & Logout Controls */}
+      <div className="mt-auto pt-2 pb-2 border-t border-[#eff3f4] dark:border-[#2f3336] shrink-0">
+        <div className="flex items-center justify-between gap-1 w-full select-none">
+          {/* Profile Click -> Navigates to /profile */}
+          <Link
+            href="/profile"
+            prefetch={true}
+            onMouseEnter={() => { try { router.prefetch('/profile') } catch {} }}
+            onTouchStart={() => { try { router.prefetch('/profile') } catch {} }}
+            className="flex items-center gap-2.5 min-w-0 flex-1 p-2 rounded-full hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors group cursor-pointer"
+            title="View your profile"
+          >
             <img 
               src={profileState?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileState?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} 
               alt="Profile" 
@@ -416,7 +387,7 @@ export function Sidebar({ profile }: { profile?: any }) {
               className="w-10 h-10 rounded-full object-cover shrink-0"
             />
             <div className="flex flex-col overflow-hidden min-w-0">
-              <span className="text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-1 min-w-0 truncate">
+              <span className="text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-1 min-w-0 truncate group-hover:underline">
                 <span className="truncate">{profileState?.full_name || 'Samir Alam'}</span>
                 <VerifiedBadge level={getBadgeLevel(profileState?.consistency_score)} />
               </span>
@@ -424,10 +395,17 @@ export function Sidebar({ profile }: { profile?: any }) {
                 {getUserHandle(profileState?.full_name)}
               </span>
             </div>
-          </div>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-[#536471] dark:text-[#71767b] group-hover:text-red-500 transition-colors shrink-0">
-            <LogOut className="w-4 h-4" />
-          </div>
+          </Link>
+
+          {/* Logout Button -> Triggers Logout Confirmation Modal */}
+          <button 
+            type="button"
+            onClick={() => setIsLogoutModalOpen(true)}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-[#536471] dark:text-[#71767b] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors shrink-0 cursor-pointer"
+            title="Log out"
+          >
+            <LogOut className="w-[18px] h-[18px]" />
+          </button>
         </div>
       </div>
 
