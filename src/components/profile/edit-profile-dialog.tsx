@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Loader2, Camera, UploadCloud, FileText, Trash2, Check, Link2 } from "lucide-react"
+import { Loader2, Camera, UploadCloud, FileText, Trash2, Check, Link2, X } from "lucide-react"
 import { cleanUsername, validateUsernameFormat, getUserHandle } from "@/lib/utils/user"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -308,30 +308,90 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
       setIsLoading(false)
     }
   }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className="inline-flex items-center justify-center rounded-full h-9 px-4 text-xs font-semibold shadow-sm border border-gray-200 bg-white hover:bg-gray-50 text-gray-900 transition-colors cursor-pointer">
+      <DialogTrigger className="inline-flex items-center justify-center rounded-full h-9 px-4 text-xs font-semibold shadow-sm border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A24] hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-white transition-colors cursor-pointer">
         Edit Profile
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Edit Profile</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-6 py-4">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-200 bg-gray-50">
+      
+      <DialogContent 
+        showCloseButton={false}
+        overlayClassName="bg-black/65 backdrop-blur-xs z-[999]"
+        className="z-[1000] p-0 gap-0 overflow-hidden flex flex-col w-full h-full sm:h-[88vh] max-h-[90vh] sm:max-w-[740px] rounded-none sm:rounded-2xl md:rounded-3xl bg-white dark:bg-[#0D0B14] border-0 sm:border border-gray-100 dark:border-[#2D2B3B] shadow-2xl"
+      >
+        <DialogTitle className="sr-only">Edit Profile</DialogTitle>
+
+        {/* Fixed Twitter/X-style Header */}
+        <div className="h-14 sm:h-16 px-4 sm:px-6 flex items-center justify-between border-b border-gray-100 dark:border-white/10 bg-white/95 dark:bg-[#0D0B14]/95 backdrop-blur-md sticky top-0 z-20 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-5 min-w-0">
+            {/* Close button on the left */}
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Title next to close button */}
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
+              Edit Profile
+            </h2>
+          </div>
+
+          {/* Save Changes button on the right */}
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={isLoading}
+            className="rounded-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 h-9 shadow-sm active:scale-95 transition-all cursor-pointer shrink-0"
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+            Save Changes
+          </Button>
+        </div>
+
+        {/* Vertically Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-6 sm:space-y-7 [scrollbar-gutter:stable]">
+          {/* Avatar Section */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 pb-6 border-b border-gray-100 dark:border-white/5">
+            <div 
+              className="relative group cursor-pointer shrink-0" 
+              onClick={() => fileInputRef.current?.click()}
+              title="Click to change profile picture"
+            >
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-violet-100 dark:border-violet-900/30 bg-gray-50 dark:bg-[#161420] shadow-sm">
                 {previewUrl ? (
-                  <img src={previewUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={previewUrl} alt="Avatar" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                  <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-gray-400">No Image</div>
                 )}
               </div>
-              <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/45 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 backdrop-blur-xs">
                 <Camera className="w-6 h-6 text-white" />
+                <span className="text-[10px] font-semibold text-white/90">Change</span>
               </div>
             </div>
+
+            <div className="space-y-1.5 text-center sm:text-left flex-1">
+              <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">Profile Photo</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed max-w-md">
+                A profile picture helps other students and tech peers recognize you across Trackr. JPG, PNG or WEBP up to 5MB.
+              </p>
+              <div className="pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-xl h-8 px-3 text-xs font-semibold border-gray-200 dark:border-white/10 hover:border-violet-500 hover:text-violet-600 transition-colors cursor-pointer"
+                >
+                  <Camera className="w-3.5 h-3.5 mr-1.5 text-violet-500" />
+                  Upload new photo
+                </Button>
+              </div>
+            </div>
+
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -341,26 +401,29 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="username" className="flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-300">
-              <span>Username (Unique Handle)</span>
+          {/* Username (Unique Handle) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="username" className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Username (Unique Handle)
+              </Label>
               <span className="text-[11px] text-gray-400 font-normal">{username.length}/20</span>
-            </Label>
+            </div>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400 select-none">@</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400 select-none">@</span>
               <Input 
                 id="username" 
                 value={username} 
                 onChange={(e) => handleUsernameChange(e.target.value)} 
                 maxLength={20} 
                 placeholder="username" 
-                className={`pl-8 rounded-xl border-gray-200 dark:border-gray-700 ${
-                  usernameStatus.available === false ? 'border-rose-400 focus-visible:ring-rose-400' : 
-                  usernameStatus.available === true ? 'border-emerald-400 focus-visible:ring-emerald-400' : ''
+                className={`h-11 pl-8 pr-10 rounded-xl border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-[#161420] text-sm text-gray-900 dark:text-white focus-visible:ring-2 focus-visible:ring-violet-500/20 focus-visible:border-violet-500 ${
+                  usernameStatus.available === false ? 'border-rose-400 focus-visible:ring-rose-400/20 focus-visible:border-rose-400' : 
+                  usernameStatus.available === true ? 'border-emerald-400 focus-visible:ring-emerald-400/20 focus-visible:border-emerald-400' : ''
                 }`} 
               />
               {usernameStatus.checking && (
-                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+                <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
               )}
             </div>
             {usernameStatus.available === false && (
@@ -376,56 +439,98 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
             )}
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={100} className="rounded-xl border-gray-200" />
+          {/* Name */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="name" className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Name
+              </Label>
+              <span className="text-[11px] text-gray-400 font-normal">{fullName.length}/100</span>
+            </div>
+            <Input 
+              id="name" 
+              value={fullName} 
+              onChange={(e) => setFullName(e.target.value)} 
+              maxLength={100} 
+              placeholder="Your display name"
+              className="h-11 rounded-xl border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-[#161420] text-sm text-gray-900 dark:text-white focus-visible:ring-2 focus-visible:ring-violet-500/20 focus-visible:border-violet-500" 
+            />
           </div>
           
-          <div className="grid gap-2">
-            <Label htmlFor="college">College / Organization</Label>
-            <Input id="college" value={college} onChange={(e) => setCollege(e.target.value)} maxLength={150} placeholder="e.g. Stanford University" className="rounded-xl border-gray-200" />
+          {/* College / Organization */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="college" className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
+                College / Organization
+              </Label>
+              <span className="text-[11px] text-gray-400 font-normal">{college.length}/150</span>
+            </div>
+            <Input 
+              id="college" 
+              value={college} 
+              onChange={(e) => setCollege(e.target.value)} 
+              maxLength={150} 
+              placeholder="e.g. Stanford University or Tech Org" 
+              className="h-11 rounded-xl border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-[#161420] text-sm text-gray-900 dark:text-white focus-visible:ring-2 focus-visible:ring-violet-500/20 focus-visible:border-violet-500" 
+            />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="website" className="flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-300">
-              <span className="flex items-center gap-1.5">
+          {/* Website / Link */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="website" className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
                 <Link2 className="w-3.5 h-3.5 text-violet-500" />
                 <span>Link / Website</span>
-              </span>
+              </Label>
               <span className="text-[11px] text-gray-400 font-normal">{website.length}/200</span>
-            </Label>
+            </div>
             <Input 
               id="website" 
               value={website} 
               onChange={(e) => setWebsite(e.target.value)} 
               maxLength={200} 
               placeholder="e.g. github.com/yourhandle, portfolio, or any link" 
-              className="rounded-xl border-gray-200 dark:border-gray-700" 
+              className="h-11 rounded-xl border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-[#161420] text-sm text-gray-900 dark:text-white focus-visible:ring-2 focus-visible:ring-violet-500/20 focus-visible:border-violet-500" 
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="bio">Bio</Label>
+          {/* Bio */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="bio" className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Bio
+              </Label>
+              <span className="text-[11px] text-gray-400 font-normal">{bio.length}/500</span>
+            </div>
             <Textarea 
               id="bio" 
               value={bio} 
               onChange={(e) => setBio(e.target.value)} 
-              placeholder="Tell us about yourself..."
+              placeholder="Tell us about yourself, what you're building, or your tech stack..."
               maxLength={500}
-              className="resize-none rounded-xl border-gray-200 h-24"
+              rows={4}
+              className="resize-none rounded-xl border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-[#161420] text-sm text-gray-900 dark:text-white leading-relaxed p-3.5 focus-visible:ring-2 focus-visible:ring-violet-500/20 focus-visible:border-violet-500 h-28" 
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="resume">Resume (PDF or Word)</Label>
+          {/* Resume Section */}
+          <div className="space-y-2 pt-1 pb-4">
+            <Label htmlFor="resume" className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Resume (PDF or Word)
+            </Label>
             <div className="flex items-center gap-3">
               {resumeFile || resumeName ? (
-                <div className="flex-1 flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/50 dark:bg-[#1A1A24] dark:border-[#2D2B3B] transition-all">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <FileText className="w-5 h-5 text-violet-500 shrink-0" />
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 truncate max-w-[220px]">
-                      {resumeFile ? resumeFile.name : resumeName}
-                    </span>
+                <div className="flex-1 flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/60 dark:bg-[#161420] transition-all">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white truncate block max-w-[280px] sm:max-w-[420px]">
+                        {resumeFile ? resumeFile.name : resumeName}
+                      </span>
+                      <span className="text-[11px] text-gray-400">Attached resume</span>
+                    </div>
                   </div>
                   <Button 
                     type="button" 
@@ -438,7 +543,8 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
                       setIsDeletingResume(true)
                       if (resumeInputRef.current) resumeInputRef.current.value = ""
                     }} 
-                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg cursor-pointer"
+                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg cursor-pointer shrink-0"
+                    title="Remove resume"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -448,10 +554,10 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
                   type="button" 
                   variant="outline" 
                   onClick={() => resumeInputRef.current?.click()} 
-                  className="w-full h-11 border-dashed border-gray-200 hover:border-violet-500 hover:bg-violet-50/10 dark:border-[#2D2B3B] rounded-xl flex items-center justify-center gap-2.5 text-gray-500 hover:text-violet-600 font-semibold transition-all duration-200 cursor-pointer"
+                  className="w-full h-14 border-dashed border-gray-300 dark:border-white/15 hover:border-violet-500 hover:bg-violet-50/20 dark:hover:bg-violet-950/20 rounded-xl flex items-center justify-center gap-2.5 text-gray-600 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 font-semibold transition-all duration-200 cursor-pointer"
                 >
-                  <UploadCloud className="w-5 h-5" />
-                  Upload Resume
+                  <UploadCloud className="w-5 h-5 text-violet-500" />
+                  <span>Upload Resume (PDF, DOC, DOCX up to 5MB)</span>
                 </Button>
               )}
               <input 
@@ -474,15 +580,6 @@ export function EditProfileDialog({ profile }: { profile: ProfileProps }) {
               />
             </div>
           </div>
-        </div>
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl border-gray-200">
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isLoading} className="rounded-xl bg-violet-600 hover:bg-violet-700 text-white">
-            {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Save Changes
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
