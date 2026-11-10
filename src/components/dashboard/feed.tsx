@@ -262,7 +262,7 @@ export function Feed({
         const { data: newRepostPost } = await supabase.from('posts').insert({
           user_id: uid,
           content: `🔁 Reposted from ${authorName}:\n\n${post.content}`,
-          type: post.type || 'Other',
+          type: null,
           image_url: post.image_url,
           tags: post.tags || []
         }).select(`*, profiles:user_id(id, full_name, avatar_url, bio, college, consistency_score, streak)`).single()
@@ -855,21 +855,6 @@ export function Feed({
                     >
                       {formatTimeCompact(post.created_at)}
                     </span>
-
-                    {post.type && (
-                      <span className={`text-[12px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${
-                        post.type === 'Learned' ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/50 dark:border-violet-800/40' :
-                        post.type === 'Built' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40' :
-                        post.type === 'Practiced' ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/40' :
-                        'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40'
-                      }`}>
-                        {post.type === 'Learned' && '💡'}
-                        {post.type === 'Built' && '🚀'}
-                        {post.type === 'Practiced' && '🎯'}
-                        {post.type === 'Other' && '📝'}
-                        <span>{post.type}</span>
-                      </span>
-                    )}
 
                     {post.time_spent && (
                       <span className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#1A1A24] px-2 py-0.5 rounded-md inline-flex items-center gap-1">

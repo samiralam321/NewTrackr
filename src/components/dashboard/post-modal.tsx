@@ -46,7 +46,6 @@ const EMOJI_CATEGORIES = [
 export function PostModal({ user, profile }: PostModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [content, setContent] = useState("")
-  const [progressType, setProgressType] = useState<'Learned' | 'Built' | 'Practiced' | 'Other'>('Learned')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -73,13 +72,6 @@ export function PostModal({ user, profile }: PostModalProps) {
   const mentionDropdownRef = useRef<HTMLDivElement>(null)
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const supabase = createClient()
-
-  const categories = [
-    { type: 'Learned', label: 'Learned', icon: '💡' },
-    { type: 'Built', label: 'Built', icon: '🚀' },
-    { type: 'Practiced', label: 'Practiced', icon: '🎯' },
-    { type: 'Other', label: 'Other', icon: '📝' },
-  ] as const
 
   // Listen for open-post-modal custom event from sidebar Post button
   useEffect(() => {
@@ -363,9 +355,6 @@ export function PostModal({ user, profile }: PostModalProps) {
       // 3. Auto-extract hashtags from content
       const tagRegex = /#[\w-]+/g
       const extractedTags: string[] = finalContent.match(tagRegex) || []
-      if (!extractedTags.some(t => t.toLowerCase() === `#${progressType.toLowerCase()}`)) {
-        extractedTags.push(`#${progressType}`)
-      }
 
       // 4. Insert post into Supabase posts table
       const { data: newPost, error: postError } = await supabase
@@ -373,7 +362,7 @@ export function PostModal({ user, profile }: PostModalProps) {
         .insert({
           user_id: user.id,
           content: finalContent,
-          type: progressType,
+          type: null,
           image_url: imageUrl,
           tags: extractedTags,
           time_spent: null

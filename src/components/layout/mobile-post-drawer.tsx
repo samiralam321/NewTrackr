@@ -3,7 +3,7 @@
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
-import { X, Image as ImageIcon, Loader2, PenLine, Smile, ChevronDown, Check, AtSign, Code2 } from "lucide-react"
+import { X, Image as ImageIcon, Loader2, PenLine, Smile, Check, AtSign, Code2 } from "lucide-react"
 import { CodeSnippetModal, CodeSnippetData } from "@/components/dashboard/code-snippet-modal"
 import { LANGUAGE_LABELS } from "@/components/ui/carbon-code-block"
 import { createClient } from "@/lib/supabase/client"
@@ -14,8 +14,6 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [content, setContent] = useState("")
-  const [progressType, setProgressType] = useState<'Learned' | 'Built' | 'Practiced' | 'Other'>('Learned')
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [showEmojis, setShowEmojis] = useState(false)
@@ -80,7 +78,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
         user_id: userData.user.id,
         content: finalPostContent,
         tags: [],
-        type: progressType,
+        type: null,
         image_url: imageUrl
       }).select(`
         *,
@@ -222,60 +220,9 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
             </div>
           </div>
 
-          {/* Top Quick Toolbar: Category Pill on Left, Gallery / Emoji / Bold on Right (Always on TOP, never hidden by keyboard) */}
-          <div className="relative flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-neutral-900 bg-gray-50/50 dark:bg-[#12111A] shrink-0">
-            {/* Category Selector Pill */}
-            <div className="relative inline-block">
-              <button 
-                type="button"
-                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 border border-violet-200/60 dark:border-violet-800/40 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors active:scale-95"
-              >
-                <span>
-                  {progressType === 'Learned' && '💡 Learned'}
-                  {progressType === 'Built' && '🚀 Built'}
-                  {progressType === 'Practiced' && '🎯 Practiced'}
-                  {progressType === 'Other' && '📝 Other'}
-                </span>
-                <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
-              </button>
-
-              {/* Dropdown Menu */}
-              {isCategoryOpen && (
-                <div className="absolute top-9 left-0 z-50 w-56 bg-white dark:bg-[#1A1A24] rounded-2xl shadow-xl border border-gray-100 dark:border-[#2D2B3B] p-1.5 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">Type of Progress</div>
-                  {[
-                    { id: 'Learned', icon: '💡', title: 'Learned', desc: 'New skill, topic, or concept' },
-                    { id: 'Built', icon: '🚀', title: 'Built', desc: 'Feature, project, or tool' },
-                    { id: 'Practiced', icon: '🎯', title: 'Practiced', desc: 'LeetCode, DSA, problems' },
-                    { id: 'Other', icon: '📝', title: 'Other', desc: 'General progress update' },
-                  ].map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => {
-                        setProgressType(cat.id as any)
-                        setIsCategoryOpen(false)
-                      }}
-                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-colors ${
-                        progressType === cat.id 
-                          ? 'bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 font-semibold' 
-                          : 'hover:bg-gray-50 dark:hover:bg-[#2D2B3B] text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      <span className="text-base">{cat.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-bold leading-tight">{cat.title}</div>
-                        <div className="text-[10px] text-gray-400 leading-tight">{cat.desc}</div>
-                      </div>
-                      {progressType === cat.id && <Check className="w-3.5 h-3.5 text-violet-600 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Gallery, Emoji, and Bold Actions */}
+          {/* Top Quick Toolbar: Gallery / Emoji / Code / Bold (Always on TOP, never hidden by keyboard) */}
+          <div className="relative flex items-center justify-end px-3 py-2 border-b border-gray-100 dark:border-neutral-900 bg-gray-50/50 dark:bg-[#12111A] shrink-0">
+            {/* Gallery, Emoji, Code, and Bold Actions */}
             <div className="flex items-center gap-1">
               <input 
                 type="file" 
