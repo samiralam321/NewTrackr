@@ -1,6 +1,7 @@
 import { RightSidebar } from "@/components/layout/right-sidebar"
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs"
 import { MobileMenuDropdown } from "@/components/dashboard/mobile-menu-dropdown"
+import { Greeting } from "@/components/dashboard/greeting"
 import { getAuthenticatedUserAndProfile } from "@/lib/auth/get-user-profile"
 import { redirect } from "next/navigation"
 import Link from "next/link"
@@ -43,6 +44,14 @@ export default async function DashboardPage() {
             </Link>
           </div>
         </div>
+
+        {/* Top Header: Greeting & Subtitle */}
+        <header className="px-4.5 pt-3.5 pb-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] shrink-0">
+          <Greeting name={displayName} />
+          <p className="text-[13px] sm:text-[14px] text-[#536471] dark:text-[#71767b] font-normal mt-0.5">
+            Better ideas. Bigger dreams. Keep going! 🚀
+          </p>
+        </header>
 
         {/* Optimized Tabs System, Twitter-style Composer & Timeline Feed */}
         <DashboardTabs currentUserId={user?.id} user={user} profile={profile} />

@@ -21,7 +21,10 @@ export function Greeting({ name }: { name: string }) {
   }, [])
 
   return (
-    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors leading-tight">
+    <h1 
+      suppressHydrationWarning
+      className="text-xl sm:text-2xl md:text-[25px] font-bold tracking-tight text-[#0f1419] dark:text-[#e7e9ea] transition-colors leading-tight"
+    >
       {greeting}, {name}! <span className="inline-block select-none">{icon}</span>
     </h1>
   )
