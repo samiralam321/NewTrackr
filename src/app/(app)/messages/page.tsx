@@ -78,7 +78,24 @@ function MessagesContent() {
   const searchParams = useSearchParams()
   const targetUserId = searchParams.get('userId')
   
-  const selectUserAndUrl = (user: Profile | null) => {
+  
+  // Hardware Android back button sync
+  useEffect(() => {
+    const handlePopState = () => {
+      const p = new URLSearchParams(window.location.search)
+      const uId = p.get('userId')
+      if (!uId) {
+        setSelectedUser(null)
+      } else {
+        const found = users.find(u => u.id === uId) || allProfiles.find(u => u.id === uId)
+        if (found) setSelectedUser(found)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [users, allProfiles])
+
+const selectUserAndUrl = (user: Profile | null) => {
     setSelectedUser(user)
     if (typeof window !== 'undefined') {
       if (user) {
@@ -1003,9 +1020,13 @@ function MessagesContent() {
           PANEL 2: ACTIVE CONVERSATION PANEL
           Takes remaining space on desktop; full screen on mobile
           ────────────────────────────────────────────────────────────────── */}
-      <main className={`flex-1 flex flex-col h-[100dvh] md:h-screen relative overflow-hidden bg-[#FCFBFE] dark:bg-[#07060A] ${
-        selectedUser ? 'flex' : 'hidden md:flex'
-      }`}>
+      <main className={`
+        ${selectedUser 
+          ? 'fixed inset-0 z-40 flex flex-col h-[100dvh] w-full md:relative md:inset-auto md:z-auto md:h-full md:w-auto md:flex-1' 
+          : 'hidden md:flex md:flex-1 md:h-full flex-col'
+        }
+        bg-[#FCFBFE] dark:bg-[#07060A] overflow-hidden
+      `}>
         {selectedUser ? (
           <>
             {/* Conversation Header */}
@@ -1063,7 +1084,7 @@ function MessagesContent() {
             {/* Message Stream */}
             <div 
               ref={messagesContainerRef} 
-              className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-2.5"
+              className="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 space-y-2.5 overscroll-contain"
             >
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400">
@@ -1165,7 +1186,7 @@ function MessagesContent() {
             </div>
 
             {/* Bottom Message Composer (Android Safe & Auto-expanding) */}
-            <div className="p-2.5 sm:p-3 border-t border-gray-100 dark:border-[#22212E] bg-white dark:bg-[#0B0A10] shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="p-2.5 sm:p-3 border-t border-gray-100 dark:border-[#22212E] bg-white dark:bg-[#0B0A10] shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] z-10">
               
               <div className="flex items-end gap-1.5 max-w-4xl mx-auto w-full relative">
                 <input 
@@ -1230,6 +1251,7 @@ function MessagesContent() {
                     value={newMessage}
                     onChange={handleTextareaInput}
                     onKeyDown={handleKeyDown}
+                    onFocus={() => setTimeout(scrollToBottom, 150)}
                     placeholder={`Message ${selectedUser.full_name}...`}
                     className="w-full bg-transparent text-xs sm:text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 resize-none max-h-28 overflow-y-auto leading-normal"
                   />
