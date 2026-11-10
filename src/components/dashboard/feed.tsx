@@ -921,26 +921,26 @@ export function Feed({
                       </button>
                       
                       {openMenuId === post.id && (
-                        <div className="absolute right-0 top-8 w-48 bg-white dark:bg-[#1A1A24] rounded-xl shadow-xl border border-gray-100 dark:border-[#2D2B3B] py-1.5 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                        <div className="absolute right-0 top-8 w-48 bg-white dark:bg-[#1A1A24] rounded-xl shadow-xl border border-gray-100 dark:border-[#2D2B3B] py-1.5 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right overflow-hidden">
                           {post.user_id === currentUserId ? (
                             <>
                               <button 
                                 onClick={() => { setEditingPostId(post.id); setEditContent(post.content); setOpenMenuId(null); }}
-                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer rounded-t-lg focus:outline-none"
                               >
                                 <Edit2 className="w-4 h-4 text-gray-400" /> Edit Post
                               </button>
                               {pinnedPostId === post.id ? (
                                 <button 
                                   onClick={() => { handleUnpinPost(post.id); setOpenMenuId(null); }}
-                                  className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer focus:outline-none"
                                 >
                                   <Pin className="w-4 h-4 text-violet-500 fill-violet-500" /> Unpin from Profile
                                 </button>
                               ) : (
                                 <button 
                                   onClick={() => { handlePinPost(post.id); setOpenMenuId(null); }}
-                                  className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer focus:outline-none"
                                 >
                                   <Pin className="w-4 h-4 text-gray-400" /> Pin to Profile
                                 </button>
@@ -948,7 +948,7 @@ export function Feed({
 
                               <button 
                                 onClick={() => handleCopyPost(post)}
-                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer focus:outline-none"
                               >
                                 {copiedPostId === post.id ? (
                                   <>
@@ -965,7 +965,7 @@ export function Feed({
 
                               <button 
                                 onClick={() => handleCopyPostLink(post)}
-                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer focus:outline-none"
                               >
                                 {copiedPostId === `link-${post.id}` ? (
                                   <>
@@ -983,7 +983,7 @@ export function Feed({
                               <div className="w-full h-px bg-gray-100 dark:bg-[#2D2B3B] my-1"></div>
                               <button 
                                 onClick={() => { setPostToDelete(post.id); setOpenMenuId(null); }}
-                                className="w-full px-4 py-2 text-[13px] font-bold text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-4 py-2 text-[13px] font-bold text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2.5 transition-colors cursor-pointer rounded-b-lg focus:outline-none"
                               >
                                 <Trash2 className="w-4 h-4" /> Delete Post
                               </button>
@@ -992,7 +992,7 @@ export function Feed({
                             <>
                               <button 
                                 onClick={() => handleCopyPost(post)}
-                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer rounded-t-lg focus:outline-none"
                               >
                                 {copiedPostId === post.id ? (
                                   <>
@@ -1009,7 +1009,7 @@ export function Feed({
 
                               <button 
                                 onClick={() => handleCopyPostLink(post)}
-                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer focus:outline-none"
                               >
                                 {copiedPostId === `link-${post.id}` ? (
                                   <>
@@ -1028,19 +1028,19 @@ export function Feed({
 
                               <button 
                                 onClick={() => { setReportPostId(post.id); setOpenMenuId(null); }}
-                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2.5 transition-colors cursor-pointer focus:outline-none"
                               >
                                 <Flag className="w-4 h-4" /> Report Post
                               </button>
                               <button 
                                 onClick={() => { handleMuteUser(post.user_id); setOpenMenuId(null); }}
-                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] flex items-center gap-2.5 transition-colors cursor-pointer focus:outline-none"
                               >
                                 <BellOff className="w-4 h-4 text-gray-400" /> Mute User
                               </button>
                               <button 
                                 onClick={() => { setBlockUser({ id: post.user_id, name: post.profiles?.full_name || 'User' }); setOpenMenuId(null); }}
-                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-4 py-2 text-[13px] font-medium text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2.5 transition-colors cursor-pointer rounded-b-lg focus:outline-none"
                               >
                                 <UserX className="w-4 h-4" /> Block User
                               </button>
