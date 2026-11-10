@@ -17,7 +17,7 @@ export function VerifiedBadge({
   size = 'sm', 
   nameOrHandle, 
   className = '', 
-  showTooltip = true,
+  showTooltip = false,
   tooltipAlign = 'center'
 }: VerifiedBadgeProps) {
   const isAdmin = isUserAdmin(nameOrHandle)
@@ -65,7 +65,7 @@ export function VerifiedBadge({
 
   return (
     <div
-      className={`relative inline-flex items-center justify-center cursor-pointer select-none group/badge shrink-0 ${className}`}
+      className={`relative inline-flex items-center justify-center select-none shrink-0 ${showTooltip ? 'cursor-pointer group/badge' : ''} ${className}`}
     >
       <div className="flex items-center justify-center shrink-0 bg-transparent">
         {/* Authentic Twitter Verified Seal & Checkmark (Clean SVG, 0 outer shadow, 0 border, 0 background) */}
