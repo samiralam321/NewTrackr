@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ActionTooltip } from '@/components/ui/action-tooltip'
 
 interface LikeButtonProps {
   isLiked: boolean
@@ -54,8 +55,8 @@ export function LikeButton({
           : 'hover:text-[#F91880] text-[#536471] dark:text-[#71767b]'
       } ${className}`}
     >
-      {/* Heart Icon Wrapper with Pop Animation & Tooltip */}
-      <div className="relative">
+      {/* Heart Icon Wrapper with Pop Animation & Twitter/X Style Tooltip */}
+      <ActionTooltip label={isLiked ? 'Unlike' : 'Like'} disabled={disabled}>
         <div className="p-2 rounded-full group-hover/btn:bg-rose-50 dark:group-hover/btn:bg-rose-950/40 transition-colors">
           <motion.div
             animate={isLiked ? {
@@ -76,12 +77,7 @@ export function LikeButton({
             />
           </motion.div>
         </div>
-
-        {/* Custom Subtle Tooltip */}
-        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xs text-white text-[11px] leading-tight font-medium rounded-md whitespace-nowrap shadow-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-150 z-50">
-          {isLiked ? 'Unlike' : 'Like'}
-        </div>
-      </div>
+      </ActionTooltip>
 
       {/* Vertical Rolling Counter */}
       <div className="relative overflow-hidden h-[18px] min-w-[12px] inline-flex items-center justify-center leading-none">

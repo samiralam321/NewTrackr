@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { Repeat2, PenLine, Ban } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ActionTooltip } from '@/components/ui/action-tooltip'
 
 interface RepostButtonProps {
   isReposted: boolean
@@ -112,8 +113,11 @@ export function RepostButton({
         } ${className}`}
         aria-label={isReposted ? "Undo Repost" : "Repost"}
       >
-        {/* Repost Icon Wrapper with Pop Animation & Tooltip */}
-        <div className="relative">
+        {/* Repost Icon Wrapper with Pop Animation & Twitter/X Style Tooltip */}
+        <ActionTooltip 
+          label={isReposted ? 'Undo Repost' : 'Repost'} 
+          disabled={disabled || isMenuOpen}
+        >
           <div className="p-2 rounded-full group-hover/btn:bg-emerald-50 dark:group-hover/btn:bg-emerald-950/40 transition-colors">
             <motion.div
               animate={isReposted ? {
@@ -135,14 +139,7 @@ export function RepostButton({
               />
             </motion.div>
           </div>
-
-          {/* Custom Subtle Tooltip (only when menu is closed) */}
-          {!isMenuOpen && (
-            <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xs text-white text-[11px] leading-tight font-medium rounded-md whitespace-nowrap shadow-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-150 z-50">
-              {isReposted ? 'Undo Repost' : 'Repost'}
-            </div>
-          )}
-        </div>
+        </ActionTooltip>
 
         {/* Vertical Rolling Counter */}
         <div className="relative overflow-hidden h-[18px] min-w-[12px] inline-flex items-center justify-center leading-none">

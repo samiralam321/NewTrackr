@@ -16,6 +16,7 @@ import { getCacheEntry, setCacheEntry, mutateAllFeedCaches } from "@/lib/cache/c
 import { ImagePreviewModal } from "@/components/ui/image-preview-modal"
 import { LikeButton } from "@/components/ui/like-button"
 import { RepostButton } from "@/components/ui/repost-button"
+import { ActionTooltip } from "@/components/ui/action-tooltip"
 import { EmbeddedQuoteCard } from "@/components/dashboard/embedded-quote-card"
 import { QuoteModal } from "@/components/dashboard/quote-modal"
 
@@ -1380,14 +1381,11 @@ export function Feed({
                     onClick={() => toggleComments(post.id)} 
                     className="flex items-center gap-1.5 text-[14px] font-medium hover:text-violet-600 dark:hover:text-violet-400 group/btn transition-colors cursor-pointer"
                   >
-                    <div className="relative">
+                    <ActionTooltip label="Reply">
                       <div className="p-2 rounded-full group-hover/btn:bg-violet-50 dark:group-hover/btn:bg-violet-950/40 transition-colors">
                         <MessageCircle className="w-[19px] h-[19px]" />
                       </div>
-                      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xs text-white text-[11px] leading-tight font-medium rounded-md whitespace-nowrap shadow-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-150 z-50">
-                        Reply
-                      </div>
-                    </div>
+                    </ActionTooltip>
                     <span className="text-[14px] font-medium leading-none">{(post as any).comments_count || 0}</span>
                   </button>
 
@@ -1420,14 +1418,11 @@ export function Feed({
                       post.user_has_bookmarked ? 'text-violet-600 dark:text-violet-400' : ''
                     }`}
                   >
-                    <div className="relative">
+                    <ActionTooltip label={post.user_has_bookmarked ? 'Saved' : 'Save'}>
                       <div className="p-2 rounded-full group-hover/btn:bg-violet-50 dark:group-hover/btn:bg-violet-950/40 transition-colors">
                         <Bookmark className={`w-[19px] h-[19px] ${post.user_has_bookmarked ? 'fill-current' : ''}`} />
                       </div>
-                      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xs text-white text-[11px] leading-tight font-medium rounded-md whitespace-nowrap shadow-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-150 z-50">
-                        {post.user_has_bookmarked ? 'Saved' : 'Save'}
-                      </div>
-                    </div>
+                    </ActionTooltip>
                   </button>
 
                   {/* Share */}
@@ -1435,14 +1430,11 @@ export function Feed({
                     onClick={() => handleSharePost(post)} 
                     className="flex items-center gap-1.5 text-[14px] font-medium hover:text-violet-600 dark:hover:text-violet-400 group/btn transition-colors cursor-pointer"
                   >
-                    <div className="relative">
+                    <ActionTooltip label="Share">
                       <div className="p-2 rounded-full group-hover/btn:bg-violet-50 dark:group-hover/btn:bg-violet-950/40 transition-colors">
                         <Share2 className="w-[19px] h-[19px]" />
                       </div>
-                      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xs text-white text-[11px] leading-tight font-medium rounded-md whitespace-nowrap shadow-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-150 z-50">
-                        Share
-                      </div>
-                    </div>
+                    </ActionTooltip>
                   </button>
 
                   {/* Delete */}
@@ -1451,14 +1443,11 @@ export function Feed({
                       onClick={() => setPostToDelete(post.id)} 
                       className="flex items-center gap-1 text-[13px] hover:text-red-500 group/btn transition-colors cursor-pointer"
                     >
-                      <div className="relative">
+                      <ActionTooltip label="Delete">
                         <div className="p-2 rounded-full group-hover/btn:bg-red-50 dark:group-hover/btn:bg-red-950/40 transition-colors">
                           <Trash2 className="w-[18px] h-[18px]" />
                         </div>
-                        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xs text-white text-[11px] leading-tight font-medium rounded-md whitespace-nowrap shadow-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-150 z-50">
-                          Delete
-                        </div>
-                      </div>
+                      </ActionTooltip>
                     </button>
                   )}
                 </div>

@@ -12,6 +12,7 @@ import { formatTimeCompact, formatFullDateTime } from '@/lib/utils/date'
 import { RichTextRenderer } from '@/components/ui/rich-text-renderer'
 import { LikeButton } from '@/components/ui/like-button'
 import { RepostButton } from '@/components/ui/repost-button'
+import { ActionTooltip } from '@/components/ui/action-tooltip'
 import { EmbeddedQuoteCard } from '@/components/dashboard/embedded-quote-card'
 import { QuoteModal } from '@/components/dashboard/quote-modal'
 import { ImagePreviewModal } from '@/components/ui/image-preview-modal'
@@ -267,14 +268,16 @@ export function PostDetailClient({
 
         {/* Action Bar */}
         <div className="flex items-center justify-around py-1 text-[#536471] dark:text-[#71767b] border-b border-[#eff3f4] dark:border-[#2f3336]">
-          <button 
-            type="button" 
-            className="flex items-center gap-1.5 p-2 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:text-violet-600 transition-colors cursor-pointer"
-            onClick={() => document.getElementById('reply-input')?.focus()}
-          >
-            <MessageCircle className="w-5 h-5" />
-            <span className="text-[13px]">{comments.length}</span>
-          </button>
+          <ActionTooltip label="Reply">
+            <button 
+              type="button" 
+              className="flex items-center gap-1.5 p-2 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:text-violet-600 transition-colors cursor-pointer"
+              onClick={() => document.getElementById('reply-input')?.focus()}
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span className="text-[13px]">{comments.length}</span>
+            </button>
+          </ActionTooltip>
 
           <RepostButton
             isReposted={isReposted}
@@ -291,23 +294,27 @@ export function PostDetailClient({
             onToggle={handleToggleLike}
           />
 
-          <button 
-            type="button" 
-            onClick={handleToggleBookmark} 
-            className={`flex items-center gap-1.5 p-2 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:text-violet-600 transition-colors cursor-pointer ${
-              isBookmarked ? 'text-violet-600 dark:text-violet-400' : ''
-            }`}
-          >
-            <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
-          </button>
+          <ActionTooltip label={isBookmarked ? 'Saved' : 'Save'}>
+            <button 
+              type="button" 
+              onClick={handleToggleBookmark} 
+              className={`flex items-center gap-1.5 p-2 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:text-violet-600 transition-colors cursor-pointer ${
+                isBookmarked ? 'text-violet-600 dark:text-violet-400' : ''
+              }`}
+            >
+              <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
+            </button>
+          </ActionTooltip>
 
-          <button 
-            type="button" 
-            onClick={handleShare} 
-            className="p-2 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:text-violet-600 transition-colors cursor-pointer"
-          >
-            <Share2 className="w-5 h-5" />
-          </button>
+          <ActionTooltip label="Share">
+            <button 
+              type="button" 
+              onClick={handleShare} 
+              className="p-2 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:text-violet-600 transition-colors cursor-pointer"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+          </ActionTooltip>
         </div>
       </article>
 
