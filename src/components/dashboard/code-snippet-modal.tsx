@@ -261,12 +261,8 @@ export function CodeSnippetModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-5 py-3.5 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#12101A] flex items-center justify-between shrink-0">
-          <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
-            Renders as a Carbon.sh styled block with one-click copy.
-          </p>
-
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+        <div className="px-5 py-3.5 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#12101A] flex items-center justify-end shrink-0">
+          <div className="flex items-center gap-2.5">
             <Button
               type="button"
               variant="ghost"
