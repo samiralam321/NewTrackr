@@ -9,9 +9,10 @@ export type VerifiedBadgeProps = {
   size?: 'xs' | 'sm' | 'md' | 'lg'
   nameOrHandle?: string | null
   className?: string
+  showTooltip?: boolean
 }
 
-export function VerifiedBadge({ level, size = 'sm', nameOrHandle, className = '' }: VerifiedBadgeProps) {
+export function VerifiedBadge({ level, size = 'sm', nameOrHandle, className = '', showTooltip = true }: VerifiedBadgeProps) {
   const [hovered, setHovered] = useState(false)
 
   const isAdmin = isUserAdmin(nameOrHandle)
@@ -59,7 +60,7 @@ export function VerifiedBadge({ level, size = 'sm', nameOrHandle, className = ''
 
   return (
     <div
-      className={`relative inline-flex items-center justify-center cursor-pointer select-none group shrink-0 ${className}`}
+      className={`relative inline-flex items-center justify-center cursor-pointer select-none group/badge shrink-0 ${className}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       title={details.title}
@@ -93,16 +94,18 @@ export function VerifiedBadge({ level, size = 'sm', nameOrHandle, className = ''
         </svg>
       </motion.div>
 
-      {/* Modern Tooltip */}
-      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none transition-all duration-150 z-50">
-        <div className="bg-gray-900/95 dark:bg-[#1A1A24]/95 text-white py-1.5 px-3 rounded-xl shadow-xl border border-white/10 dark:border-gray-800 text-[11px] whitespace-nowrap text-center backdrop-blur-md">
-          <p className="font-bold text-[#1D9BF0] flex items-center justify-center gap-1">
-            <span>{details.title}</span>
-          </p>
-          <p className="text-gray-300 text-[10px] font-normal mt-0.5">{details.desc}</p>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-[#1A1A24]" />
+      {/* Modern Tooltip - strictly scoped to direct badge hover */}
+      {showTooltip && (
+        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 scale-95 group-hover/badge:opacity-100 group-hover/badge:scale-100 pointer-events-none transition-all duration-150 z-50">
+          <div className="bg-gray-900 dark:bg-[#1A1A24] text-white py-1.5 px-3 rounded-xl shadow-md border border-white/10 dark:border-gray-800 text-[11px] whitespace-nowrap text-center">
+            <p className="font-bold text-[#1D9BF0] flex items-center justify-center gap-1">
+              <span>{details.title}</span>
+            </p>
+            <p className="text-gray-300 text-[10px] font-normal mt-0.5">{details.desc}</p>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-[#1A1A24]" />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

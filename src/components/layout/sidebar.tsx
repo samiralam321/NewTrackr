@@ -354,12 +354,16 @@ export function Sidebar({ profile }: { profile?: any }) {
               className="w-10 h-10 rounded-full object-cover shrink-0"
             />
             <div className="flex flex-col overflow-hidden min-w-0">
-              <span className="text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-1 min-w-0 truncate">
+              <div className="text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] flex items-center gap-1 min-w-0 truncate">
                 <span className="truncate">{profileState?.full_name || 'Samir Alam'}</span>
-                <VerifiedBadge level={getBadgeLevel(profileState?.consistency_score, profileState?.full_name || 'Samir Alam')} nameOrHandle={profileState?.full_name || 'Samir Alam'} />
-              </span>
+                <VerifiedBadge 
+                  showTooltip={false} 
+                  level={getBadgeLevel(profileState?.consistency_score, profileState?.full_name || 'Samir Alam')} 
+                  nameOrHandle={profileState?.full_name || 'Samir Alam'} 
+                />
+              </div>
               <span className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal truncate">
-                {getUserHandle(profileState?.full_name)}
+                {getUserHandle(profileState)}
               </span>
             </div>
           </Link>
