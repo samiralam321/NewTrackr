@@ -53,28 +53,34 @@ export function LikeButton({
           ? 'text-[#F91880]' 
           : 'hover:text-[#F91880] text-[#536471] dark:text-[#71767b]'
       } ${className}`}
-      title={isLiked ? "Unlike" : "Like"}
     >
-      {/* Heart Icon Wrapper with Pop Animation */}
-      <div className="p-2 rounded-full group-hover/btn:bg-rose-50 dark:group-hover/btn:bg-rose-950/40 transition-colors">
-        <motion.div
-          animate={isLiked ? {
-            scale: [1, 0.78, 1.28, 1],
-            transition: { duration: 0.26, times: [0, 0.22, 0.62, 1], ease: [0.16, 1, 0.3, 1] }
-          } : {
-            scale: [1, 0.88, 1],
-            transition: { duration: 0.18, ease: "easeOut" }
-          }}
-          className="relative flex items-center justify-center shrink-0"
-        >
-          <Heart 
-            className={`w-[19px] h-[19px] transition-colors duration-150 ${
-              isLiked 
-                ? 'fill-[#F91880] text-[#F91880]' 
-                : 'fill-transparent text-current'
-            }`} 
-          />
-        </motion.div>
+      {/* Heart Icon Wrapper with Pop Animation & Tooltip */}
+      <div className="relative">
+        <div className="p-2 rounded-full group-hover/btn:bg-rose-50 dark:group-hover/btn:bg-rose-950/40 transition-colors">
+          <motion.div
+            animate={isLiked ? {
+              scale: [1, 0.78, 1.28, 1],
+              transition: { duration: 0.26, times: [0, 0.22, 0.62, 1], ease: [0.16, 1, 0.3, 1] }
+            } : {
+              scale: [1, 0.88, 1],
+              transition: { duration: 0.18, ease: "easeOut" }
+            }}
+            className="relative flex items-center justify-center shrink-0"
+          >
+            <Heart 
+              className={`w-[19px] h-[19px] transition-colors duration-150 ${
+                isLiked 
+                  ? 'fill-[#F91880] text-[#F91880]' 
+                  : 'fill-transparent text-current'
+              }`} 
+            />
+          </motion.div>
+        </div>
+
+        {/* Custom Subtle Tooltip */}
+        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 bg-gray-900/90 dark:bg-black/90 backdrop-blur-xs text-white text-[11px] leading-tight font-medium rounded-md whitespace-nowrap shadow-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-150 z-50">
+          {isLiked ? 'Unlike' : 'Like'}
+        </div>
       </div>
 
       {/* Vertical Rolling Counter */}
