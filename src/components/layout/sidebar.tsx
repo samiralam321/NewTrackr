@@ -259,14 +259,14 @@ export function Sidebar({ profile }: { profile?: any }) {
         href="/dashboard" 
         prefetch={true} 
         onMouseEnter={() => { try { router.prefetch('/dashboard') } catch {} }}
-        className="flex items-center gap-3 px-3 py-2 mb-1 shrink-0 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors w-fit group"
+        className="flex items-center gap-3 px-3 py-2 mb-2 pt-1 shrink-0 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors w-fit group"
       >
         <img src="/logo.png" alt="Trackr Logo" className="w-10 h-10 object-contain drop-shadow-xs group-hover:scale-105 transition-transform" />
         <span className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Trackr</span>
       </Link>
 
       {/* Nav Items - Twitter Navigation Rhythm (20-21px bold typography, 24px icons, rounded-full hover) */}
-      <nav className="flex flex-col gap-1 my-0.5 shrink-0">
+      <nav className="flex flex-col gap-2 xl:gap-2.5 my-1 shrink-0">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -276,7 +276,7 @@ export function Sidebar({ profile }: { profile?: any }) {
               prefetch={true}
               onMouseEnter={() => { try { router.prefetch(item.href) } catch {} }}
               onTouchStart={() => { try { router.prefetch(item.href) } catch {} }}
-              className={`flex items-center gap-4 px-4 py-2.5 xl:px-4.5 xl:py-2.5 rounded-full transition-all duration-150 relative select-none w-fit min-w-[200px] group ${
+              className={`flex items-center gap-4 px-4.5 py-3 xl:px-5 xl:py-3 rounded-full transition-all duration-150 relative select-none w-fit min-w-[200px] group ${
                 isActive 
                   ? 'text-[#7C3AED] dark:text-[#A78BFA] font-semibold bg-violet-50/70 dark:bg-violet-950/30' 
                   : 'text-[#0f1419] dark:text-[#e7e9ea] font-normal hover:bg-black/[0.04] dark:hover:bg-white/[0.07]'
@@ -303,7 +303,7 @@ export function Sidebar({ profile }: { profile?: any }) {
         {/* Contact Button */}
         <button 
           onClick={() => setIsContactOpen(true)}
-          className="flex items-center gap-4 px-4 py-2.5 xl:px-4.5 xl:py-2.5 rounded-full transition-all duration-150 text-[#0f1419] dark:text-[#e7e9ea] font-normal hover:bg-black/[0.04] dark:hover:bg-white/[0.07] text-left cursor-pointer w-fit min-w-[200px] group"
+          className="flex items-center gap-4 px-4.5 py-3 xl:px-5 xl:py-3 rounded-full transition-all duration-150 text-[#0f1419] dark:text-[#e7e9ea] font-normal hover:bg-black/[0.04] dark:hover:bg-white/[0.07] text-left cursor-pointer w-fit min-w-[200px] group"
         >
           <div className="relative flex items-center justify-center shrink-0">
             <MessageSquare className="w-[23px] h-[23px] stroke-[1.8] group-hover:scale-105 transition-transform" />
@@ -312,9 +312,9 @@ export function Sidebar({ profile }: { profile?: any }) {
         </button>
 
         {/* PWA Install Button */}
-        <div className="mt-0.5">
+        <div className="w-fit">
           <InstallButton 
-            className="flex items-center gap-4 px-4 py-2.5 xl:px-4.5 xl:py-2.5 rounded-full font-normal text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors text-left cursor-pointer w-fit min-w-[200px]" 
+            className="flex items-center gap-4 px-4.5 py-3 xl:px-5 xl:py-3 rounded-full font-normal text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors text-left cursor-pointer w-fit min-w-[200px]" 
             iconClassName="w-[23px] h-[23px] stroke-[1.8]"
             textClassName="text-[18px] xl:text-[19px] leading-tight"
           />
@@ -322,7 +322,7 @@ export function Sidebar({ profile }: { profile?: any }) {
       </nav>
 
       {/* Twitter-style Large "Post" Button */}
-      <div className="my-3 w-full pr-1">
+      <div className="mt-4 mb-3 w-full pr-1">
         <button
           type="button"
           onClick={handlePostClick}
