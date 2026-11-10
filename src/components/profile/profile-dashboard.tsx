@@ -13,31 +13,56 @@ import { usePresence } from "@/components/providers/presence-provider"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { motion } from "framer-motion"
 import { getBadgeLevel } from "@/lib/utils/streak"
+import { getCacheEntry, setCacheEntry } from "@/lib/cache/client-cache"
 
 export function ProfileDashboard({ 
   profile, 
   posts, 
+  postsCount,
+  hasProblemSolved,
   followersCount, 
   followingCount, 
   isCurrentUser,
   currentUserId
 }: { 
   profile: any, 
-  posts: any[], 
+  posts?: any[], 
+  postsCount?: number,
+  hasProblemSolved?: boolean,
   followersCount: number, 
   followingCount: number, 
   isCurrentUser: boolean,
   currentUserId: string
 }) {
-  const [profileState, setProfileState] = useState(profile)
-  const [postsCountState, setPostsCountState] = useState(posts?.length || 0)
-  const [followersCountState, setFollowersCountState] = useState(followersCount || 0)
-  const [followingCountState, setFollowingCountState] = useState(followingCount || 0)
+  const cacheKey = `profile_meta_${profile?.id || 'unknown'}`
+  const cached = getCacheEntry<any>(cacheKey, 120_000, currentUserId)
+
+  const [profileState, setProfileState] = useState(cached?.data?.profile || profile)
+  const [postsCountState, setPostsCountState] = useState<number>(cached?.data?.postsCount ?? postsCount ?? posts?.length ?? 0)
+  const [followersCountState, setFollowersCountState] = useState<number>(cached?.data?.followersCount ?? followersCount ?? 0)
+  const [followingCountState, setFollowingCountState] = useState<number>(cached?.data?.followingCount ?? followingCount ?? 0)
+  const [problemSolvedState, setProblemSolvedState] = useState(
+    cached?.data?.hasProblemSolved ?? hasProblemSolved ?? 
+    ((posts || []).some(p => p.tags?.includes('#DSA') || p.tags?.includes('#Algorithms') || p.tags?.includes('DSA') || p.content?.toLowerCase().includes('dsa') || p.content?.toLowerCase().includes('algorithm')))
+  )
   const [activeTab, setActiveTab] = useState("posts")
   const onlineUsers = usePresence()
   const isOnline = profileState?.id ? onlineUsers.includes(profileState?.id) : false
   
   const supabase = createClient()
+
+  // Save to client cache whenever data changes
+  useEffect(() => {
+    if (profile?.id) {
+      setCacheEntry(cacheKey, {
+        profile: profileState,
+        postsCount: postsCountState,
+        followersCount: followersCountState,
+        followingCount: followingCountState,
+        hasProblemSolved: problemSolvedState
+      }, currentUserId)
+    }
+  }, [profile?.id, profileState, postsCountState, followersCountState, followingCountState, problemSolvedState, currentUserId, cacheKey])
 
   // Sync state if initial props change (prevent stale server refreshes from overwriting local state)
   useEffect(() => {
@@ -57,10 +82,13 @@ export function ProfileDashboard({
       }
       return profile
     })
-    setPostsCountState(posts?.length || 0)
+    setPostsCountState(postsCount ?? posts?.length ?? 0)
     setFollowersCountState(followersCount || 0)
     setFollowingCountState(followingCount || 0)
-  }, [profile, posts, followersCount, followingCount])
+    if (hasProblemSolved !== undefined) {
+      setProblemSolvedState(hasProblemSolved)
+    }
+  }, [profile, posts, postsCount, hasProblemSolved, followersCount, followingCount])
 
   // Listen for custom profile-updated event (handles local updates from posts & profile edits)
   useEffect(() => {
@@ -205,7 +233,7 @@ export function ProfileDashboard({
     { id: 'streak_starter', name: 'Streak Starter', active: displayStreak > 0, icon: Flame, color: 'text-orange-500 bg-orange-50' },
     { id: 'active_learner', name: 'Active Learner', active: postsCountState >= 10, icon: BookOpen, color: 'text-emerald-500 bg-emerald-50' },
     { id: 'sharer', name: 'Sharer', active: (followersCountState || 0) > 0, icon: Share2, color: 'text-blue-500 bg-blue-50' },
-    { id: 'problem_solver', name: 'Problem Solver', active: (posts || []).some(p => p.tags?.includes('#DSA') || p.tags?.includes('#Algorithms') || p.tags?.includes('DSA') || p.content?.toLowerCase().includes('dsa') || p.content?.toLowerCase().includes('algorithm')), icon: Puzzle, color: 'text-fuchsia-500 bg-fuchsia-50' },
+    { id: 'problem_solver', name: 'Problem Solver', active: problemSolvedState || (posts || []).some(p => p.tags?.includes('#DSA') || p.tags?.includes('#Algorithms') || p.tags?.includes('DSA') || p.content?.toLowerCase().includes('dsa') || p.content?.toLowerCase().includes('algorithm')), icon: Puzzle, color: 'text-fuchsia-500 bg-fuchsia-50' },
     { id: 'top_contributor', name: 'Top Contributor', active: postsCountState >= 50, icon: Trophy, color: 'text-amber-500 bg-amber-50' }
   ]
 

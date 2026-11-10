@@ -76,6 +76,25 @@ export function Sidebar({ profile }: { profile?: any }) {
     }
   }, [profileState])
 
+  // Eagerly prefetch primary application routes in background for instant 0ms navigation
+  useEffect(() => {
+    const primaryRoutes = [
+      '/dashboard',
+      '/profile',
+      '/explore',
+      '/challenges',
+      '/leaderboard',
+      '/saved',
+      '/messages',
+      '/notifications'
+    ]
+    primaryRoutes.forEach(route => {
+      try {
+        router.prefetch(route)
+      } catch {}
+    })
+  }, [router])
+
   const confirmLogout = async () => {
     clearTrackrClientCaches()
     try {
@@ -250,7 +269,12 @@ export function Sidebar({ profile }: { profile?: any }) {
   return (
     <aside className="w-[280px] h-screen sticky top-0 z-50 border-r border-gray-100 dark:border-[#2D2B3B] bg-white dark:bg-[#0B0A10] flex flex-col pt-4 pb-4 px-4 shrink-0 overflow-y-auto no-scrollbar transition-colors duration-300">
       {/* Logo */}
-      <Link href="/dashboard" className="flex items-center gap-3 px-2 mb-4 shrink-0">
+      <Link 
+        href="/dashboard" 
+        prefetch={true} 
+        onMouseEnter={() => { try { router.prefetch('/dashboard') } catch {} }}
+        className="flex items-center gap-3 px-2 mb-4 shrink-0"
+      >
         <img src="/logo.png" alt="Trackr Logo" className="w-12 h-12 object-contain drop-shadow-sm scale-[1.2] origin-left" />
         <span className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Trackr</span>
       </Link>
@@ -263,6 +287,9 @@ export function Sidebar({ profile }: { profile?: any }) {
             <Link
               key={item.name}
               href={item.href}
+              prefetch={true}
+              onMouseEnter={() => { try { router.prefetch(item.href) } catch {} }}
+              onTouchStart={() => { try { router.prefetch(item.href) } catch {} }}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors relative select-none ${
                 isActive 
                   ? 'text-violet-600 dark:text-violet-400 font-semibold' 
@@ -345,7 +372,13 @@ export function Sidebar({ profile }: { profile?: any }) {
 
         {/* Profile Info */}
         <div className="flex items-center gap-2">
-          <Link href="/profile" className="flex-1 flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-colors border border-gray-100 dark:border-[#2D2B3B] shadow-sm min-w-0">
+          <Link 
+            href="/profile" 
+            prefetch={true}
+            onMouseEnter={() => { try { router.prefetch('/profile') } catch {} }}
+            onTouchStart={() => { try { router.prefetch('/profile') } catch {} }}
+            className="flex-1 flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-[#1A1A24] transition-colors border border-gray-100 dark:border-[#2D2B3B] shadow-sm min-w-0"
+          >
             <img 
               src={profileState?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileState?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} 
               alt="Profile" 

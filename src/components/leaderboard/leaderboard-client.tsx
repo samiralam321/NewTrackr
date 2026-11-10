@@ -6,16 +6,26 @@ import { Trophy, Star, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
+import { getCacheEntry, setCacheEntry } from "@/lib/cache/client-cache"
 
 export function LeaderboardClient({ dates, defaultDate }: { dates: string[], defaultDate: string }) {
   const [activeDate, setActiveDate] = useState(defaultDate)
-  const [attempts, setAttempts] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  
+  // Instant synchronous state initialization from client-cache
+  const initialCache = getCacheEntry<any[]>(`leaderboard_${defaultDate}`, 180_000)
+  const [attempts, setAttempts] = useState<any[]>(() => initialCache?.data || [])
+  const [isLoading, setIsLoading] = useState(!initialCache)
   const [isMounted, setIsMounted] = useState(false)
   const supabase = createClient()
 
-  const fetchAttempts = async (date: string) => {
-    setIsLoading(true)
+  const fetchAttempts = async (date: string, showLoading = true) => {
+    const curCacheKey = `leaderboard_${date}`
+    const existing = getCacheEntry<any[]>(curCacheKey, 180_000)
+    
+    if (showLoading && !existing) {
+      setIsLoading(true)
+    }
+
     const { data } = await supabase
       .from('attempts')
       .select(`
@@ -29,19 +39,30 @@ export function LeaderboardClient({ dates, defaultDate }: { dates: string[], def
       .order('time_taken', { ascending: true })
       .limit(50)
       
-    setAttempts(data || [])
+    if (data) {
+      setAttempts(data)
+      setCacheEntry(curCacheKey, data)
+    }
     setIsLoading(false)
   }
 
   useEffect(() => {
     setIsMounted(true)
-    fetchAttempts(activeDate)
+    const existing = getCacheEntry<any[]>(`leaderboard_${activeDate}`, 180_000)
+    if (existing) {
+      setAttempts(existing.data)
+      setIsLoading(false)
+      // Background revalidation
+      fetchAttempts(activeDate, false)
+    } else {
+      fetchAttempts(activeDate, true)
+    }
 
-    const channel = supabase.channel('realtime_leaderboard')
+    const channel = supabase.channel(`realtime_leaderboard_${activeDate}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'attempts' }, (payload) => {
         if (payload.new && (payload.new as any).challenge_date === activeDate) {
            // Refetch to maintain perfectly correct ordering of top 50
-           fetchAttempts(activeDate)
+           fetchAttempts(activeDate, false)
         }
       })
       .subscribe()
@@ -73,7 +94,14 @@ export function LeaderboardClient({ dates, defaultDate }: { dates: string[], def
           {dates.map(date => (
             <button 
               key={date}
-              onClick={() => setActiveDate(date)}
+              onClick={() => {
+                setActiveDate(date)
+                const cached = getCacheEntry<any[]>(`leaderboard_${date}`, 180_000)
+                if (cached) {
+                  setAttempts(cached.data)
+                  setIsLoading(false)
+                }
+              }}
               className={`flex items-center justify-center gap-2 px-5 sm:px-8 py-2.5 h-full text-sm font-bold rounded-xl transition-all whitespace-nowrap ${activeDate === date ? 'bg-white dark:bg-[#2D2B3B] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
             >
               {formatDateLabel(date)}
@@ -107,7 +135,7 @@ export function LeaderboardClient({ dates, defaultDate }: { dates: string[], def
                 className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 dark:border-[#2D2B3B]"
               />
               <div className="flex-1">
-                <Link href={`/profile/${attempt.profiles?.id}`} className="inline-flex items-center gap-2 hover:underline decoration-violet-500 decoration-2 underline-offset-2">
+                <Link href={`/profile/${attempt.profiles?.id}`} prefetch={true} className="inline-flex items-center gap-2 hover:underline decoration-violet-500 decoration-2 underline-offset-2">
                   <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5 transition-colors hover:text-violet-600 dark:hover:text-violet-400">
                     <span>{attempt.profiles?.full_name}</span>
                     <VerifiedBadge level={getBadgeLevel(attempt.profiles?.consistency_score)} />

@@ -21,12 +21,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     notFound()
   }
 
-  const [postsRes, followersRes, followingRes] = await Promise.all([
+  const [postsCountRes, followersRes, followingRes, problemSolvedRes] = await Promise.all([
     supabase
       .from('posts')
-      .select('*')
-      .eq('user_id', profile.id)
-      .order('created_at', { ascending: false }),
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', profile.id),
     supabase
       .from('follows')
       .select('*', { count: 'exact', head: true })
@@ -34,13 +33,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     supabase
       .from('follows')
       .select('*', { count: 'exact', head: true })
-      .eq('follower_id', profile.id)
+      .eq('follower_id', profile.id),
+    supabase
+      .from('posts')
+      .select('id')
+      .eq('user_id', profile.id)
+      .or('content.ilike.%dsa%,content.ilike.%algorithm%')
+      .limit(1)
   ])
 
   return (
     <ProfileDashboard 
       profile={profile}
-      posts={postsRes.data || []}
+      postsCount={postsCountRes.count || 0}
+      hasProblemSolved={(problemSolvedRes.data && problemSolvedRes.data.length > 0) || false}
       followersCount={followersRes.count || 0}
       followingCount={followingRes.count || 0}
       isCurrentUser={user?.id === profile.id}

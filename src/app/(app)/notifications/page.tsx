@@ -6,6 +6,7 @@ import { Bell, Heart, MessageCircle, UserPlus, AtSign, ChevronLeft } from "lucid
 import Link from "next/link"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
+import { getCacheEntry, setCacheEntry } from "@/lib/cache/client-cache"
 
 type Notification = {
   id: string
@@ -21,18 +22,21 @@ type Notification = {
   }
 }
 
+const NOTIFS_CACHE_KEY = 'user_notifications_cache'
+
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [loading, setLoading] = useState(true)
+  const cached = getCacheEntry<Notification[]>(NOTIFS_CACHE_KEY, 60_000)
+  const [notifications, setNotifications] = useState<Notification[]>(() => cached?.data || [])
+  const [loading, setLoading] = useState(!cached)
   const supabase = createClient()
 
   useEffect(() => {
-    fetchNotifications()
+    fetchNotifications(!cached)
 
     const channel = supabase
       .channel('notifications-db')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => {
-        fetchNotifications()
+        fetchNotifications(false)
       })
       .subscribe()
 
@@ -41,9 +45,13 @@ export default function NotificationsPage() {
     }
   }, [])
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (showLoading = true) => {
     const { data: userData } = await supabase.auth.getUser()
     if (!userData.user) return
+
+    if (showLoading && !notifications.length) {
+      setLoading(true)
+    }
 
     const { data, error } = await supabase
       .from('notifications')
@@ -56,6 +64,7 @@ export default function NotificationsPage() {
 
     if (data && !error) {
       setNotifications(data as any)
+      setCacheEntry(NOTIFS_CACHE_KEY, data, userData.user.id)
       
       // Mark as read
       const unreadIds = data.filter(n => !n.is_read).map(n => n.id)
@@ -136,14 +145,24 @@ export default function NotificationsPage() {
     <div className="flex-1 overflow-y-auto px-4 md:px-10 py-6 md:py-8 bg-gray-50/30 dark:bg-[#050505] transition-colors duration-300">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <Link href="/dashboard" className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A24] transition-colors">
+          <Link href="/dashboard" prefetch={true} className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A24] transition-colors">
             <ChevronLeft className="w-6 h-6" />
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white transition-colors">Notifications</h1>
         </div>
 
-        {loading ? (
-          <div className="text-center py-10 text-gray-500 dark:text-gray-400">Loading notifications...</div>
+        {loading && !notifications.length ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-white dark:bg-[#0B0A10] rounded-2xl border border-gray-100 dark:border-[#2D2B3B] p-4 flex gap-4 animate-pulse">
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#1A1A24] shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 dark:bg-[#1A1A24] rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 dark:bg-[#1A1A24] rounded w-1/4" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : notifications.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-[#0B0A10] rounded-2xl border border-gray-100 dark:border-[#2D2B3B] shadow-sm transition-colors duration-300">
             <div className="w-16 h-16 bg-gray-50 dark:bg-[#1A1A24] rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
@@ -163,7 +182,7 @@ export default function NotificationsPage() {
                   {getIcon(notification)}
                 </div>
                 <div className="flex-1">
-                  <Link href={`/profile/${notification.actor_id}`} className="flex items-center gap-2 mb-1.5">
+                  <Link href={`/profile/${notification.actor_id}`} prefetch={true} className="flex items-center gap-2 mb-1.5">
                     <img 
                       src={notification.actor?.avatar_url || `https://ui-avatars.com/api/?name=${notification.actor?.full_name || 'User'}&background=7C3AED&color=fff`} 
                       alt="" 

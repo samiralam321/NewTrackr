@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getAuthenticatedUserAndProfile } from "@/lib/auth/get-user-profile"
 import { Trophy, Clock, Flame, ShieldAlert, Play, Target, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { QuizScreen } from "@/components/challenges/quiz-screen"
@@ -8,13 +9,13 @@ import { redirect } from "next/navigation"
 export const dynamic = 'force-dynamic'
 
 export default async function ChallengesPage() {
-  const supabase = await createClient()
-  let user = null; try { const { data } = await supabase.auth.getUser(); user = data?.user || null; } catch { user = null; }
+  const { user, profile } = await getAuthenticatedUserAndProfile()
 
   if (!user) {
     redirect('/auth')
   }
 
+  const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
 
   let dailyChallenge = null
@@ -71,13 +72,6 @@ export default async function ChallengesPage() {
   
   const challengeDate = dailyChallenge?.date || today
 
-  // 2. Fetch user's profile stats
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('streak, challenge_rank, full_name')
-    .eq('id', user.id)
-    .maybeSingle()
-
   let attempt = null
   let isFirstAttempt = false
   if (dailyChallenge) {
@@ -116,8 +110,6 @@ export default async function ChallengesPage() {
     <div className="flex h-screen w-full bg-[#FCFBFF] dark:bg-[#050505] transition-colors duration-300">
       <main className="flex-1 overflow-y-auto px-4 md:px-10 py-6 md:py-8">
         
-        {/* Header is now rendered inside QuizScreen/ResultScreen for dynamic hiding */}
-
         {/* Dynamic State Rendering */}
         {!dailyChallenge ? (
            <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#0B0A10] rounded-3xl border border-gray-100 dark:border-[#2D2B3B]">
@@ -130,7 +122,7 @@ export default async function ChallengesPage() {
              <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                <div>
                  <div className="flex items-center gap-3">
-                   <Link href="/dashboard" className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A24] transition-colors">
+                   <Link href="/dashboard" prefetch={true} className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A24] transition-colors">
                      <ChevronLeft className="w-6 h-6" />
                    </Link>
                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -170,7 +162,7 @@ export default async function ChallengesPage() {
              <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                <div>
                  <div className="flex items-center gap-3">
-                   <Link href="/dashboard" className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A24] transition-colors">
+                   <Link href="/dashboard" prefetch={true} className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A24] transition-colors">
                      <ChevronLeft className="w-6 h-6" />
                    </Link>
                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -209,4 +201,3 @@ export default async function ChallengesPage() {
     </div>
   )
 }
-

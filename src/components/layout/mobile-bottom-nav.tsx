@@ -2,15 +2,24 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Home, Compass, Bell, Mail } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 export function MobileBottomNav({ profile }: { profile?: any }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [hideNav, setHideNav] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const supabase = createClient()
+
+  // Eagerly prefetch routes for instant mobile navigation
+  useEffect(() => {
+    const routes = ['/dashboard', '/explore', '/notifications', '/messages', '/profile']
+    routes.forEach(r => {
+      try { router.prefetch(r) } catch {}
+    })
+  }, [router])
 
   useEffect(() => {
     const checkChat = () => {
@@ -93,6 +102,8 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
           <Link
             key={item.name}
             href={item.href}
+            prefetch={true}
+            onTouchStart={() => { try { router.prefetch(item.href) } catch {} }}
             className="flex flex-col items-center justify-center min-w-[56px] h-12 relative active:scale-90 transition-transform"
             aria-label={item.name}
           >
@@ -113,6 +124,8 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
       })}
       <Link 
         href="/profile"
+        prefetch={true}
+        onTouchStart={() => { try { router.prefetch('/profile') } catch {} }}
         className="flex flex-col items-center justify-center min-w-[56px] h-12 active:scale-90 transition-transform"
         aria-label="Profile"
       >

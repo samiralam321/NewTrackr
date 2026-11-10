@@ -14,13 +14,12 @@ export default async function ProfilePage() {
 
   const supabase = await createClient()
 
-  // Parallelize secondary queries
-  const [postsRes, followersRes, followingRes] = await Promise.all([
+  // Parallelize secondary lightweight count & badge queries (0 row payloads over the wire)
+  const [postsCountRes, followersRes, followingRes, problemSolvedRes] = await Promise.all([
     supabase
       .from('posts')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false }),
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id),
     supabase
       .from('follows')
       .select('*', { count: 'exact', head: true })
@@ -28,7 +27,13 @@ export default async function ProfilePage() {
     supabase
       .from('follows')
       .select('*', { count: 'exact', head: true })
-      .eq('follower_id', user.id)
+      .eq('follower_id', user.id),
+    supabase
+      .from('posts')
+      .select('id')
+      .eq('user_id', user.id)
+      .or('content.ilike.%dsa%,content.ilike.%algorithm%')
+      .limit(1)
   ])
 
   const resolvedProfile = profile || {
@@ -49,7 +54,8 @@ export default async function ProfilePage() {
   return (
     <ProfileDashboard 
       profile={resolvedProfile}
-      posts={postsRes.data || []}
+      postsCount={postsCountRes.count || 0}
+      hasProblemSolved={(problemSolvedRes.data && problemSolvedRes.data.length > 0) || false}
       followersCount={followersRes.count || 0}
       followingCount={followingRes.count || 0}
       isCurrentUser={true}
