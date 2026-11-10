@@ -1018,7 +1018,6 @@ export function Feed({
                     <div 
                       className="rounded-2xl overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] bg-black/[0.02] dark:bg-white/[0.02] cursor-pointer hover:opacity-95 transition-all shadow-2xs group/img inline-block w-fit max-w-full" 
                       onClick={() => setPreviewImageUrl(post.image_url!)}
-                      title="Click to view full image"
                     >
                       <img 
                         src={post.image_url} 
