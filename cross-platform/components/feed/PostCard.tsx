@@ -25,7 +25,11 @@ function formatRelativeTime(dateString?: string): string {
   if (diffHrs < 24) return `${diffHrs}h ago`
   const diffDays = Math.floor(diffHrs / 24)
   if (diffDays < 7) return `${diffDays}d ago`
-  return new Date(dateString).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  const postDate = new Date(dateString)
+  if (postDate.getFullYear() === new Date().getFullYear()) {
+    return postDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  }
+  return postDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 export function PostCard({ post, onCommentPress }: PostCardProps) {

@@ -10,6 +10,7 @@ import { RichTextRenderer } from "@/components/ui/rich-text-renderer"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { getBadgeLevel } from "@/lib/utils/streak"
 import { getUserHandle } from "@/lib/utils/user"
+import { formatTimeCompact, formatFullDateTime } from "@/lib/utils/date"
 import { getCacheEntry, setCacheEntry, mutateAllFeedCaches } from "@/lib/cache/client-cache"
 import { ImagePreviewModal } from "@/components/ui/image-preview-modal"
 
@@ -208,15 +209,6 @@ export function Feed({
       supabase.removeChannel(channel)
     }
   }, [currentFeedKey, userIdFilter, savedOnlyFilter, likedByFilter, commentedByFilter, followingOnlyFilter, collegeOnlyFilter, opportunitiesOnlyFilter, eventsOnlyFilter, sortBy, currentUserIdProp])
-
-  
-  const formatTimeCompact = (dateStr: string) => {
-    const diff = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 1000)
-    if (diff < 60) return 'now'
-    if (diff < 3600) return `${Math.floor(diff / 60)}m`
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h`
-    return `${Math.floor(diff / 86400)}d`
-  }
 
   const handleRepost = async (target: Post | string) => {
     const uid = currentUserId || currentUserIdProp
@@ -633,17 +625,6 @@ export function Feed({
     }
   }
 
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-    
-    if (diffInSeconds < 60) return `Just now`
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
-    return `${Math.floor(diffInSeconds / 86400)}d ago`
-  }
-
   const deletePost = async (postId: string) => {
     const { error } = await supabase.from('posts').delete().eq('id', postId).eq('user_id', currentUserId!)
     if (!error) {
@@ -867,7 +848,11 @@ export function Feed({
                       {getUserHandle(post.profiles?.full_name)}
                     </span>
                     <span className="text-[#536471] dark:text-[#71767b] text-[14px] font-normal">·</span>
-                    <span className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal hover:underline shrink-0">
+                    <span 
+                      className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal hover:underline shrink-0"
+                      title={formatFullDateTime(post.created_at)}
+                      suppressHydrationWarning
+                    >
                       {formatTimeCompact(post.created_at)}
                     </span>
 
@@ -1140,9 +1125,21 @@ export function Feed({
                       <div key={comment.id} className="flex gap-3">
                         <img src={comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.profiles?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} className="w-8 h-8 rounded-full object-cover shrink-0 mt-0.5" alt="" width={32} height={32} loading="lazy" decoding="async" />
                         <div className="bg-gray-50 dark:bg-[#1A1A24] rounded-2xl rounded-tl-none px-4 py-2.5 flex-1 transition-colors">
-                          <p className="text-[14px] font-bold text-[#0f1419] dark:text-[#e7e9ea] mb-0.5 flex items-center gap-1">
+                          <p className="text-[14px] font-bold text-[#0f1419] dark:text-[#e7e9ea] mb-0.5 flex items-center gap-1.5 flex-wrap">
                             <span>{comment.profiles?.full_name}</span>
                             <VerifiedBadge level={getBadgeLevel(comment.profiles?.consistency_score)} />
+                            {(comment as any).created_at && (
+                              <>
+                                <span className="text-[#536471] dark:text-[#71767b] text-[12px] font-normal">·</span>
+                                <span 
+                                  className="text-[12px] text-[#536471] dark:text-[#71767b] font-normal hover:underline"
+                                  title={formatFullDateTime((comment as any).created_at)}
+                                  suppressHydrationWarning
+                                >
+                                  {formatTimeCompact((comment as any).created_at)}
+                                </span>
+                              </>
+                            )}
                           </p>
                           <div className="text-[14.5px] font-normal leading-[1.5] text-[#0f1419] dark:text-[#e7e9ea]">
                             <RichTextRenderer content={comment.content} />
