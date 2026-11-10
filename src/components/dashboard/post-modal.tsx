@@ -117,11 +117,12 @@ export function PostModal({ user, profile }: PostModalProps) {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
-      const minHeight = imagePreview ? 48 : 96
+      const hasAttachment = Boolean(imagePreview || attachedSnippet)
+      const minHeight = hasAttachment ? 36 : 64
       const calculatedHeight = Math.max(textareaRef.current.scrollHeight, minHeight)
       textareaRef.current.style.height = `${calculatedHeight}px`
     }
-  }, [content, imagePreview, isOpen])
+  }, [content, imagePreview, attachedSnippet, isOpen])
 
   const handleClose = () => {
     if (isSubmitting) return
@@ -473,7 +474,7 @@ export function PostModal({ user, profile }: PostModalProps) {
         )}
 
         {/* Main Content Area: Avatar + Text Input */}
-        <div className="flex-1 overflow-y-auto p-4 flex items-start gap-3 relative min-h-[140px]">
+        <div className="flex-1 overflow-y-auto p-4 flex items-start gap-3 relative min-h-[70px]">
           <img
             src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`}
             alt="You"
@@ -485,12 +486,12 @@ export function PostModal({ user, profile }: PostModalProps) {
           <div className="flex-1 min-w-0 relative">
             <textarea
               ref={textareaRef}
-              rows={imagePreview ? 2 : 4}
+              rows={(imagePreview || attachedSnippet) ? 1 : 2}
               value={content}
               onChange={handleTextChange}
               placeholder={`What's on your mind, ${firstName}?`}
-              className={`w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-relaxed overflow-hidden transition-[height] duration-75 ${
-                imagePreview ? 'min-h-[48px]' : 'min-h-[96px]'
+              className={`w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-snug overflow-hidden transition-[height] duration-75 ${
+                (imagePreview || attachedSnippet) ? 'min-h-[36px]' : 'min-h-[64px]'
               }`}
             />
 
@@ -566,7 +567,7 @@ export function PostModal({ user, profile }: PostModalProps) {
 
             {/* Attached Code Snippet Card */}
             {attachedSnippet && (
-              <div className="mt-2 mb-2 rounded-2xl border border-violet-200/80 dark:border-violet-900/60 bg-gradient-to-r from-violet-50/80 via-purple-50/40 to-indigo-50/60 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-indigo-950/20 p-3 flex items-center justify-between gap-3 shadow-xs">
+              <div className="mt-2.5 mb-1.5 rounded-2xl border border-violet-200/80 dark:border-violet-900/60 bg-gradient-to-r from-violet-50/80 via-purple-50/40 to-indigo-50/60 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-indigo-950/20 p-2.5 sm:p-3 flex items-center justify-between gap-3 shadow-xs">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0 shadow-sm">
                     <Code2 className="w-5 h-5" />

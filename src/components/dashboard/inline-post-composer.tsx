@@ -104,11 +104,12 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
-      const minH = imagePreview ? 48 : (isFocused ? 64 : 48)
+      const hasAttachment = Boolean(imagePreview || attachedSnippet)
+      const minH = hasAttachment ? 36 : (isFocused ? 64 : 48)
       const calculatedHeight = Math.max(textareaRef.current.scrollHeight, minH)
       textareaRef.current.style.height = `${calculatedHeight}px`
     }
-  }, [content, imagePreview, isFocused])
+  }, [content, imagePreview, attachedSnippet, isFocused])
 
   // Debounced search for registered users when @ is typed
   useEffect(() => {
@@ -432,12 +433,14 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
         <div className="flex-1 min-w-0 relative">
           <textarea
             ref={textareaRef}
-            rows={imagePreview ? 2 : (isFocused || content.length > 50 ? 3 : 2)}
+            rows={(imagePreview || attachedSnippet) ? 1 : (isFocused || content.length > 50 ? 3 : 2)}
             value={content}
             onChange={handleTextChange}
             onFocus={() => setIsFocused(true)}
             placeholder={`What's on your mind, ${firstName}?`}
-            className="w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-relaxed min-h-[48px] overflow-hidden transition-[height] duration-75"
+            className={`w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-snug overflow-hidden transition-[height] duration-75 ${
+              (imagePreview || attachedSnippet) ? 'min-h-[36px]' : 'min-h-[48px]'
+            }`}
           />
 
           {/* User @Mention Autocomplete Dropdown Popover */}
@@ -515,7 +518,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
 
           {/* Attached Code Snippet Card */}
           {attachedSnippet && (
-            <div className="mt-2 mb-3 rounded-2xl border border-violet-200/80 dark:border-violet-900/60 bg-gradient-to-r from-violet-50/80 via-purple-50/40 to-indigo-50/60 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-indigo-950/20 p-3 flex items-center justify-between gap-3 shadow-xs">
+            <div className="mt-2.5 mb-2 rounded-2xl border border-violet-200/80 dark:border-violet-900/60 bg-gradient-to-r from-violet-50/80 via-purple-50/40 to-indigo-50/60 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-indigo-950/20 p-2.5 sm:p-3 flex items-center justify-between gap-3 shadow-xs">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0 shadow-sm">
                   <Code2 className="w-5 h-5" />
