@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { Home, Compass, Trophy, Medal, Bookmark, Mail, Bell, CheckCircle2, LogOut, MessageSquare } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
@@ -236,13 +237,20 @@ export function Sidebar({ profile }: { profile?: any }) {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors relative ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors relative select-none ${
                 isActive 
-                  ? 'bg-[#EEECFF] dark:bg-[#1A1A24] text-violet-600 dark:text-violet-400' 
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A24] hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-violet-600 dark:text-violet-400 font-semibold' 
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50/80 dark:hover:bg-[#1A1A24] hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              <div className="relative flex items-center justify-center">
+              {isActive && (
+                <motion.div
+                  layoutId="sidebar-active-pill"
+                  className="absolute inset-0 bg-[#EEECFF] dark:bg-[#1A1A24] rounded-xl"
+                  transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                />
+              )}
+              <div className="relative z-10 flex items-center justify-center">
                 <item.icon className="w-5 h-5" />
                 {item.name === 'Notifications' && unreadCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-violet-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] h-[16px] flex items-center justify-center shadow-sm leading-none border-2 border-white dark:border-[#0B0A10] z-10">
@@ -255,7 +263,7 @@ export function Sidebar({ profile }: { profile?: any }) {
                   </span>
                 )}
               </div>
-              {item.name}
+              <span className="relative z-10">{item.name}</span>
             </Link>
           )
         })}
