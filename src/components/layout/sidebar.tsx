@@ -276,14 +276,14 @@ export function Sidebar({ profile }: { profile?: any }) {
               prefetch={true}
               onMouseEnter={() => { try { router.prefetch(item.href) } catch {} }}
               onTouchStart={() => { try { router.prefetch(item.href) } catch {} }}
-              className={`flex items-center gap-4 px-4 py-2.5 xl:px-4.5 xl:py-2.5 rounded-full transition-all duration-150 relative select-none w-fit min-w-[210px] group ${
+              className={`flex items-center gap-4 px-4 py-2.5 xl:px-4.5 xl:py-2.5 rounded-full transition-all duration-150 relative select-none w-fit min-w-[200px] group ${
                 isActive 
-                  ? 'text-[#7C3AED] dark:text-[#A78BFA] font-bold bg-violet-50/80 dark:bg-violet-950/30' 
-                  : 'text-[#0f1419] dark:text-[#e7e9ea] font-medium hover:bg-black/[0.04] dark:hover:bg-white/[0.07]'
+                  ? 'text-[#7C3AED] dark:text-[#A78BFA] font-semibold bg-violet-50/70 dark:bg-violet-950/30' 
+                  : 'text-[#0f1419] dark:text-[#e7e9ea] font-normal hover:bg-black/[0.04] dark:hover:bg-white/[0.07]'
               }`}
             >
               <div className="relative flex items-center justify-center shrink-0">
-                <item.icon className={`w-[24px] h-[24px] transition-transform group-hover:scale-105 ${isActive ? 'stroke-[2.6]' : 'stroke-[2]'}`} />
+                <item.icon className={`w-[23px] h-[23px] transition-transform group-hover:scale-105 ${isActive ? 'stroke-[2.2]' : 'stroke-[1.8]'}`} />
                 {item.name === 'Notifications' && unreadCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-violet-600 text-white text-[9.5px] font-bold px-1 rounded-full min-w-[17px] h-[17px] flex items-center justify-center shadow-xs leading-none border-2 border-white dark:border-black z-10">
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -295,7 +295,7 @@ export function Sidebar({ profile }: { profile?: any }) {
                   </span>
                 )}
               </div>
-              <span className="text-[19px] xl:text-[20px] font-medium xl:font-semibold tracking-tight">{item.name}</span>
+              <span className="text-[18px] xl:text-[19px] leading-tight">{item.name}</span>
             </Link>
           )
         })}
@@ -303,20 +303,20 @@ export function Sidebar({ profile }: { profile?: any }) {
         {/* Contact Button */}
         <button 
           onClick={() => setIsContactOpen(true)}
-          className="flex items-center gap-4 px-4 py-2.5 xl:px-4.5 xl:py-2.5 rounded-full transition-all duration-150 text-[#0f1419] dark:text-[#e7e9ea] font-medium hover:bg-black/[0.04] dark:hover:bg-white/[0.07] text-left cursor-pointer w-fit min-w-[210px] group"
+          className="flex items-center gap-4 px-4 py-2.5 xl:px-4.5 xl:py-2.5 rounded-full transition-all duration-150 text-[#0f1419] dark:text-[#e7e9ea] font-normal hover:bg-black/[0.04] dark:hover:bg-white/[0.07] text-left cursor-pointer w-fit min-w-[200px] group"
         >
           <div className="relative flex items-center justify-center shrink-0">
-            <MessageSquare className="w-[24px] h-[24px] stroke-[2] group-hover:scale-105 transition-transform" />
+            <MessageSquare className="w-[23px] h-[23px] stroke-[1.8] group-hover:scale-105 transition-transform" />
           </div>
-          <span className="text-[19px] xl:text-[20px] font-medium xl:font-semibold tracking-tight">Contact</span>
+          <span className="text-[18px] xl:text-[19px] leading-tight">Contact</span>
         </button>
 
         {/* PWA Install Button */}
         <div className="mt-0.5">
           <InstallButton 
-            className="flex items-center gap-4 px-4 py-2.5 xl:px-4.5 xl:py-2.5 rounded-full font-medium text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors text-left cursor-pointer w-fit min-w-[210px]" 
-            iconClassName="w-[24px] h-[24px]"
-            textClassName="text-[19px] xl:text-[20px] font-medium xl:font-semibold tracking-tight"
+            className="flex items-center gap-4 px-4 py-2.5 xl:px-4.5 xl:py-2.5 rounded-full font-normal text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors text-left cursor-pointer w-fit min-w-[200px]" 
+            iconClassName="w-[23px] h-[23px] stroke-[1.8]"
+            textClassName="text-[18px] xl:text-[19px] leading-tight"
           />
         </div>
       </nav>
