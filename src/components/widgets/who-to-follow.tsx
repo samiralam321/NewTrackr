@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Users, Check, UserPlus } from "lucide-react"
+import { Users } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
@@ -22,7 +22,17 @@ interface WhoToFollowCacheData {
   followingMap: Record<string, boolean>
 }
 
-const CACHE_KEY_PREFIX = 'who_to_follow_'
+export const SAMIR_PINNED_USER_ID = '149304fc-ee0a-4980-83ed-9ed88cf48d6d'
+
+const SAMIR_DEFAULT_PROFILE: ProfileUser = {
+  id: SAMIR_PINNED_USER_ID,
+  full_name: 'Samir Alam',
+  avatar_url: 'https://bsqqdfkdycziocmgiani.supabase.co/storage/v1/object/public/avatars/149304fc-ee0a-4980-83ed-9ed88cf48d6d-0.8075707230184318.jpeg',
+  consistency_score: 1,
+  college: 'IKG PTU'
+}
+
+const CACHE_KEY_PREFIX = 'who_to_follow_v3_'
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 
 export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
@@ -31,7 +41,10 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
   // Initialize synchronously from in-memory cache if available (0ms render)
   const [users, setUsers] = useState<ProfileUser[]>(() => {
     const cached = getCacheEntry<WhoToFollowCacheData>(cacheKey, CACHE_TTL_MS, currentUserId)
-    return cached?.data?.users || []
+    if (cached?.data?.users && cached.data.users.length > 0) {
+      return cached.data.users
+    }
+    return [SAMIR_DEFAULT_PROFILE]
   })
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>(() => {
     const cached = getCacheEntry<WhoToFollowCacheData>(cacheKey, CACHE_TTL_MS, currentUserId)
@@ -46,7 +59,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
   useEffect(() => {
     async function loadWhoToFollow() {
       const cached = getCacheEntry<WhoToFollowCacheData>(cacheKey, CACHE_TTL_MS, currentUserId)
-      if (cached && !cached.isStale) {
+      if (cached && !cached.isStale && cached.data?.users?.[0]?.id === SAMIR_PINNED_USER_ID) {
         // Cache is fresh, avoid unnecessary network roundtrips
         return
       }
@@ -73,34 +86,47 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
           setFollowingMap(initialMap)
         }
 
-        // 2. Fetch top 10 most active profiles ordered by consistency_score (streak)
-        let query = supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url, consistency_score, college')
-          .not('full_name', 'is', null)
-          .order('consistency_score', { ascending: false })
-          .limit(10)
+        // 2. Fetch Samir Alam's profile and top other active profiles concurrently
+        const [samirRes, othersRes] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, consistency_score, college')
+            .eq('id', SAMIR_PINNED_USER_ID)
+            .maybeSingle(),
+          supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, consistency_score, college')
+            .not('full_name', 'is', null)
+            .neq('id', SAMIR_PINNED_USER_ID)
+            .order('consistency_score', { ascending: false })
+            .limit(10)
+        ])
 
-        if (currentUserId) {
-          query = query.neq('id', currentUserId)
+        const samirProfile: ProfileUser = samirRes.data || SAMIR_DEFAULT_PROFILE
+        const otherProfiles: ProfileUser[] = othersRes.data || []
+
+        // Prioritize users not yet followed among others, then take top active
+        const notFollowed = otherProfiles.filter(p => !followingIds.includes(p.id))
+        const alreadyFollowed = otherProfiles.filter(p => followingIds.includes(p.id))
+        const sortedOthers = [...notFollowed, ...alreadyFollowed]
+
+        // Samir Alam is always placed at the very TOP (#1)
+        const finalList: ProfileUser[] = [samirProfile]
+        for (const p of sortedOthers) {
+          if (finalList.length >= 5) break
+          if (p.id !== SAMIR_PINNED_USER_ID) {
+            finalList.push(p)
+          }
         }
 
-        const { data: profiles, error } = await query
+        setUsers(finalList)
 
-        if (!error && profiles) {
-          // Prioritize users not yet followed, then display top 5 most active
-          const notFollowed = profiles.filter(p => !followingIds.includes(p.id))
-          const alreadyFollowed = profiles.filter(p => followingIds.includes(p.id))
-          const sorted = [...notFollowed, ...alreadyFollowed].slice(0, 5)
-          setUsers(sorted)
-
-          // Save to client cache
-          setCacheEntry<WhoToFollowCacheData>(
-            cacheKey,
-            { users: sorted, followingMap: initialMap },
-            currentUserId
-          )
-        }
+        // Save to client cache
+        setCacheEntry<WhoToFollowCacheData>(
+          cacheKey,
+          { users: finalList, followingMap: initialMap },
+          currentUserId
+        )
       } catch (err) {
         console.error("Error loading who to follow:", err)
       } finally {
@@ -116,6 +142,8 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
       window.location.href = '/login'
       return
     }
+
+    if (targetUserId === currentUserId) return
 
     const isCurrentlyFollowing = !!followingMap[targetUserId]
     const nextFollowingState = !isCurrentlyFollowing
@@ -175,7 +203,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
     }
   }
 
-  if (loading) {
+  if (loading && users.length === 0) {
     return (
       <div className="bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-4 shadow-sm animate-pulse">
         <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/3 mb-4"></div>
@@ -216,6 +244,7 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
       <div className="space-y-3">
         {users.map((user) => {
           const isFollowing = !!followingMap[user.id]
+          const isSelf = currentUserId === user.id
           const handle = getUserHandle(user.full_name)
           const badgeLevel = getBadgeLevel(user.consistency_score)
           const streak = user.consistency_score || 0
@@ -258,17 +287,23 @@ export function WhoToFollow({ currentUserId }: { currentUserId?: string }) {
                 </div>
               </Link>
 
-              {/* Follow Button */}
-              <button
-                onClick={() => handleToggleFollow(user.id)}
-                className={`px-3 py-1 text-xs font-semibold rounded-full transition-all shrink-0 select-none ${
-                  isFollowing
-                    ? "bg-gray-100 dark:bg-[#1A1A24] text-gray-700 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 border border-gray-200/60 dark:border-[#2D2B3B]"
-                    : "bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-300 hover:bg-violet-600 hover:text-white dark:hover:bg-violet-600 dark:hover:text-white border border-violet-200/60 dark:border-violet-800/40"
-                }`}
-              >
-                {isFollowing ? "Following" : "Follow"}
-              </button>
+              {/* Follow Button or You Tag */}
+              {isSelf ? (
+                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/60 dark:border-violet-800/40 select-none">
+                  You
+                </span>
+              ) : (
+                <button
+                  onClick={() => handleToggleFollow(user.id)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all shrink-0 select-none ${
+                    isFollowing
+                      ? "bg-gray-100 dark:bg-[#1A1A24] text-gray-700 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 border border-gray-200/60 dark:border-[#2D2B3B]"
+                      : "bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-300 hover:bg-violet-600 hover:text-white dark:hover:bg-violet-600 dark:hover:text-white border border-violet-200/60 dark:border-violet-800/40"
+                  }`}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </button>
+              )}
             </div>
           )
         })}
