@@ -854,20 +854,20 @@ export function Feed({
               {/* Right Column: Post Body, Header, Media, Actions */}
               <div className="flex-1 min-w-0">
                 {/* Twitter-style Header Line: Name · @Handle · Time · Category */}
-                <div className="flex items-center justify-between gap-1 mb-1.5">
+                <div className="flex items-center justify-between gap-1 mb-1">
                   <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                     <Link 
                       href={`/profile/${post.user_id}`} 
-                      className="text-[16px] sm:text-[16.5px] font-bold text-[#0f1419] dark:text-[#e7e9ea] hover:underline transition-colors truncate"
+                      className="text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] hover:underline transition-colors truncate"
                     >
                       {post.profiles?.full_name || 'Anonymous User'}
                     </Link>
                     <VerifiedBadge level={getBadgeLevel(post.profiles?.consistency_score)} />
-                    <span className="text-[14.5px] text-[#536471] dark:text-[#71767b] font-normal truncate">
+                    <span className="text-[13.5px] text-[#536471] dark:text-[#71767b] font-normal truncate">
                       {getUserHandle(post.profiles?.full_name)}
                     </span>
                     <span className="text-[#536471] dark:text-[#71767b] text-xs font-normal">·</span>
-                    <span className="text-[14.5px] text-[#536471] dark:text-[#71767b] font-normal hover:underline shrink-0">
+                    <span className="text-[13.5px] text-[#536471] dark:text-[#71767b] font-normal hover:underline shrink-0">
                       {formatTimeCompact(post.created_at)}
                     </span>
 
@@ -1021,7 +1021,7 @@ export function Feed({
                       </div>
                     </div>
                   ) : (
-                    <div className="text-[16px] sm:text-[16.5px] md:text-[17px] text-[#0f1419] dark:text-[#e7e9ea] leading-[1.5] whitespace-pre-wrap font-normal max-w-2xl">
+                    <div className="text-[15px] leading-[20px] text-[#0f1419] dark:text-[#e7e9ea] whitespace-pre-wrap font-normal max-w-2xl">
                       <RichTextRenderer content={post.content} />
                     </div>
                   )}
