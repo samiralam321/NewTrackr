@@ -41,6 +41,20 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
     }
   }
 
+  const resetForm = () => {
+    setContent("")
+    setImageFile(null)
+    setAttachedSnippet(null)
+    setShowEmojis(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleClose = () => {
+    if (isSubmitting) return
+    resetForm()
+    setIsOpen(false)
+  }
+
   const handlePost = async () => {
     if (!content.trim() && !imageFile && !attachedSnippet) return
 
@@ -133,11 +147,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
       }
 
       // Reset form
-      setContent("")
-      setImageFile(null)
-      setAttachedSnippet(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      
+      resetForm()
       setIsOpen(false)
       router.refresh()
     } catch (error) {
@@ -160,7 +170,10 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
     <>
       {/* Floating Action Button (FAB) - Circular Twitter/X Style */}
       <button 
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          resetForm()
+          setIsOpen(true)
+        }}
         className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] right-4 w-14 h-14 bg-violet-600 hover:bg-violet-700 text-white rounded-full flex items-center justify-center shadow-lg shadow-violet-500/35 active:scale-95 transition-all duration-200 z-40"
         aria-label="New post"
       >
@@ -174,7 +187,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
           {/* Top Bar: Close on left, Character counter + Post pill on right */}
           <div className="flex items-center justify-between px-3 h-14 border-b border-gray-100 dark:border-neutral-900 bg-white dark:bg-black shrink-0">
             <button 
-              onClick={() => setIsOpen(false)} 
+              onClick={handleClose} 
               className="w-9 h-9 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 active:scale-90 transition-all"
               aria-label="Close"
             >

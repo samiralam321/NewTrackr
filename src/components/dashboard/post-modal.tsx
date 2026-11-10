@@ -43,8 +43,13 @@ const EMOJI_CATEGORIES = [
   }
 ]
 
-export function PostModal({ user, profile }: PostModalProps) {
-  const [isOpen, setIsOpen] = useState(false)
+interface PostModalDialogProps {
+  user?: any
+  profile?: any
+  onClose: () => void
+}
+
+function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
   const [content, setContent] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
@@ -71,35 +76,76 @@ export function PostModal({ user, profile }: PostModalProps) {
   const emojiPickerRef = useRef<HTMLDivElement>(null)
   const mentionDropdownRef = useRef<HTMLDivElement>(null)
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
+  const imagePreviewRef = useRef<string | null>(null)
+  imagePreviewRef.current = imagePreview
+
   const supabase = createClient()
 
-  // Listen for open-post-modal custom event from sidebar Post button
-  useEffect(() => {
-    const handleOpen = () => {
-      setIsOpen(true)
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.focus()
-        }
-      }, 100)
+  // Reset all temporary composer form state and revoke preview URLs
+  const resetForm = () => {
+    setContent("")
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview)
     }
+    setImageFile(null)
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+    setAttachedSnippet(null)
+    setTrackedMentions([])
+    setMentionQuery(null)
+    setMentionIndex(-1)
+    setMentionResults([])
+    setShowEmojiPicker(false)
+    setIsCodeModalOpen(false)
+    setStatusMessage(null)
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current)
+    }
+  }
 
-    window.addEventListener('open-post-modal', handleOpen)
-    return () => window.removeEventListener('open-post-modal', handleOpen)
+  // Gracefully close modal, resetting all temporary composer state
+  const handleClose = () => {
+    if (isSubmitting) return
+    resetForm()
+    onClose()
+  }
+
+  // Auto-focus on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus()
+      }
+    }, 100)
+    return () => clearTimeout(timer)
   }, [])
 
-  // Close on Escape key
+  // Close on Escape key (unless code snippet modal is open)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape' && !isCodeModalOpen) {
         handleClose()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen])
+  }, [isCodeModalOpen, isSubmitting])
 
-  // Close emoji picker on outside click
+  // Cleanup on unmount (revoke object URL and clear debounce timer)
+  useEffect(() => {
+    return () => {
+      if (imagePreviewRef.current) {
+        URL.revokeObjectURL(imagePreviewRef.current)
+      }
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current)
+      }
+    }
+  }, [])
+
+  // Close emoji picker and mention dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
@@ -122,14 +168,7 @@ export function PostModal({ user, profile }: PostModalProps) {
       const calculatedHeight = Math.max(textareaRef.current.scrollHeight, minHeight)
       textareaRef.current.style.height = `${calculatedHeight}px`
     }
-  }, [content, imagePreview, attachedSnippet, isOpen])
-
-  const handleClose = () => {
-    if (isSubmitting) return
-    setIsOpen(false)
-    setShowEmojiPicker(false)
-    setMentionQuery(null)
-  }
+  }, [content, imagePreview, attachedSnippet])
 
   // Handle Text change and detect @mention trigger
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -292,6 +331,10 @@ export function PostModal({ user, profile }: PostModalProps) {
         return
       }
 
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview)
+      }
+
       setImageFile(file)
       setImagePreview(URL.createObjectURL(file))
     }
@@ -299,7 +342,9 @@ export function PostModal({ user, profile }: PostModalProps) {
 
   const removeImage = () => {
     setImageFile(null)
-    if (imagePreview) URL.revokeObjectURL(imagePreview)
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview)
+    }
     setImagePreview(null)
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
@@ -417,13 +462,8 @@ export function PostModal({ user, profile }: PostModalProps) {
       }
 
       // Reset form and close modal
-      setContent("")
-      removeImage()
-      setAttachedSnippet(null)
-      setTrackedMentions([])
-      setShowEmojiPicker(false)
-      setMentionQuery(null)
-      setIsOpen(false)
+      resetForm()
+      onClose()
     } catch (err: any) {
       console.error("Posting error:", err)
       setStatusMessage({ text: err.message || "Failed to post progress", type: 'error' })
@@ -433,8 +473,6 @@ export function PostModal({ user, profile }: PostModalProps) {
       setIsUploadingImage(false)
     }
   }
-
-  if (!isOpen) return null
 
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : 'Samir'
 
@@ -446,298 +484,326 @@ export function PostModal({ user, profile }: PostModalProps) {
           if (e.target === e.currentTarget && !isCodeModalOpen) handleClose()
         }}
       >
-      <div 
-        className="bg-white dark:bg-[#000000] sm:rounded-2xl border border-transparent sm:border-[#eff3f4] dark:sm:border-[#2f3336] shadow-2xl w-full max-w-[600px] flex flex-col overflow-hidden max-h-screen sm:max-h-[90vh] animate-in zoom-in-95 duration-200 relative"
-      >
-        {/* Top Header Row: Close button */}
-        <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336]">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-[#0f1419] dark:text-[#e7e9ea] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] transition-colors cursor-pointer"
-            title="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Status Message Alert */}
-        {statusMessage && (
-          <div className={`px-4 py-2 text-xs font-semibold flex items-center gap-2 ${
-            statusMessage.type === 'success' 
-              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' 
-              : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
-          }`}>
-            {statusMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-            <span>{statusMessage.text}</span>
+        <div 
+          className="bg-white dark:bg-[#000000] sm:rounded-2xl border border-transparent sm:border-[#eff3f4] dark:sm:border-[#2f3336] shadow-2xl w-full max-w-[600px] flex flex-col overflow-hidden max-h-screen sm:max-h-[90vh] animate-in zoom-in-95 duration-200 relative"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Top Header Row: Close button */}
+          <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336]">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-[#0f1419] dark:text-[#e7e9ea] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        )}
 
-        {/* Main Content Area: Avatar + Text Input */}
-        <div className="flex-1 overflow-y-auto p-4 flex items-start gap-3 relative min-h-[70px]">
-          <img
-            src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`}
-            alt="You"
-            width={40}
-            height={40}
-            className="w-10 h-10 rounded-full object-cover shrink-0 mt-0.5"
-          />
+          {/* Status Message Alert */}
+          {statusMessage && (
+            <div className={`px-4 py-2 text-xs font-semibold flex items-center gap-2 ${
+              statusMessage.type === 'success' 
+                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' 
+                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+            }`}>
+              {statusMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+              <span>{statusMessage.text}</span>
+            </div>
+          )}
 
-          <div className="flex-1 min-w-0 relative">
-            <textarea
-              ref={textareaRef}
-              rows={(imagePreview || attachedSnippet) ? 1 : 2}
-              value={content}
-              onChange={handleTextChange}
-              placeholder={`What's on your mind, ${firstName}?`}
-              className={`w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-snug overflow-hidden transition-[height] duration-75 ${
-                (imagePreview || attachedSnippet) ? 'min-h-[36px]' : 'min-h-[64px]'
-              }`}
+          {/* Main Content Area: Avatar + Text Input */}
+          <div className="flex-1 overflow-y-auto p-4 flex items-start gap-3 relative min-h-[70px]">
+            <img
+              src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`}
+              alt="You"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-full object-cover shrink-0 mt-0.5"
             />
 
-            {/* User @Mention Autocomplete Dropdown Popover */}
-            {mentionQuery !== null && (
-              <div 
-                ref={mentionDropdownRef}
-                style={{ top: `${getMentionTopOffset()}px` }}
-                className="absolute left-0 w-80 max-h-60 overflow-y-auto no-scrollbar bg-white dark:bg-[#1A1A24] rounded-2xl shadow-2xl border border-gray-100 dark:border-[#2D2B3B] py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
-              >
-                <div className="px-3 py-1 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                  Mention someone
-                </div>
-                {isSearchingUsers ? (
-                  <div className="px-3 py-3 text-xs text-gray-400 flex items-center gap-2">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-500" />
-                    <span>Searching students...</span>
-                  </div>
-                ) : mentionResults.length === 0 ? (
-                  <div className="px-3 py-3 text-xs text-gray-400">
-                    No students found matching "@{mentionQuery}"
-                  </div>
-                ) : (
-                  mentionResults.map((u) => {
-                    const handle = getUserHandle(u.full_name)
-                    const badgeLevel = getBadgeLevel(u.consistency_score, u.full_name)
-                    return (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => handleSelectMention(u)}
-                        className="w-full px-3 py-2 text-left hover:bg-violet-50/70 dark:hover:bg-violet-950/30 flex items-center gap-2.5 transition-colors cursor-pointer group"
-                      >
-                        <img
-                          src={u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name || 'User')}&background=7C3AED&color=fff&size=60`}
-                          alt=""
-                          className="w-7 h-7 rounded-full object-cover shrink-0"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[13px] font-bold text-gray-900 dark:text-white flex items-center gap-1 truncate group-hover:text-violet-600 transition-colors">
-                            <span className="truncate">{u.full_name}</span>
-                            <VerifiedBadge level={badgeLevel} nameOrHandle={u.full_name} />
-                          </div>
-                          <div className="text-[11px] text-gray-400 truncate">
-                            {handle}
-                          </div>
-                        </div>
-                      </button>
-                    )
-                  })
-                )}
-              </div>
-            )}
+            <div className="flex-1 min-w-0 relative">
+              <textarea
+                ref={textareaRef}
+                rows={(imagePreview || attachedSnippet) ? 1 : 2}
+                value={content}
+                onChange={handleTextChange}
+                placeholder={`What's on your mind, ${firstName}?`}
+                className={`w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-snug overflow-hidden transition-[height] duration-75 ${
+                  (imagePreview || attachedSnippet) ? 'min-h-[36px]' : 'min-h-[64px]'
+                }`}
+              />
 
-            {/* Image Preview with remove button */}
-            {imagePreview && (
-              <div className="relative mt-2 rounded-2xl overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] bg-black/[0.02] dark:bg-white/[0.02] max-h-60 w-fit max-w-full inline-block">
-                <img
-                  src={imagePreview}
-                  alt="Upload preview"
-                  className="max-h-60 w-auto max-w-full rounded-2xl object-contain block"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center shadow-md transition-all cursor-pointer"
-                  title="Remove image"
+              {/* User @Mention Autocomplete Dropdown Popover */}
+              {mentionQuery !== null && (
+                <div 
+                  ref={mentionDropdownRef}
+                  style={{ top: `${getMentionTopOffset()}px` }}
+                  className="absolute left-0 w-80 max-h-60 overflow-y-auto no-scrollbar bg-white dark:bg-[#1A1A24] rounded-2xl shadow-2xl border border-gray-100 dark:border-[#2D2B3B] py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
                 >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-
-            {/* Attached Code Snippet Card */}
-            {attachedSnippet && (
-              <div className="mt-2.5 mb-1.5 rounded-2xl border border-violet-200/80 dark:border-violet-900/60 bg-gradient-to-r from-violet-50/80 via-purple-50/40 to-indigo-50/60 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-indigo-950/20 p-2.5 sm:p-3 flex items-center justify-between gap-3 shadow-xs">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                    <Code2 className="w-5 h-5" />
+                  <div className="px-3 py-1 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                    Mention someone
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-[13px] text-gray-900 dark:text-gray-100 truncate">
-                        {attachedSnippet.title || `${LANGUAGE_LABELS[attachedSnippet.language] || attachedSnippet.language.toUpperCase()} Snippet`}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 uppercase">
-                        {LANGUAGE_LABELS[attachedSnippet.language] || attachedSnippet.language}
-                      </span>
-                      <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                        {attachedSnippet.code.split('\n').length} {attachedSnippet.code.split('\n').length === 1 ? 'line' : 'lines'}
-                      </span>
+                  {isSearchingUsers ? (
+                    <div className="px-3 py-3 text-xs text-gray-400 flex items-center gap-2">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-500" />
+                      <span>Searching students...</span>
                     </div>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 font-mono truncate max-w-md mt-0.5">
-                      {attachedSnippet.code.split('\n')[0] || '// Empty snippet'}
-                    </p>
-                  </div>
+                  ) : mentionResults.length === 0 ? (
+                    <div className="px-3 py-3 text-xs text-gray-400">
+                      No students found matching "@{mentionQuery}"
+                    </div>
+                  ) : (
+                    mentionResults.map((u) => {
+                      const handle = getUserHandle(u.full_name)
+                      const badgeLevel = getBadgeLevel(u.consistency_score, u.full_name)
+                      return (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => handleSelectMention(u)}
+                          className="w-full px-3 py-2 text-left hover:bg-violet-50/70 dark:hover:bg-violet-950/30 flex items-center gap-2.5 transition-colors cursor-pointer group"
+                        >
+                          <img
+                            src={u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name || 'User')}&background=7C3AED&color=fff&size=60`}
+                            alt=""
+                            className="w-7 h-7 rounded-full object-cover shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-bold text-gray-900 dark:text-white flex items-center gap-1 truncate group-hover:text-violet-600 transition-colors">
+                              <span className="truncate">{u.full_name}</span>
+                              <VerifiedBadge level={badgeLevel} nameOrHandle={u.full_name} />
+                            </div>
+                            <div className="text-[11px] text-gray-400 truncate">
+                              {handle}
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })
+                  )}
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
+              )}
+
+              {/* Image Preview with remove button */}
+              {imagePreview && (
+                <div className="relative mt-2 rounded-2xl overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] bg-black/[0.02] dark:bg-white/[0.02] max-h-60 w-fit max-w-full inline-block">
+                  <img
+                    src={imagePreview}
+                    alt="Upload preview"
+                    className="max-h-60 w-auto max-w-full rounded-2xl object-contain block"
+                  />
                   <button
                     type="button"
-                    onClick={() => setIsCodeModalOpen(true)}
-                    className="px-2.5 py-1 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-950/60 rounded-lg transition-colors cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAttachedSnippet(null)}
-                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg transition-colors cursor-pointer"
-                    title="Remove snippet"
+                    onClick={removeImage}
+                    className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center shadow-md transition-all cursor-pointer"
+                    title="Remove image"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Bottom Toolbar: Attachments + Post Button */}
-        <div className="px-4 py-3 border-t border-[#eff3f4] dark:border-[#2f3336] flex items-center justify-between bg-white dark:bg-[#000000]">
-          {/* Action Icons */}
-          <div className="flex items-center gap-1 text-[#7C3AED] relative">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/jpg"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer"
-              title="Add image"
-            >
-              <ImageIcon className="w-[19px] h-[19px]" />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleTriggerMention}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer"
-              title="Mention a student"
-            >
-              <AtSign className="w-[19px] h-[19px]" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer"
-              title="Add emoji"
-            >
-              <Smile className="w-[19px] h-[19px]" />
-            </button>
-
-            {/* Code Snippet Button (immediately beside Emoji button) */}
-            <button
-              type="button"
-              onClick={() => setIsCodeModalOpen(true)}
-              className={`w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer ${
-                attachedSnippet ? 'bg-violet-100 dark:bg-violet-950/60 ring-1 ring-violet-300 dark:ring-violet-700' : ''
-              }`}
-              title="Add code snippet"
-            >
-              <Code2 className="w-[19px] h-[19px]" />
-            </button>
-
-            {/* Emoji Popover */}
-            {showEmojiPicker && (
-              <div
-                ref={emojiPickerRef}
-                className="absolute left-0 bottom-full mb-2 bg-white dark:bg-[#1A1A24] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl shadow-2xl p-3 w-64 z-50 animate-in fade-in zoom-in-95 duration-150"
-              >
-                <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100 dark:border-[#2D2B3B]">
-                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Quick Emojis</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowEmojiPicker(false)}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <div className="space-y-2.5 max-h-48 overflow-y-auto no-scrollbar">
-                  {EMOJI_CATEGORIES.map((cat) => (
-                    <div key={cat.name}>
-                      <p className="text-[10px] font-semibold text-gray-400 mb-1">{cat.name}</p>
-                      <div className="grid grid-cols-5 gap-1.5">
-                        {cat.emojis.map((emoji) => (
-                          <button
-                            key={emoji}
-                            type="button"
-                            onClick={() => handleInsertEmoji(emoji)}
-                            className="w-8 h-8 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-950/40 text-base flex items-center justify-center transition-transform active:scale-125 select-none cursor-pointer"
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right: Submit Button */}
-          <div className="flex items-center gap-3">
-            {content.length > 0 && (
-              <span className={`text-[12px] font-medium ${
-                content.length > 280 ? 'text-rose-500' : 'text-[#536471] dark:text-[#71767b]'
-              }`}>
-                {280 - content.length}
-              </span>
-            )}
-
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting || (!content.trim() && !imageFile && !attachedSnippet)}
-              className="px-5 py-2 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-[15px] disabled:opacity-50 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-none"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Posting...</span>
-                </>
-              ) : (
-                <span>Post</span>
               )}
-            </button>
+
+              {/* Attached Code Snippet Card */}
+              {attachedSnippet && (
+                <div className="mt-2.5 mb-1.5 rounded-2xl border border-violet-200/80 dark:border-violet-900/60 bg-gradient-to-r from-violet-50/80 via-purple-50/40 to-indigo-50/60 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-indigo-950/20 p-2.5 sm:p-3 flex items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <Code2 className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-[13px] text-gray-900 dark:text-gray-100 truncate">
+                          {attachedSnippet.title || `${LANGUAGE_LABELS[attachedSnippet.language] || attachedSnippet.language.toUpperCase()} Snippet`}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 uppercase">
+                          {LANGUAGE_LABELS[attachedSnippet.language] || attachedSnippet.language}
+                        </span>
+                        <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                          {attachedSnippet.code.split('\n').length} {attachedSnippet.code.split('\n').length === 1 ? 'line' : 'lines'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 font-mono truncate max-w-md mt-0.5">
+                        {attachedSnippet.code.split('\n')[0] || '// Empty snippet'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsCodeModalOpen(true)}
+                      className="px-2.5 py-1 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-950/60 rounded-lg transition-colors cursor-pointer"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAttachedSnippet(null)}
+                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg transition-colors cursor-pointer"
+                      title="Remove snippet"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Toolbar: Attachments + Post Button */}
+          <div className="px-4 py-3 border-t border-[#eff3f4] dark:border-[#2f3336] flex items-center justify-between bg-white dark:bg-[#000000]">
+            {/* Action Icons */}
+            <div className="flex items-center gap-1 text-[#7C3AED] relative">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/jpg"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer"
+                title="Add image"
+              >
+                <ImageIcon className="w-[19px] h-[19px]" />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleTriggerMention}
+                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer"
+                title="Mention a student"
+              >
+                <AtSign className="w-[19px] h-[19px]" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer"
+                title="Add emoji"
+              >
+                <Smile className="w-[19px] h-[19px]" />
+              </button>
+
+              {/* Code Snippet Button (immediately beside Emoji button) */}
+              <button
+                type="button"
+                onClick={() => setIsCodeModalOpen(true)}
+                className={`w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer ${
+                  attachedSnippet ? 'bg-violet-100 dark:bg-violet-950/60 ring-1 ring-violet-300 dark:ring-violet-700' : ''
+                }`}
+                title="Add code snippet"
+              >
+                <Code2 className="w-[19px] h-[19px]" />
+              </button>
+
+              {/* Emoji Popover */}
+              {showEmojiPicker && (
+                <div
+                  ref={emojiPickerRef}
+                  className="absolute left-0 bottom-full mb-2 bg-white dark:bg-[#1A1A24] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl shadow-2xl p-3 w-64 z-50 animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100 dark:border-[#2D2B3B]">
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Quick Emojis</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(false)}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="space-y-2.5 max-h-48 overflow-y-auto no-scrollbar">
+                    {EMOJI_CATEGORIES.map((cat) => (
+                      <div key={cat.name}>
+                        <p className="text-[10px] font-semibold text-gray-400 mb-1">{cat.name}</p>
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {cat.emojis.map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => handleInsertEmoji(emoji)}
+                              className="w-8 h-8 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-950/40 text-base flex items-center justify-center transition-transform active:scale-125 select-none cursor-pointer"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right: Submit Button */}
+            <div className="flex items-center gap-3">
+              {content.length > 0 && (
+                <span className={`text-[12px] font-medium ${
+                  content.length > 280 ? 'text-rose-500' : 'text-[#536471] dark:text-[#71767b]'
+                }`}>
+                  {280 - content.length}
+                </span>
+              )}
+
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting || (!content.trim() && !imageFile && !attachedSnippet)}
+                className="px-5 py-2 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-[15px] disabled:opacity-50 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-none"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Posting...</span>
+                  </>
+                ) : (
+                  <span>Post</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    {/* Code Snippet Modal */}
-    <CodeSnippetModal
-      open={isCodeModalOpen}
-      onOpenChange={setIsCodeModalOpen}
-      initialData={attachedSnippet}
-      onSaveSnippet={(snippet) => setAttachedSnippet(snippet)}
+      {/* Code Snippet Modal */}
+      <CodeSnippetModal
+        open={isCodeModalOpen}
+        onOpenChange={setIsCodeModalOpen}
+        initialData={attachedSnippet}
+        onSaveSnippet={(snippet) => setAttachedSnippet(snippet)}
+      />
+    </>
+  )
+}
+
+export function PostModal({ user, profile }: PostModalProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [modalKey, setModalKey] = useState(0)
+
+  // Listen for open-post-modal custom event from sidebar Post button
+  useEffect(() => {
+    const handleOpen = () => {
+      setModalKey(prev => prev + 1)
+      setIsOpen(true)
+    }
+
+    window.addEventListener('open-post-modal', handleOpen)
+    return () => window.removeEventListener('open-post-modal', handleOpen)
+  }, [])
+
+  if (!isOpen) return null
+
+  return (
+    <PostModalDialog
+      key={modalKey}
+      user={user}
+      profile={profile}
+      onClose={() => setIsOpen(false)}
     />
-  </>
-)
+  )
 }
