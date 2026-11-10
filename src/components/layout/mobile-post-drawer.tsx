@@ -3,7 +3,7 @@
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
-import { X, Image as ImageIcon, Loader2, PenLine, Smile, ChevronDown, Check } from "lucide-react"
+import { X, Image as ImageIcon, Loader2, PenLine, Smile, ChevronDown, Check, AtSign } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter, usePathname } from "next/navigation"
 import { updateUserStreakAndBadge } from "@/lib/utils/streak"
@@ -269,7 +269,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
                 type="file" 
                 ref={fileInputRef} 
                 onChange={(e) => setImageFile(e.target.files?.[0] || null)} 
-                accept="image/*" 
+                accept="image/jpeg,image/png,image/webp,image/jpg" 
                 className="hidden" 
               />
               <button 
@@ -282,7 +282,17 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
                 <ImageIcon className="w-4.5 h-4.5 stroke-[2.2]" />
               </button>
               
-              <button 
+                            <button 
+                type="button"
+                onClick={() => setContent(prev => prev + '@')}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-100/50 dark:hover:bg-violet-950/40 active:scale-90 transition-all"
+                title="Tag Person"
+                aria-label="Tag person"
+              >
+                <AtSign className="w-4.5 h-4.5 stroke-[2.2]" />
+              </button>
+
+<button 
                 type="button"
                 onClick={() => setShowEmojis(!showEmojis)}
                 className={`w-9 h-9 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-100/50 dark:hover:bg-violet-950/40 active:scale-90 transition-all ${showEmojis ? 'bg-violet-100 dark:bg-violet-950/60 ring-1 ring-violet-500' : ''}`}

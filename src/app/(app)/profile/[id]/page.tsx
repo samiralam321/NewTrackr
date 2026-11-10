@@ -10,12 +10,28 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   
   let user = null; try { const { data } = await supabase.auth.getUser(); user = data?.user || null; } catch { user = null; }
 
-  // Fetch the profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', resolvedParams.id)
-    .maybeSingle()
+  // Fetch the profile by UUID or handle/name
+  const rawId = decodeURIComponent(resolvedParams.id).trim()
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId)
+
+  let profile = null
+  if (isUuid) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', rawId)
+      .maybeSingle()
+    profile = data
+  } else {
+    const cleanSearch = rawId.replace(/^@/, '').replace(/_/g, ' ')
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .ilike('full_name', `%${cleanSearch}%`)
+      .limit(1)
+      .maybeSingle()
+    profile = data
+  }
 
   if (!profile) {
     notFound()
