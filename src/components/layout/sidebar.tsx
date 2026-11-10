@@ -248,20 +248,24 @@ export function Sidebar({ profile }: { profile?: any }) {
     { name: 'Notifications', href: '/notifications', icon: Bell },
   ]
 
-  const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-  
-  let displayStreak = profileState?.consistency_score || 0
-  if (profileState?.last_post_date) {
-    const todayStr = new Date().toISOString().split('T')[0]
-    const [currY, currM, currD] = todayStr.split('-').map(Number)
-    const [lastY, lastM, lastD] = String(profileState.last_post_date).split('-').map(Number)
-    const current = Date.UTC(currY, currM - 1, currD)
-    const last = Date.UTC(lastY, lastM - 1, lastD)
-    const diffDays = Math.round((current - last) / (1000 * 60 * 60 * 24))
-    
-    // If the last post is older than yesterday in UTC, the streak is broken today
-    if (diffDays > 1) {
-      displayStreak = 0
+  const handlePostClick = () => {
+    if (pathname !== '/dashboard') {
+      router.push('/dashboard')
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('focus-post-composer'))
+        const ta = document.querySelector('textarea')
+        if (ta) {
+          ta.focus()
+          ta.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 300)
+    } else {
+      window.dispatchEvent(new CustomEvent('focus-post-composer'))
+      const ta = document.querySelector('textarea')
+      if (ta) {
+        ta.focus()
+        ta.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
     }
   }
 
@@ -334,35 +338,15 @@ export function Sidebar({ profile }: { profile?: any }) {
         </div>
       </nav>
 
-      {/* Streak Tracker - Compact & Minimal */}
-      <div className="my-1.5 p-2.5 rounded-2xl bg-[#f7f9f9] dark:bg-[#16181c] border border-[#eff3f4] dark:border-[#2f3336] shrink-0">
-        <div className="flex items-center justify-between mb-1.5">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">{displayStreak > 0 ? '🔥' : '⏳'}</span>
-            <div>
-              <p className="text-[13px] font-bold text-[#0f1419] dark:text-[#e7e9ea]">
-                {displayStreak} Day Streak
-              </p>
-              <p className="text-[10.5px] text-[#536471] dark:text-[#71767b]">Keep learning daily</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-between items-center px-1">
-          {days.map((day, i) => (
-            <div key={i} className="flex flex-col items-center gap-0.5">
-              <span className="text-[8.5px] font-semibold text-gray-400">{day}</span>
-              {activeDays[i] ? (
-                <div className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
-                  <CheckCircle2 className="w-2.5 h-2.5 stroke-[3]" />
-                </div>
-              ) : (
-                <div className="w-4 h-4 rounded-full bg-gray-200 dark:bg-[#25282c] flex items-center justify-center">
-                  <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-600"></div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+      {/* Twitter-style Large "Post" Button */}
+      <div className="my-3 w-full pr-1">
+        <button
+          type="button"
+          onClick={handlePostClick}
+          className="w-full h-[52px] rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-[17px] shadow-md shadow-violet-500/25 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer select-none"
+        >
+          Post
+        </button>
       </div>
 
       {/* Fixed Bottom Profile & Logout Controls */}

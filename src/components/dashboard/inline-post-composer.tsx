@@ -88,6 +88,19 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  // Listen for sidebar Post button trigger to focus composer
+  useEffect(() => {
+    const handleFocusTrigger = () => {
+      if (textareaRef.current) {
+        textareaRef.current.focus()
+        textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        setIsFocused(true)
+      }
+    }
+    window.addEventListener('focus-post-composer', handleFocusTrigger)
+    return () => window.removeEventListener('focus-post-composer', handleFocusTrigger)
+  }, [])
+
   // Debounced search for registered users when @ is typed
   useEffect(() => {
     if (mentionQuery === null) {
