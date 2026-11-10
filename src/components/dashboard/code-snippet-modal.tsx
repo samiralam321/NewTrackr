@@ -315,16 +315,21 @@ export function CodeSnippetModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#12101A] flex items-center justify-between gap-3 shrink-0">
-          {/* Aesthetic Slogan */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-violet-500/[0.08] via-fuchsia-500/[0.08] to-indigo-500/[0.08] dark:from-violet-500/15 dark:via-fuchsia-500/15 dark:to-indigo-500/15 border border-violet-500/20 dark:border-violet-500/30 shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-violet-500 dark:text-violet-400 shrink-0" />
-            <span className="text-[11px] sm:text-xs font-semibold tracking-wider bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 dark:from-violet-300 dark:via-fuchsia-300 dark:to-indigo-300 bg-clip-text text-transparent font-mono select-none">
-              Learn. Code. Share. Repeat.
-            </span>
+        <div className="relative px-5 py-3 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#12101A] flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 shrink-0">
+          {/* Centered Minimal Tagline */}
+          <div className="w-full sm:w-auto sm:absolute sm:inset-0 sm:flex sm:items-center sm:justify-center text-center pointer-events-none order-2 sm:order-1">
+            <p className="text-[11.5px] sm:text-xs font-medium text-gray-400 dark:text-gray-500 tracking-normal select-none inline-flex items-center justify-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-violet-500/80 dark:text-violet-400/80 shrink-0" />
+              <span>
+                Good code deserves to be <span className="text-violet-600 dark:text-violet-400 font-semibold">shared.</span>
+              </span>
+            </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="hidden sm:block w-20" aria-hidden="true" />
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2.5 justify-end w-full sm:w-auto relative z-10 shrink-0 order-1 sm:order-2">
             <Button
               type="button"
               variant="ghost"
