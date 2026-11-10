@@ -207,6 +207,14 @@ export function PostModal({ user, profile }: PostModalProps) {
     }, 10)
   }
 
+  // Calculate top offset for @mention autocomplete dropdown so it drops right below current typing line
+  const getMentionTopOffset = () => {
+    if (mentionIndex <= 0) return 44
+    const textBeforeMention = content.slice(0, mentionIndex)
+    const lines = textBeforeMention.split('\n').length
+    return Math.min(lines * 28 + 14, 180)
+  }
+
   // Insert @ trigger manually
   const handleTriggerMention = () => {
     if (!textareaRef.current) return
@@ -449,7 +457,7 @@ export function PostModal({ user, profile }: PostModalProps) {
         )}
 
         {/* Main Content Area: Avatar + Text Input */}
-        <div className="flex-1 overflow-y-auto p-4 flex items-start gap-3 relative min-h-[160px]">
+        <div className="flex-1 overflow-y-auto p-4 flex items-start gap-3 relative min-h-[220px]">
           <img
             src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`}
             alt="You"
@@ -472,7 +480,8 @@ export function PostModal({ user, profile }: PostModalProps) {
             {mentionQuery !== null && (
               <div 
                 ref={mentionDropdownRef}
-                className="absolute left-0 bottom-full mb-2 w-72 bg-white dark:bg-[#1A1A24] rounded-2xl shadow-2xl border border-gray-100 dark:border-[#2D2B3B] py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                style={{ top: `${getMentionTopOffset()}px` }}
+                className="absolute left-0 w-80 max-h-60 overflow-y-auto no-scrollbar bg-white dark:bg-[#1A1A24] rounded-2xl shadow-2xl border border-gray-100 dark:border-[#2D2B3B] py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
               >
                 <div className="px-3 py-1 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                   Mention someone
