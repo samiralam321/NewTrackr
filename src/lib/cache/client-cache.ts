@@ -120,4 +120,17 @@ export function invalidateCache(prefix: string): void {
 export function clearTrackrClientCaches(): void {
   memoryStore.clear()
   inFlightPromises.clear()
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.clear()
+      const keysToRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && k.startsWith('trackr_notifications_')) {
+          keysToRemove.push(k)
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k))
+    } catch {}
+  }
 }

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { Home, Compass, Bell, Mail } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { scrollToFeedTop } from "@/lib/utils/scroll"
+import { prefetchNotifications } from "@/lib/notifications/notifications-service"
 
 export function MobileBottomNav({ profile }: { profile?: any }) {
   const pathname = usePathname()
@@ -52,15 +53,18 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
     }
   }, [])
 
-  // Live unread notifications tracker
+  // Clear unread badge immediately when user views notifications
+  useEffect(() => {
+    if (pathname === '/notifications') {
+      setUnreadCount(0)
+    }
+  }, [pathname])
+
+  // Live unread notifications tracker (stable channel, doesn't bounce on route changes)
   useEffect(() => {
     if (!profile?.id) return
 
     const fetchUnread = async () => {
-      if (pathname === '/notifications') {
-        setUnreadCount(0)
-        return
-      }
       const { count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
@@ -70,6 +74,11 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
     }
 
     fetchUnread()
+
+    // Warm up notifications cache on idle
+    const prefetchTimer = setTimeout(() => {
+      prefetchNotifications(profile.id)
+    }, 500)
 
     const channel = supabase
       .channel(`mobile-nav-notifications:${profile.id}`)
@@ -82,9 +91,10 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
       .subscribe()
 
     return () => {
+      clearTimeout(prefetchTimer)
       supabase.removeChannel(channel)
     }
-  }, [profile?.id, pathname])
+  }, [profile?.id])
 
   if (hideNav) return null
 
@@ -112,7 +122,14 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
             href={item.href}
             prefetch={true}
             onClick={(e) => handleNavClick(e, item.href)}
-            onTouchStart={() => { try { router.prefetch(item.href) } catch {} }}
+            onTouchStart={() => { 
+              try { 
+                router.prefetch(item.href) 
+                if (item.href === '/notifications' && profile?.id) {
+                  prefetchNotifications(profile.id)
+                }
+              } catch {} 
+            }}
             className="flex flex-col items-center justify-center min-w-[56px] h-12 relative active:scale-90 transition-transform"
             aria-label={item.name}
           >

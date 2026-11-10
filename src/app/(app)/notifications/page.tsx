@@ -1,79 +1,88 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Bell, Heart, MessageCircle, UserPlus, AtSign, ChevronLeft, Repeat2, PenLine } from "lucide-react"
 import Link from "next/link"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
-import { getCacheEntry, setCacheEntry } from "@/lib/cache/client-cache"
-
-type Notification = {
-  id: string
-  user_id: string
-  actor_id: string
-  type: 'like' | 'comment' | 'follow' | 'mention' | 'badge' | 'repost' | 'quote'
-  post_id?: string
-  is_read: boolean
-  created_at: string
-  actor: {
-    full_name: string
-    avatar_url: string
-  }
-}
-
-const NOTIFS_CACHE_KEY = 'user_notifications_cache'
+import { formatTimeCompact } from "@/lib/utils/date"
+import { 
+  Notification, 
+  getCachedNotifications, 
+  fetchNotifications, 
+  markNotificationsAsRead 
+} from "@/lib/notifications/notifications-service"
 
 export default function NotificationsPage() {
-  const cached = getCacheEntry<Notification[]>(NOTIFS_CACHE_KEY, 60_000)
-  const [notifications, setNotifications] = useState<Notification[]>(() => cached?.data || [])
-  const [loading, setLoading] = useState(!cached)
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    return getCachedNotifications() || []
+  })
+  const [loading, setLoading] = useState(() => {
+    const cached = getCachedNotifications()
+    return !cached || cached.length === 0
+  })
   const supabase = createClient()
+  const activeUserIdRef = useRef<string | null>(null)
 
   useEffect(() => {
-    fetchNotifications(!cached)
+    let isMounted = true
 
-    const channel = supabase
-      .channel('notifications-db')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => {
-        fetchNotifications(false)
-      })
-      .subscribe()
+    const load = async () => {
+      const res = await fetchNotifications(activeUserIdRef.current)
+      if (!isMounted) return
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
+      if (res?.data) {
+        activeUserIdRef.current = res.userId
+        setNotifications(res.data)
+        setLoading(false)
 
-  const fetchNotifications = async (showLoading = true) => {
-    const { data: userData } = await supabase.auth.getUser()
-    if (!userData.user) return
-
-    if (showLoading && !notifications.length) {
-      setLoading(true)
-    }
-
-    const { data, error } = await supabase
-      .from('notifications')
-      .select(`
-        *,
-        actor:profiles!notifications_actor_id_fkey(full_name, avatar_url, consistency_score)
-      `)
-      .eq('user_id', userData.user.id)
-      .order('created_at', { ascending: false })
-
-    if (data && !error) {
-      setNotifications(data as any)
-      setCacheEntry(NOTIFS_CACHE_KEY, data, userData.user.id)
-      
-      // Mark as read
-      const unreadIds = data.filter(n => !n.is_read).map(n => n.id)
-      if (unreadIds.length > 0) {
-        await supabase.from('notifications').update({ is_read: true }).in('id', unreadIds)
+        // Mark unread as read asynchronously in background without blocking UI
+        const unreadIds = res.data.filter(n => !n.is_read).map(n => n.id)
+        if (unreadIds.length > 0) {
+          markNotificationsAsRead(unreadIds)
+        }
+      } else {
+        setLoading(false)
       }
     }
-    setLoading(false)
-  }
+
+    load()
+
+    // Realtime listener scoped specifically to the current user
+    const setupRealtime = async () => {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const currentUserId = sessionData.session?.user?.id || activeUserIdRef.current
+      if (!currentUserId || !isMounted) return null
+
+      const channel = supabase
+        .channel(`notifications-user-${currentUserId}`)
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'notifications',
+          filter: `user_id=eq.${currentUserId}`
+        }, () => {
+          fetchNotifications(currentUserId).then(res => {
+            if (res?.data && isMounted) {
+              setNotifications(res.data)
+            }
+          })
+        })
+        .subscribe()
+
+      return channel
+    }
+
+    const channelPromise = setupRealtime()
+
+    return () => {
+      isMounted = false
+      channelPromise.then(channel => {
+        if (channel) supabase.removeChannel(channel)
+      })
+    }
+  }, [])
 
   const getIcon = (n: Notification) => {
     if (n.type === 'badge' as any) {
@@ -199,19 +208,29 @@ export default function NotificationsPage() {
                 <div className="mt-1 flex-shrink-0">
                   {getIcon(notification)}
                 </div>
-                <div className="flex-1">
-                  <Link href={`/profile/${notification.actor_id}`} prefetch={true} className="flex items-center gap-2 mb-1.5">
-                    <img 
-                      src={notification.actor?.avatar_url || `https://ui-avatars.com/api/?name=${notification.actor?.full_name || 'User'}&background=7C3AED&color=fff`} 
-                      alt="" 
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {getMessage(notification)}
-                    </p>
-                  </Link>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <Link href={`/profile/${notification.actor_id}`} prefetch={true} className="shrink-0">
+                      <img 
+                        src={notification.actor?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(notification.actor?.full_name || 'User')}&background=7C3AED&color=fff`} 
+                        alt="" 
+                        className="w-6 h-6 rounded-full object-cover hover:opacity-85 transition-opacity"
+                      />
+                    </Link>
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      {notification.post_id && !['badge', 'follow'].includes(notification.type) ? (
+                        <Link href={`/post/${notification.post_id}`} prefetch={true} className="hover:underline">
+                          {getMessage(notification)}
+                        </Link>
+                      ) : (
+                        <Link href={`/profile/${notification.actor_id}`} prefetch={true} className="hover:underline">
+                          {getMessage(notification)}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
                   <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">
-                    {new Date(notification.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    {formatTimeCompact(notification.created_at)}
                   </p>
                 </div>
               </div>

@@ -12,6 +12,7 @@ import { getUserHandle } from "@/lib/utils/user"
 import { InstallButton } from "@/components/pwa/InstallPWA"
 import { clearTrackrClientCaches } from "@/lib/cache/client-cache"
 import { scrollToFeedTop } from "@/lib/utils/scroll"
+import { prefetchNotifications } from "@/lib/notifications/notifications-service"
 
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
@@ -140,14 +141,20 @@ export function Sidebar({ profile }: { profile?: any }) {
     }
   }
 
+  // Instantly clear badges when user navigates to notifications or messages
+  useEffect(() => {
+    if (pathname === '/notifications') {
+      setUnreadCount(0)
+    }
+    if (pathname === '/messages') {
+      setUnreadMessagesCount(0)
+    }
+  }, [pathname])
+
   useEffect(() => {
     if (!profileState?.id) return
 
     const fetchUnread = async () => {
-      if (pathname === '/notifications') {
-        setUnreadCount(0)
-        return
-      }
       const { count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
@@ -157,10 +164,6 @@ export function Sidebar({ profile }: { profile?: any }) {
     }
 
     const fetchUnreadMessages = async () => {
-      if (pathname === '/messages') {
-        setUnreadMessagesCount(0)
-        return
-      }
       const { count } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
@@ -200,6 +203,11 @@ export function Sidebar({ profile }: { profile?: any }) {
     fetchUnreadMessages()
     fetchActiveDays()
 
+    // Warm up notifications in idle time so clicking 'Notifications' opens instantly
+    const prefetchTimer = setTimeout(() => {
+      prefetchNotifications(profileState.id)
+    }, 400)
+
     const channel = supabase
       .channel(`sidebar-updates:${profileState.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => {
@@ -235,9 +243,10 @@ export function Sidebar({ profile }: { profile?: any }) {
       .subscribe()
 
     return () => {
+      clearTimeout(prefetchTimer)
       supabase.removeChannel(channel)
     }
-  }, [profileState?.id, pathname])
+  }, [profileState?.id])
 
   const navItems = [
     { name: 'Home', href: '/dashboard', icon: Home },
@@ -284,8 +293,22 @@ export function Sidebar({ profile }: { profile?: any }) {
               href={item.href}
               prefetch={true}
               onClick={(e) => handleNavClick(e, item.href)}
-              onMouseEnter={() => { try { router.prefetch(item.href) } catch {} }}
-              onTouchStart={() => { try { router.prefetch(item.href) } catch {} }}
+              onMouseEnter={() => { 
+                try { 
+                  router.prefetch(item.href) 
+                  if (item.href === '/notifications' && profileState?.id) {
+                    prefetchNotifications(profileState.id)
+                  }
+                } catch {} 
+              }}
+              onTouchStart={() => { 
+                try { 
+                  router.prefetch(item.href) 
+                  if (item.href === '/notifications' && profileState?.id) {
+                    prefetchNotifications(profileState.id)
+                  }
+                } catch {} 
+              }}
               className={`flex items-center gap-4 px-4.5 py-3 xl:px-5 xl:py-3 rounded-full transition-all duration-150 relative select-none w-fit min-w-[200px] group ${
                 isActive 
                   ? 'text-[#7C3AED] dark:text-[#A78BFA] font-semibold bg-violet-50/70 dark:bg-violet-950/30' 
