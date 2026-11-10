@@ -68,6 +68,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const emojiButtonRef = useRef<HTMLButtonElement>(null)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
   const mentionDropdownRef = useRef<HTMLDivElement>(null)
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
@@ -76,7 +77,12 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
   // Close emoji picker on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+      if (
+        emojiPickerRef.current && 
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        emojiButtonRef.current &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
         setShowEmojiPicker(false)
       }
       if (mentionDropdownRef.current && !mentionDropdownRef.current.contains(event.target as Node)) {
@@ -86,6 +92,49 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  // Position adjustment to prevent emoji picker dropdown from getting clipped by viewport edges
+  useEffect(() => {
+    if (!showEmojiPicker) return
+
+    const adjustPosition = () => {
+      const el = emojiPickerRef.current
+      if (!el) return
+
+      el.style.transform = ''
+      const rect = el.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const padding = 12
+
+      // Check horizontal collision (prevent clipping on small mobile screens)
+      if (rect.right > viewportWidth - padding) {
+        const overflow = rect.right - (viewportWidth - padding)
+        el.style.transform = `translateX(-${overflow}px)`
+      } else if (rect.left < padding) {
+        const underflow = padding - rect.left
+        el.style.transform = `translateX(${underflow}px)`
+      }
+
+      // Check vertical collision (keep within viewport height)
+      const viewportHeight = window.innerHeight
+      if (rect.bottom > viewportHeight - padding) {
+        const spaceBelow = viewportHeight - rect.top - padding
+        if (spaceBelow >= 140) {
+          el.style.maxHeight = `${spaceBelow}px`
+          el.style.overflowY = 'auto'
+        }
+      }
+    }
+
+    const rafId = requestAnimationFrame(adjustPosition)
+    window.addEventListener('resize', adjustPosition)
+    window.addEventListener('scroll', adjustPosition, true)
+    return () => {
+      cancelAnimationFrame(rafId)
+      window.removeEventListener('resize', adjustPosition)
+      window.removeEventListener('scroll', adjustPosition, true)
+    }
+  }, [showEmojiPicker])
 
   // Listen for sidebar Post button trigger to focus composer
   useEffect(() => {
@@ -597,6 +646,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
               <div className="relative">
                 <button
                   type="button"
+                  ref={emojiButtonRef}
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   title="Add emoji"
                   className={`p-2 rounded-full text-[#7C3AED] hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer ${showEmojiPicker ? 'bg-violet-100 dark:bg-violet-950/60' : ''}`}
@@ -608,7 +658,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
                 {showEmojiPicker && (
                   <div
                     ref={emojiPickerRef}
-                    className="absolute left-0 bottom-full mb-2 bg-white dark:bg-[#1A1A24] rounded-2xl shadow-2xl border border-gray-100 dark:border-[#2D2B3B] p-3 w-64 z-50 animate-in fade-in zoom-in-95 duration-150"
+                    className="absolute left-0 top-full mt-2 max-w-[calc(100vw-24px)] bg-white dark:bg-[#1A1A24] rounded-2xl shadow-2xl border border-gray-100 dark:border-[#2D2B3B] p-3 w-64 z-50 animate-in fade-in zoom-in-95 duration-150"
                   >
                     <div className="space-y-2.5">
                       {EMOJI_CATEGORIES.map((category) => (

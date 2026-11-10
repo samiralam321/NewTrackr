@@ -31,6 +31,8 @@ export function QuoteModal({
   const [showEmojis, setShowEmojis] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const emojiRef = useRef<HTMLDivElement>(null)
+  const emojiButtonRef = useRef<HTMLButtonElement>(null)
+  const pickerContainerRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
   // Auto-focus and reset on open
@@ -49,13 +51,59 @@ export function QuoteModal({
   // Close emojis on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
+      if (
+        pickerContainerRef.current && 
+        !pickerContainerRef.current.contains(e.target as Node) &&
+        emojiButtonRef.current &&
+        !emojiButtonRef.current.contains(e.target as Node)
+      ) {
         setShowEmojis(false)
       }
     }
     if (showEmojis) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showEmojis])
+
+  // Position adjustment to prevent emoji dropdown from clipping against viewport edges
+  useEffect(() => {
+    if (!showEmojis) return
+
+    const adjustPosition = () => {
+      const el = pickerContainerRef.current
+      if (!el) return
+
+      el.style.transform = ''
+      const rect = el.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const padding = 12
+
+      if (rect.right > viewportWidth - padding) {
+        const overflow = rect.right - (viewportWidth - padding)
+        el.style.transform = `translateX(-${overflow}px)`
+      } else if (rect.left < padding) {
+        const underflow = padding - rect.left
+        el.style.transform = `translateX(${underflow}px)`
+      }
+
+      const viewportHeight = window.innerHeight
+      if (rect.bottom > viewportHeight - padding) {
+        const spaceBelow = viewportHeight - rect.top - padding
+        if (spaceBelow >= 120) {
+          el.style.maxHeight = `${spaceBelow}px`
+          el.style.overflowY = 'auto'
+        }
+      }
+    }
+
+    const rafId = requestAnimationFrame(adjustPosition)
+    window.addEventListener('resize', adjustPosition)
+    window.addEventListener('scroll', adjustPosition, true)
+    return () => {
+      cancelAnimationFrame(rafId)
+      window.removeEventListener('resize', adjustPosition)
+      window.removeEventListener('scroll', adjustPosition, true)
     }
   }, [showEmojis])
 
@@ -214,11 +262,11 @@ export function QuoteModal({
       }}
     >
       <div 
-        className="bg-white dark:bg-[#000000] w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-[600px] rounded-none sm:rounded-2xl border border-transparent sm:border-[#eff3f4] dark:sm:border-[#2f3336] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        className="bg-white dark:bg-[#000000] w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-[600px] rounded-none sm:rounded-2xl border border-transparent sm:border-[#eff3f4] dark:sm:border-[#2f3336] shadow-2xl flex flex-col overflow-visible animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#eff3f4] dark:border-[#2f3336] shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#eff3f4] dark:border-[#2f3336] shrink-0 sm:rounded-t-2xl">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -279,19 +327,23 @@ export function QuoteModal({
         </div>
 
         {/* Bottom Toolbar */}
-        <div className="px-4 py-2.5 border-t border-[#eff3f4] dark:border-[#2f3336] flex items-center justify-between shrink-0 bg-white dark:bg-[#000000]">
+        <div className="px-4 py-2.5 border-t border-[#eff3f4] dark:border-[#2f3336] flex items-center justify-between shrink-0 bg-white dark:bg-[#000000] sm:rounded-b-2xl">
           <div className="relative" ref={emojiRef}>
             <button
               type="button"
+              ref={emojiButtonRef}
               onClick={() => setShowEmojis(!showEmojis)}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer"
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer ${showEmojis ? 'bg-violet-100 dark:bg-violet-950/60' : ''}`}
               title="Add emoji"
             >
               <Smile className="w-5 h-5" />
             </button>
 
             {showEmojis && (
-              <div className="absolute left-0 bottom-full mb-2 bg-white dark:bg-[#1A1A24] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl shadow-xl p-2.5 w-60 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div 
+                ref={pickerContainerRef}
+                className="absolute left-0 top-full mt-2 max-w-[calc(100vw-24px)] bg-white dark:bg-[#1A1A24] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl shadow-xl p-2.5 w-60 z-50 animate-in fade-in zoom-in-95 duration-150"
+              >
                 <div className="grid grid-cols-5 gap-1">
                   {EMOJI_LIST.map((emoji) => (
                     <button

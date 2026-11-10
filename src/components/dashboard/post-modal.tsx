@@ -73,6 +73,7 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const emojiButtonRef = useRef<HTMLButtonElement>(null)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
   const mentionDropdownRef = useRef<HTMLDivElement>(null)
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
@@ -148,7 +149,12 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
   // Close emoji picker and mention dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+      if (
+        emojiPickerRef.current && 
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        emojiButtonRef.current &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
         setShowEmojiPicker(false)
       }
       if (mentionDropdownRef.current && !mentionDropdownRef.current.contains(event.target as Node)) {
@@ -158,6 +164,49 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  // Position adjustment to prevent emoji picker dropdown from getting clipped by viewport edges
+  useEffect(() => {
+    if (!showEmojiPicker) return
+
+    const adjustPosition = () => {
+      const el = emojiPickerRef.current
+      if (!el) return
+
+      el.style.transform = ''
+      const rect = el.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const padding = 12
+
+      // Check horizontal collision (prevent clipping on small mobile screens)
+      if (rect.right > viewportWidth - padding) {
+        const overflow = rect.right - (viewportWidth - padding)
+        el.style.transform = `translateX(-${overflow}px)`
+      } else if (rect.left < padding) {
+        const underflow = padding - rect.left
+        el.style.transform = `translateX(${underflow}px)`
+      }
+
+      // Check vertical collision (keep within viewport height)
+      const viewportHeight = window.innerHeight
+      if (rect.bottom > viewportHeight - padding) {
+        const spaceBelow = viewportHeight - rect.top - padding
+        if (spaceBelow >= 140) {
+          el.style.maxHeight = `${spaceBelow}px`
+          el.style.overflowY = 'auto'
+        }
+      }
+    }
+
+    const rafId = requestAnimationFrame(adjustPosition)
+    window.addEventListener('resize', adjustPosition)
+    window.addEventListener('scroll', adjustPosition, true)
+    return () => {
+      cancelAnimationFrame(rafId)
+      window.removeEventListener('resize', adjustPosition)
+      window.removeEventListener('scroll', adjustPosition, true)
+    }
+  }, [showEmojiPicker])
 
   // Auto-resize textarea to fit content snugly without leaving excessive empty vertical space
   useEffect(() => {
@@ -485,11 +534,11 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
         }}
       >
         <div 
-          className="bg-white dark:bg-[#000000] sm:rounded-2xl border border-transparent sm:border-[#eff3f4] dark:sm:border-[#2f3336] shadow-2xl w-full max-w-[600px] flex flex-col overflow-hidden max-h-screen sm:max-h-[90vh] animate-in zoom-in-95 duration-200 relative"
+          className="bg-white dark:bg-[#000000] sm:rounded-2xl border border-transparent sm:border-[#eff3f4] dark:sm:border-[#2f3336] shadow-2xl w-full max-w-[600px] flex flex-col overflow-visible max-h-screen sm:max-h-[90vh] animate-in zoom-in-95 duration-200 relative"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Header Row: Close button */}
-          <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336]">
+          <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] sm:rounded-t-2xl">
             <button
               type="button"
               onClick={handleClose}
@@ -651,7 +700,7 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
           </div>
 
           {/* Bottom Toolbar: Attachments + Post Button */}
-          <div className="px-4 py-3 border-t border-[#eff3f4] dark:border-[#2f3336] flex items-center justify-between bg-white dark:bg-[#000000]">
+          <div className="px-4 py-3 border-t border-[#eff3f4] dark:border-[#2f3336] flex items-center justify-between bg-white dark:bg-[#000000] sm:rounded-b-2xl">
             {/* Action Icons */}
             <div className="flex items-center gap-1 text-[#7C3AED] relative">
               <input
@@ -680,14 +729,58 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
                 <AtSign className="w-[19px] h-[19px]" />
               </button>
 
-              <button
-                type="button"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer"
-                title="Add emoji"
-              >
-                <Smile className="w-[19px] h-[19px]" />
-              </button>
+              {/* Emoji Picker Button & Dropdown */}
+              <div className="relative">
+                <button
+                  type="button"
+                  ref={emojiButtonRef}
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className={`w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors cursor-pointer ${
+                    showEmojiPicker ? 'bg-violet-100 dark:bg-violet-950/60' : ''
+                  }`}
+                  title="Add emoji"
+                >
+                  <Smile className="w-[19px] h-[19px]" />
+                </button>
+
+                {/* Emoji Popover */}
+                {showEmojiPicker && (
+                  <div
+                    ref={emojiPickerRef}
+                    className="absolute left-0 top-full mt-2 max-w-[calc(100vw-24px)] bg-white dark:bg-[#1A1A24] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl shadow-2xl p-3 w-64 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  >
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100 dark:border-[#2D2B3B]">
+                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Quick Emojis</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowEmojiPicker(false)}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="space-y-2.5 max-h-48 overflow-y-auto no-scrollbar">
+                      {EMOJI_CATEGORIES.map((cat) => (
+                        <div key={cat.name}>
+                          <p className="text-[10px] font-semibold text-gray-400 mb-1">{cat.name}</p>
+                          <div className="grid grid-cols-5 gap-1.5">
+                            {cat.emojis.map((emoji) => (
+                              <button
+                                key={emoji}
+                                type="button"
+                                onClick={() => handleInsertEmoji(emoji)}
+                                className="w-8 h-8 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-950/40 text-base flex items-center justify-center transition-transform active:scale-125 select-none cursor-pointer"
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Code Snippet Button (immediately beside Emoji button) */}
               <button
@@ -700,44 +793,6 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
               >
                 <Code2 className="w-[19px] h-[19px]" />
               </button>
-
-              {/* Emoji Popover */}
-              {showEmojiPicker && (
-                <div
-                  ref={emojiPickerRef}
-                  className="absolute left-0 bottom-full mb-2 bg-white dark:bg-[#1A1A24] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl shadow-2xl p-3 w-64 z-50 animate-in fade-in zoom-in-95 duration-150"
-                >
-                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100 dark:border-[#2D2B3B]">
-                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Quick Emojis</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowEmojiPicker(false)}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div className="space-y-2.5 max-h-48 overflow-y-auto no-scrollbar">
-                    {EMOJI_CATEGORIES.map((cat) => (
-                      <div key={cat.name}>
-                        <p className="text-[10px] font-semibold text-gray-400 mb-1">{cat.name}</p>
-                        <div className="grid grid-cols-5 gap-1.5">
-                          {cat.emojis.map((emoji) => (
-                            <button
-                              key={emoji}
-                              type="button"
-                              onClick={() => handleInsertEmoji(emoji)}
-                              className="w-8 h-8 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-950/40 text-base flex items-center justify-center transition-transform active:scale-125 select-none cursor-pointer"
-                            >
-                              {emoji}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Right: Submit Button */}
