@@ -45,12 +45,16 @@ type Message = {
   status?: 'sending' | 'sent' | 'error'
 }
 
+// In-memory instant cache for zero-lag conversation switching
+const chatMemoryCache = new Map<string, Message[]>()
+
 function MessagesContent() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [users, setUsers] = useState<Profile[]>([])
   const [allProfiles, setAllProfiles] = useState<Profile[]>([])
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({})
   const [newMessage, setNewMessage] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [directorySearchQuery, setDirectorySearchQuery] = useState("")
@@ -75,6 +79,11 @@ function MessagesContent() {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const activeRoomChannelRef = useRef<any>(null)
   const hasUserManuallySelected = useRef(false)
+  const selectedUserRef = useRef<Profile | null>(null)
+
+  useEffect(() => {
+    selectedUserRef.current = selectedUser
+  }, [selectedUser])
   
   const supabase = createClient()
   const onlineUsers = usePresence()
@@ -137,7 +146,30 @@ function MessagesContent() {
         }
       }
     } catch (e) {}
-  }, [targetUserId])
+  }, [])
+
+  // Sync external navigation targetUserId changes (e.g. from student directory / profile link)
+  useEffect(() => {
+    if (!targetUserId) return
+    if (selectedUser?.id === targetUserId) return
+
+    const found = users.find(u => u.id === targetUserId) || allProfiles.find(u => u.id === targetUserId)
+    if (found) {
+      setSelectedUser(found)
+    } else {
+      supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, college, consistency_score')
+        .eq('id', targetUserId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setUsers(prev => prev.some(u => u.id === data.id) ? prev : [data, ...prev])
+            setSelectedUser(data)
+          }
+        })
+    }
+  }, [targetUserId, users, allProfiles, selectedUser?.id])
 
   // Hardware Android back button sync
   useEffect(() => {
@@ -163,25 +195,36 @@ function MessagesContent() {
     setSelectedUser(user)
 
     if (user && currentUser) {
-      const chatCacheKey = `trackr_chat_cache_${currentUser.id}_${user.id}`
-      try {
-        const cached = localStorage.getItem(chatCacheKey)
-        if (cached) {
-          const parsed = JSON.parse(cached)
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setMessages(parsed)
-            setIsLoadingMessages(false)
+      const cacheKey = `${currentUser.id}_${user.id}`
+      const chatCacheKey = `trackr_chat_cache_${cacheKey}`
+
+      // 1. Instant RAM cache check (0ms, no JSON parse, no layout flash)
+      const memCached = chatMemoryCache.get(cacheKey)
+      if (memCached && memCached.length > 0) {
+        setMessages(memCached)
+        setIsLoadingMessages(false)
+      } else {
+        // 2. LocalStorage fallback
+        try {
+          const cached = localStorage.getItem(chatCacheKey)
+          if (cached) {
+            const parsed = JSON.parse(cached)
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              chatMemoryCache.set(cacheKey, parsed)
+              setMessages(parsed)
+              setIsLoadingMessages(false)
+            } else {
+              setMessages([])
+              setIsLoadingMessages(true)
+            }
           } else {
             setMessages([])
             setIsLoadingMessages(true)
           }
-        } else {
+        } catch {
           setMessages([])
           setIsLoadingMessages(true)
         }
-      } catch {
-        setMessages([])
-        setIsLoadingMessages(true)
       }
     } else {
       setMessages([])
@@ -190,9 +233,9 @@ function MessagesContent() {
 
     if (typeof window !== 'undefined') {
       if (user) {
-        window.history.pushState(null, '', `/messages?userId=${user.id}`)
+        window.history.replaceState(null, '', `/messages?userId=${user.id}`)
       } else {
-        window.history.pushState(null, '', `/messages`)
+        window.history.replaceState(null, '', `/messages`)
       }
     }
   }
@@ -364,12 +407,20 @@ function MessagesContent() {
     }
   }
 
-  // Initialize Auth & Conversation List with session persistence
+  // Initialize Auth & Conversation List with session persistence (runs once on mount)
   useEffect(() => {
     let isMounted = true
 
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      // 1. Fast local session retrieval (0ms synchronous read from browser storage)
+      const { data: sessionData } = await supabase.auth.getSession()
+      let user: any = sessionData?.session?.user
+
+      if (!user) {
+        const { data: userData } = await supabase.auth.getUser()
+        user = userData?.user
+      }
+
       if (!isMounted) return
 
       try {
@@ -378,15 +429,6 @@ function MessagesContent() {
           setCurrentUser(user)
           await loadConversations(user)
           await fetchDirectoryProfiles(user.id)
-        } else {
-          // Retry session retrieval
-          const { data: sessionData } = await supabase.auth.getSession()
-          if (sessionData.session?.user && isMounted) {
-            localStorage.setItem('trackr_last_user_id', sessionData.session.user.id)
-            setCurrentUser(sessionData.session.user)
-            await loadConversations(sessionData.session.user)
-            await fetchDirectoryProfiles(sessionData.session.user.id)
-          }
         }
       } finally {
         if (isMounted) {
@@ -400,7 +442,7 @@ function MessagesContent() {
     // Listen to Supabase Auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return
-      if (session?.user) {
+      if (session?.user && session.user.id !== currentUser?.id) {
         setCurrentUser(session.user)
         await loadConversations(session.user)
         await fetchDirectoryProfiles(session.user.id)
@@ -411,7 +453,7 @@ function MessagesContent() {
       isMounted = false
       subscription.unsubscribe()
     }
-  }, [targetUserId])
+  }, [])
 
   const markAsRead = (otherUserId: string) => {
     const stored = typeof window !== 'undefined' ? localStorage.getItem('trackr_read_timestamps') : null
@@ -432,9 +474,9 @@ function MessagesContent() {
     }
   }
 
-  // Global Realtime Updates for Incoming Messages across conversations
+  // Global Realtime Updates for Incoming Messages across conversations (stays connected, never bounces on chat switch)
   useEffect(() => {
-    if (!currentUser) return
+    if (!currentUser?.id) return
 
     const channel = supabase
       .channel(`global-messages:${currentUser.id}`)
@@ -472,7 +514,21 @@ function MessagesContent() {
             return prev
           })
 
-          if (newMsg.sender_id !== currentUser.id && selectedUser?.id !== otherId) {
+          // Live append to active conversation if user is currently viewing otherId
+          if (selectedUserRef.current?.id === otherId) {
+            setMessages(prev => {
+              if (prev.some(m => m.id === newMsg.id)) return prev
+              const updated = [...prev, newMsg]
+              const cacheKey = `${currentUser.id}_${otherId}`
+              chatMemoryCache.set(cacheKey, updated)
+              try {
+                localStorage.setItem(`trackr_chat_cache_${cacheKey}`, JSON.stringify(updated))
+              } catch (e) {}
+              return updated
+            })
+            markAsRead(otherId)
+            scrollToBottom()
+          } else if (newMsg.sender_id !== currentUser.id) {
             setUnreadCounts(prev => ({ ...prev, [otherId]: (prev[otherId] || 0) + 1 }))
           }
         }
@@ -484,101 +540,103 @@ function MessagesContent() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [currentUser, selectedUser])
+  }, [currentUser?.id])
 
-  // Active Conversation WebSocket Real-Time Channel (Instant broadcast + DB sync)
+  // Active Conversation Channel (Instant broadcast + Peer typing indicators)
   useEffect(() => {
-    if (!currentUser || !selectedUser) return
+    if (!currentUser?.id || !selectedUser?.id) return
 
-    const chatCacheKey = `trackr_chat_cache_${currentUser.id}_${selectedUser.id}`
+    const currentChatUser = selectedUser
+    const cacheKey = `${currentUser.id}_${currentChatUser.id}`
+    const chatCacheKey = `trackr_chat_cache_${cacheKey}`
 
-    // 1. Instant Cache Hydration: Never show blank chat if previously cached
+    // 1. Instant Cache Hydration: Never show blank chat if previously cached in memory or localStorage
     let hasCached = false
-    try {
-      const cached = localStorage.getItem(chatCacheKey)
-      if (cached) {
-        const parsed = JSON.parse(cached)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMessages(parsed)
-          setIsLoadingMessages(false)
-          hasCached = true
-          scrollToBottom('auto')
+    const memCached = chatMemoryCache.get(cacheKey)
+    if (memCached && memCached.length > 0) {
+      setMessages(memCached)
+      setIsLoadingMessages(false)
+      hasCached = true
+      scrollToBottom('auto')
+    } else {
+      try {
+        const cached = localStorage.getItem(chatCacheKey)
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            chatMemoryCache.set(cacheKey, parsed)
+            setMessages(parsed)
+            setIsLoadingMessages(false)
+            hasCached = true
+            scrollToBottom('auto')
+          }
         }
-      }
-    } catch (e) {}
+      } catch (e) {}
+    }
 
     if (!hasCached) {
       setMessages([])
       setIsLoadingMessages(true)
     }
 
-    // 2. Fetch fresh messages from Database with fallback recovery
+    // 2. Fast Indexed Fetch from DB using native .in() syntax
+    let isCancelled = false
     const fetchMessages = async () => {
       try {
         const { data, error } = await supabase
           .from('messages')
           .select('*')
-          .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${selectedUser.id}),and(sender_id.eq.${selectedUser.id},receiver_id.eq.${currentUser.id})`)
+          .in('sender_id', [currentUser.id, currentChatUser.id])
+          .in('receiver_id', [currentUser.id, currentChatUser.id])
           .order('created_at', { ascending: true })
         
-        if (error) {
-          console.warn("Primary message query error, trying resilient fallback:", error)
-          // Fallback query if nested and() is rejected by PostgREST
-          const { data: fallbackData } = await supabase
-            .from('messages')
-            .select('*')
-            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-            .order('created_at', { ascending: true })
-          
-          if (fallbackData) {
-            const filtered = fallbackData.filter(m => 
-              (m.sender_id === currentUser.id && m.receiver_id === selectedUser.id) ||
-              (m.sender_id === selectedUser.id && m.receiver_id === currentUser.id)
-            )
-            setMessages(filtered)
-            try {
-              localStorage.setItem(chatCacheKey, JSON.stringify(filtered))
-            } catch (e) {}
-          }
-        } else if (data) {
-          setMessages(data)
+        if (!isCancelled && data && !error) {
+          const filtered = data.filter(m => 
+            (m.sender_id === currentUser.id && m.receiver_id === currentChatUser.id) ||
+            (m.sender_id === currentChatUser.id && m.receiver_id === currentUser.id)
+          )
+          setMessages(filtered)
+          chatMemoryCache.set(cacheKey, filtered)
           try {
-            localStorage.setItem(chatCacheKey, JSON.stringify(data))
+            localStorage.setItem(chatCacheKey, JSON.stringify(filtered))
           } catch (e) {}
+          scrollToBottom('auto')
         }
-        scrollToBottom('auto')
       } catch (err) {
         console.error("Failed to fetch messages:", err)
       } finally {
-        setIsLoadingMessages(false)
+        if (!isCancelled) {
+          setIsLoadingMessages(false)
+        }
       }
     }
 
     fetchMessages()
 
     // 3. WebSocket Real-Time Broadcast Room: Instant peer-to-peer delivery (<50ms latency)
-    const chatRoom = [currentUser.id, selectedUser.id].sort().join('-')
+    const chatRoom = [currentUser.id, currentChatUser.id].sort().join('-')
     const roomChannel = supabase
       .channel(`chat_room:${chatRoom}`, {
         config: { broadcast: { ack: true } }
       })
       .on('broadcast', { event: 'chat_message' }, (payload) => {
         const incomingMsg = payload.payload as Message
-        if (incomingMsg && incomingMsg.sender_id === selectedUser.id) {
+        if (incomingMsg && incomingMsg.sender_id === currentChatUser.id) {
           setMessages(prev => {
             if (prev.some(m => m.id === incomingMsg.id)) return prev
             const updated = [...prev, incomingMsg]
+            chatMemoryCache.set(cacheKey, updated)
             try {
               localStorage.setItem(chatCacheKey, JSON.stringify(updated))
             } catch (e) {}
             return updated
           })
-          markAsRead(selectedUser.id)
+          markAsRead(currentChatUser.id)
           scrollToBottom()
         }
       })
       .on('broadcast', { event: 'typing' }, (payload) => {
-        if (payload.payload?.senderId === selectedUser.id) {
+        if (payload.payload?.senderId === currentChatUser.id) {
           setIsOtherUserTyping(true)
           if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
           typingTimeoutRef.current = setTimeout(() => {
@@ -592,38 +650,13 @@ function MessagesContent() {
 
     activeRoomChannelRef.current = roomChannel
 
-    // 4. Postgres DB Changes replication channel for this active chat
-    const chatDbChannel = supabase
-      .channel(`chat_db:${currentUser.id}-${selectedUser.id}`)
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'messages',
-        filter: `receiver_id=eq.${currentUser.id}`
-      }, (payload) => {
-        const newMsg = payload.new as Message
-        if (newMsg.sender_id === selectedUser.id) {
-          setMessages(prev => {
-            if (prev.some(m => m.id === newMsg.id)) return prev
-            const updated = [...prev, newMsg]
-            try {
-              localStorage.setItem(chatCacheKey, JSON.stringify(updated))
-            } catch (e) {}
-            return updated
-          })
-          markAsRead(selectedUser.id)
-          scrollToBottom()
-        }
-      })
-      .subscribe()
-
     return () => {
+      isCancelled = true
       supabase.removeChannel(roomChannel)
-      supabase.removeChannel(chatDbChannel)
       activeRoomChannelRef.current = null
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
     }
-  }, [currentUser, selectedUser])
+  }, [currentUser?.id, selectedUser?.id])
 
   useEffect(() => {
     if (selectedUser) {
@@ -756,7 +789,7 @@ function MessagesContent() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !currentUser || !selectedUser) return
+    if (!file || !currentUser || !selectedUser) return
 
     const validation = validateFileSecurity(file, IMAGE_UPLOAD_CONSTRAINTS)
     if (!validation.valid) {
@@ -1172,7 +1205,7 @@ function MessagesContent() {
           ────────────────────────────────────────────────────────────────── */}
       <main className={`
         ${selectedUser 
-          ? 'fixed inset-0 z-40 flex flex-col h-[100dvh] w-full md:relative md:inset-auto md:z-auto md:h-full md:w-auto md:flex-1 animate-in fade-in max-md:slide-in-from-right-3 duration-200' 
+          ? 'fixed inset-0 z-40 flex flex-col h-[100dvh] w-full md:relative md:inset-auto md:z-auto md:h-full md:w-auto md:flex-1 max-md:animate-in max-md:fade-in max-md:slide-in-from-right-3 max-md:duration-200' 
           : 'hidden md:flex md:flex-1 md:h-full flex-col'
         }
         bg-[#FCFBFE] dark:bg-[#07060A] overflow-hidden
@@ -1294,16 +1327,25 @@ function MessagesContent() {
                             : 'bg-white dark:bg-[#161520] text-gray-900 dark:text-gray-100 border border-gray-100 dark:border-[#262534] rounded-tl-xs'
                         }`}>
                           {msg.content.startsWith('[IMAGE]: ') ? (
-                            <div 
-                              className="rounded-xl overflow-hidden max-h-72 cursor-pointer" 
-                              onClick={() => setSelectedImageModal(msg.content.replace('[IMAGE]: ', ''))}
-                            >
-                              <img 
-                                src={msg.content.replace('[IMAGE]: ', '')} 
-                                alt="Shared attachment" 
-                                className="w-full h-auto object-cover hover:opacity-95 transition-opacity" 
-                              />
-                            </div>
+                            imageErrors[msg.id] ? (
+                              <div className="flex items-center gap-2 py-1.5 px-1 text-xs text-gray-500 dark:text-gray-400">
+                                <ImageIcon className="w-4 h-4 text-violet-500 shrink-0" />
+                                <span>Attachment unavailable</span>
+                              </div>
+                            ) : (
+                              <div 
+                                className="rounded-xl overflow-hidden max-h-72 cursor-pointer" 
+                                onClick={() => setSelectedImageModal(msg.content.replace('[IMAGE]: ', ''))}
+                              >
+                                <img 
+                                  src={msg.content.replace('[IMAGE]: ', '')} 
+                                  alt="Shared attachment" 
+                                  className="w-full h-auto object-cover hover:opacity-95 transition-opacity" 
+                                  onError={() => setImageErrors(prev => ({ ...prev, [msg.id]: true }))}
+                                  loading="lazy"
+                                />
+                              </div>
+                            )
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
                           )}
