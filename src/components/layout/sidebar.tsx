@@ -8,13 +8,15 @@ import { useEffect, useState } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
+import { getUserHandle } from "@/lib/utils/user"
 import { InstallButton } from "@/components/pwa/InstallPWA"
 
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
   const router = useRouter()
   const [profileState, setProfileState] = useState(profile)
-  const [unreadCount, setUnreadCount] = useState(0)
+  const [unreadCount, setUnreadCount] = useState(5)
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(3)
   const [activeDays, setActiveDays] = useState([false, false, false, false, false, false, false])
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const supabase = createClient()
@@ -243,8 +245,13 @@ export function Sidebar({ profile }: { profile?: any }) {
               <div className="relative flex items-center justify-center">
                 <item.icon className="w-5 h-5" />
                 {item.name === 'Notifications' && unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-[16px] h-[16px] flex items-center justify-center shadow-sm leading-none border-2 border-white dark:border-[#0B0A10] z-10">
+                  <span className="absolute -top-1.5 -right-1.5 bg-violet-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] h-[16px] flex items-center justify-center shadow-sm leading-none border-2 border-white dark:border-[#0B0A10] z-10">
                     {unreadCount > 5 ? '5+' : unreadCount}
+                  </span>
+                )}
+                {item.name === 'Messages' && unreadMessagesCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-violet-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] h-[16px] flex items-center justify-center shadow-sm leading-none border-2 border-white dark:border-[#0B0A10] z-10">
+                    {unreadMessagesCount}
                   </span>
                 )}
               </div>
@@ -312,10 +319,10 @@ export function Sidebar({ profile }: { profile?: any }) {
             />
             <div className="flex flex-col overflow-hidden min-w-0">
               <span className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5 min-w-0">
-                <span className="truncate">{profileState?.full_name ? profileState.full_name.split(' ')[0] : 'User'}</span>
+                <span className="truncate">{profileState?.full_name || 'Samir Alam'}</span>
                 <VerifiedBadge level={getBadgeLevel(profileState?.consistency_score)} />
               </span>
-              <span className="text-xs font-medium text-violet-600 dark:text-violet-400 truncate">View profile</span>
+              <span className="text-xs font-medium text-gray-400 dark:text-gray-500 truncate">{getUserHandle(profileState?.full_name)}</span>
             </div>
           </Link>
           <button 
