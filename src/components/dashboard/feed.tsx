@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Bookmark, Heart, MessageCircle, Repeat2, Send, Trash2, MoreVertical, Edit2, Pin, Flag, BellOff, UserX, AlertTriangle, Share2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Post, Comment } from "@/lib/supabase/types"
@@ -57,6 +57,7 @@ export function Feed({
   const [hiddenUserIds, setHiddenUserIds] = useState<string[]>([])
   const [pinnedPostId, setPinnedPostId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const liveChannelRef = useRef<any>(null)
   
   const supabase = createClient()
 
@@ -108,20 +109,63 @@ export function Feed({
 
     window.addEventListener('post-created', handlePostCreated)
     
-    const uniqueChannelName = `schema-db-changes-${Math.random().toString(36).substring(7)}`
+    const uniqueChannelName = `trackr-live-feed-sync`
     
     const channel = supabase
       .channel(uniqueChannelName)
+      // Real-time broadcast events for instant live sync between all clients
+      .on('broadcast', { event: 'like_toggled' }, ({ payload }) => {
+        if (!payload) return
+        setPosts(prev => prev.map(p => {
+          if (p.id === payload.postId) {
+            const count = (p as any).likes_count || 0
+            return {
+              ...p,
+              likes_count: Math.max(0, count + (payload.action === 'like' ? 1 : -1))
+            }
+          }
+          return p
+        }))
+      })
+      .on('broadcast', { event: 'comment_added' }, ({ payload }) => {
+        if (!payload) return
+        setPosts(prev => prev.map(p => {
+          if (p.id === payload.postId) {
+            return {
+              ...p,
+              comments_count: ((p as any).comments_count || 0) + 1
+            }
+          }
+          return p
+        }))
+        if (payload.postId) {
+          fetchComments(payload.postId)
+        }
+      })
+      .on('broadcast', { event: 'repost_toggled' }, ({ payload }) => {
+        if (!payload) return
+        setPosts(prev => prev.map(p => {
+          if (p.id === payload.postId) {
+            const count = (p as any).reposts_count || 0
+            return {
+              ...p,
+              reposts_count: Math.max(0, count + (payload.action === 'repost' ? 1 : -1))
+            }
+          }
+          return p
+        }))
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => fetchPosts(false))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, () => fetchPosts(false))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookmarks' }, () => fetchPosts(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => {
-          Object.keys(expandedComments).forEach(postId => {
-            if (expandedComments[postId]) fetchComments(postId)
-          })
-          fetchPosts(false)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, (payload) => {
+        const pid = (payload.new as any)?.post_id || (payload.old as any)?.post_id
+        if (pid) fetchComments(pid)
+        fetchPosts(false)
       })
       .subscribe()
+
+    liveChannelRef.current = channel
 
     return () => {
       window.removeEventListener('post-created', handlePostCreated)
@@ -138,11 +182,70 @@ export function Feed({
     return `${Math.floor(diff / 86400)}d`
   }
 
-  const handleRepost = (postId: string) => {
-    setRepostedPosts(prev => ({
-      ...prev,
-      [postId]: !prev[postId]
+  const handleRepost = async (target: Post | string) => {
+    const uid = currentUserId || currentUserIdProp
+    if (!uid) {
+      window.location.href = '/login'
+      return
+    }
+
+    const postId = typeof target === 'string' ? target : target.id
+    const post = typeof target === 'string' ? posts.find(p => p.id === target) : target
+    const isCurrentlyReposted = !!repostedPosts[postId]
+
+    // 1. Instant optimistic UI toggle
+    setRepostedPosts(prev => {
+      const next = { ...prev }
+      if (isCurrentlyReposted) {
+        delete next[postId]
+      } else {
+        next[postId] = true
+      }
+      try {
+        localStorage.setItem('trackr_user_reposts', JSON.stringify(next))
+      } catch (e) {}
+      return next
+    })
+
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        const count = (p as any).reposts_count || 0
+        return {
+          ...p,
+          reposts_count: Math.max(0, count + (isCurrentlyReposted ? -1 : 1))
+        }
+      }
+      return p
     }))
+
+    // 2. Broadcast repost to other viewers in real time
+    try {
+      liveChannelRef.current?.send({
+        type: 'broadcast',
+        event: 'repost_toggled',
+        payload: { postId, userId: uid, action: isCurrentlyReposted ? 'unrepost' : 'repost' }
+      })
+    } catch (e) {}
+
+    // 3. Persist repost as real feed item in Supabase posts table
+    if (!isCurrentlyReposted && post) {
+      try {
+        const authorName = post.profiles?.full_name || 'student'
+        const { data: newRepostPost } = await supabase.from('posts').insert({
+          user_id: uid,
+          content: `🔁 Reposted from ${authorName}:\n\n${post.content}`,
+          type: post.type || 'Other',
+          image_url: post.image_url,
+          tags: post.tags || []
+        }).select(`*, profiles:user_id(*)`).single()
+
+        if (newRepostPost) {
+          window.dispatchEvent(new CustomEvent('post-created', { detail: newRepostPost }))
+        }
+      } catch (err) {
+        console.warn('Could not insert repost feed post:', err)
+      }
+    }
   }
 
   const fetchPosts = async (showLoading = true) => {
@@ -321,12 +424,13 @@ export function Feed({
 
   const submitComment = async (postId: string) => {
     const text = commentTexts[postId]?.trim()
-    if (!text || !currentUserId) return
+    const uid = currentUserId || currentUserIdProp
+    if (!text || !uid) return
 
     const newComment = {
-      id: Math.random().toString(),
+      id: `temp-${Date.now()}`,
       post_id: postId,
-      user_id: currentUserId,
+      user_id: uid,
       content: text,
       created_at: new Date().toISOString(),
       profiles: {
@@ -335,36 +439,114 @@ export function Feed({
       }
     }
 
+    // 1. Optimistically append new comment to comments list
     setPostComments(prev => ({
       ...prev,
       [postId]: [...(prev[postId] || []), newComment as any]
     }))
     setCommentTexts(prev => ({ ...prev, [postId]: "" }))
 
-    await supabase.from('comments').insert({
-      post_id: postId,
-      user_id: currentUserId,
-      content: text
-    })
-  }
-
-  const toggleLike = async (postId: string, currentlyLiked: boolean) => {
-    if (!currentUserId) return
-    setPosts(posts.map(p => {
+    // 2. Optimistically increment comments_count on post card
+    setPosts(prev => prev.map(p => {
       if (p.id === postId) {
         return {
           ...p,
-          user_has_liked: !currentlyLiked,
-          likes_count: (p as any).likes_count + (currentlyLiked ? -1 : 1)
+          comments_count: ((p as any).comments_count || 0) + 1
         }
       }
       return p
     }))
 
-    if (currentlyLiked) {
-      await supabase.from('likes').delete().match({ post_id: postId, user_id: currentUserId })
-    } else {
-      await supabase.from('likes').insert({ post_id: postId, user_id: currentUserId })
+    // 3. Persist to Supabase comments table
+    try {
+      const { data: inserted, error } = await supabase.from('comments').insert({
+        post_id: postId,
+        user_id: uid,
+        content: text
+      }).select(`*, profiles(*)`).single()
+
+      if (inserted && !error) {
+        setPostComments(prev => ({
+          ...prev,
+          [postId]: (prev[postId] || []).map(c => c.id === newComment.id ? inserted : c)
+        }))
+
+        // Broadcast comment to all connected users
+        liveChannelRef.current?.send({
+          type: 'broadcast',
+          event: 'comment_added',
+          payload: { postId, comment: inserted }
+        })
+      }
+    } catch (err) {
+      console.error("Comment submit error:", err)
+    }
+  }
+
+  const toggleLike = async (postId: string, currentlyLiked: boolean) => {
+    const uid = currentUserId || currentUserIdProp
+    if (!uid) {
+      window.location.href = '/login'
+      return
+    }
+
+    // 1. Instant optimistic update
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        const currentCount = (p as any).likes_count || 0
+        return {
+          ...p,
+          user_has_liked: !currentlyLiked,
+          likes_count: Math.max(0, currentCount + (currentlyLiked ? -1 : 1))
+        }
+      }
+      return p
+    }))
+
+    // 2. Broadcast immediately to all connected clients
+    try {
+      liveChannelRef.current?.send({
+        type: 'broadcast',
+        event: 'like_toggled',
+        payload: { postId, userId: uid, action: currentlyLiked ? 'unlike' : 'like' }
+      })
+    } catch (e) {}
+
+    // 3. Persist to Supabase likes table
+    try {
+      if (currentlyLiked) {
+        await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', uid)
+      } else {
+        await supabase.from('likes').insert({ post_id: postId, user_id: uid })
+
+        // Create notification for post owner if not self
+        const post = posts.find(p => p.id === postId)
+        if (post && post.user_id !== uid) {
+          try {
+            await supabase.from('notifications').insert({
+              user_id: post.user_id,
+              actor_id: uid,
+              type: 'like',
+              post_id: postId,
+              is_read: false
+            })
+          } catch (notifErr) {}
+        }
+      }
+    } catch (err) {
+      console.error("Like toggle error:", err)
+      // Rollback on error
+      setPosts(prev => prev.map(p => {
+        if (p.id === postId) {
+          const currentCount = (p as any).likes_count || 0
+          return {
+            ...p,
+            user_has_liked: currentlyLiked,
+            likes_count: Math.max(0, currentCount + (currentlyLiked ? 1 : -1))
+          }
+        }
+        return p
+      }))
     }
   }
 
@@ -598,8 +780,6 @@ export function Feed({
             )}
 
             <article className={`bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-3.5 sm:p-5 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 dark:hover:border-violet-900/50 group/card ${isJourneyMode ? 'relative z-10' : ''}`}>
-          
-          /* Top Section */
           {!isJourneyMode && (
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -858,14 +1038,14 @@ export function Feed({
 
               {/* Repost */}
               <button 
-                onClick={() => handleRepost(post.id)} 
+                onClick={() => handleRepost(post)} 
                 className={`flex items-center gap-1.5 text-xs sm:text-[13px] font-semibold transition-all duration-150 hover:scale-105 active:scale-95 ${
                   repostedPosts[post.id] ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400'
                 }`}
                 title="Repost"
               >
                 <Repeat2 className="w-4 h-4" /> 
-                <span>{((post as any).bookmarks_count || 0) + (repostedPosts[post.id] ? 1 : 0) || 7}</span>
+                <span>{((post as any).reposts_count || 0) + (repostedPosts[post.id] ? 1 : 0)}</span>
               </button>
             </div>
 
