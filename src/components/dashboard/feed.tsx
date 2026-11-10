@@ -11,6 +11,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { getBadgeLevel } from "@/lib/utils/streak"
 import { getUserHandle } from "@/lib/utils/user"
 import { getCacheEntry, setCacheEntry, mutateAllFeedCaches } from "@/lib/cache/client-cache"
+import { ImagePreviewModal } from "@/components/ui/image-preview-modal"
 
 export function Feed({ 
   userIdFilter,
@@ -63,6 +64,7 @@ export function Feed({
   const [blockUser, setBlockUser] = useState<{id: string, name: string} | null>(null)
   const [hiddenUserIds, setHiddenUserIds] = useState<string[]>([])
   const [pinnedPostId, setPinnedPostId] = useState<string | null>(null)
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(() => {
     const entry = getCacheEntry<Post[]>(currentFeedKey, 45_000, currentUserIdProp)
     return !entry
@@ -1070,10 +1072,22 @@ export function Feed({
             )}
           </div>
           
-          {/* Image Preview - Aspect ratio constrained for Android & desktop */}
+          {/* Responsive Post Image - Natural Aspect Ratio & Uncropped Containment */}
           {post.image_url && (
-            <div className="mb-3.5 md:mb-5 w-full max-w-lg aspect-[16/10] max-h-72 sm:max-h-80 bg-gray-100 dark:bg-[#1A1A24] rounded-xl overflow-hidden border border-gray-100 dark:border-[#2D2B3B] cursor-pointer hover:opacity-95 transition-all shadow-sm" onClick={() => window.open(post.image_url!, '_blank')}>
-               <img src={post.image_url} alt="Post attachment" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+            <div 
+              className="mb-3.5 md:mb-5 w-full max-w-2xl rounded-2xl overflow-hidden border border-gray-100 dark:border-[#2D2B3B] bg-gray-50/70 dark:bg-[#111019] cursor-pointer hover:border-violet-300 dark:hover:border-violet-800/60 transition-all shadow-xs group/img" 
+              onClick={() => setPreviewImageUrl(post.image_url!)}
+              title="Click to view full image"
+            >
+              <div className="w-full flex items-center justify-center p-1 sm:p-2">
+                <img 
+                  src={post.image_url} 
+                  alt="Post attachment" 
+                  className="block w-auto max-w-full h-auto max-h-[580px] object-contain object-center rounded-xl mx-auto transition-transform duration-200 group-hover/img:scale-[1.008]" 
+                  loading="lazy" 
+                  decoding="async" 
+                />
+              </div>
             </div>
           )}
             
@@ -1299,6 +1313,13 @@ export function Feed({
           </div>
         </div>
       )}
+
+      {/* Full-Screen Image Preview Modal */}
+      <ImagePreviewModal
+        imageUrl={previewImageUrl}
+        isOpen={!!previewImageUrl}
+        onClose={() => setPreviewImageUrl(null)}
+      />
     </div>
   )
 }

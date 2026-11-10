@@ -355,7 +355,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
                   <img 
                     src={URL.createObjectURL(imageFile)} 
                     alt="Attachment preview" 
-                    className="w-full h-52 object-cover" 
+                    className="max-h-60 w-auto max-w-full mx-auto object-contain block" 
                   />
                   <button 
                     onClick={() => {

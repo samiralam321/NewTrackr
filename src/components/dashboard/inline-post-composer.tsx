@@ -494,7 +494,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
               <img
                 src={imagePreview}
                 alt="Preview"
-                className="max-h-48 max-w-full rounded-xl object-cover"
+                className="max-h-60 w-auto max-w-full rounded-xl object-contain bg-gray-50/70 dark:bg-[#111019]"
               />
               <button
                 type="button"
