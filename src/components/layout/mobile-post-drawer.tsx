@@ -380,16 +380,16 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
               )}
             </div>
           </div>
-
-          {/* Code Snippet Modal */}
-          <CodeSnippetModal
-            open={isCodeModalOpen}
-            onOpenChange={setIsCodeModalOpen}
-            initialData={attachedSnippet}
-            onSaveSnippet={(snippet) => setAttachedSnippet(snippet)}
-          />
         </div>
       )}
+
+      {/* Code Snippet Modal */}
+      <CodeSnippetModal
+        open={isCodeModalOpen}
+        onOpenChange={setIsCodeModalOpen}
+        initialData={attachedSnippet}
+        onSaveSnippet={(snippet) => setAttachedSnippet(snippet)}
+      />
     </>
   )
 }

@@ -95,7 +95,10 @@ export function CodeSnippetModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[92vh] flex flex-col p-0 overflow-hidden rounded-2xl bg-white dark:bg-[#0D0B14] border border-gray-100 dark:border-[#2D2B3B] shadow-2xl">
+      <DialogContent 
+        overlayClassName="z-[10000] bg-black/70 backdrop-blur-xs"
+        className="z-[10001] sm:max-w-[700px] max-h-[92vh] flex flex-col p-0 overflow-hidden rounded-2xl bg-white dark:bg-[#0D0B14] border border-gray-100 dark:border-[#2D2B3B] shadow-2xl"
+      >
         {/* Modal Header */}
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-gray-100 dark:border-white/10 shrink-0">
           <div className="flex items-center justify-between">

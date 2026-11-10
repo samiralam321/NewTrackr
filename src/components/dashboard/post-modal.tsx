@@ -438,12 +438,13 @@ export function PostModal({ user, profile }: PostModalProps) {
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : 'Samir'
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[9999] flex items-start sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) handleClose()
-      }}
-    >
+    <>
+      <div 
+        className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[9999] flex items-start sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200"
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !isCodeModalOpen) handleClose()
+        }}
+      >
       <div 
         className="bg-white dark:bg-[#000000] sm:rounded-2xl border border-transparent sm:border-[#eff3f4] dark:sm:border-[#2f3336] shadow-2xl w-full max-w-[600px] flex flex-col overflow-hidden max-h-screen sm:max-h-[90vh] animate-in zoom-in-95 duration-200 relative"
       >
@@ -727,14 +728,15 @@ export function PostModal({ user, profile }: PostModalProps) {
           </div>
         </div>
       </div>
-
-      {/* Code Snippet Modal */}
-      <CodeSnippetModal
-        open={isCodeModalOpen}
-        onOpenChange={setIsCodeModalOpen}
-        initialData={attachedSnippet}
-        onSaveSnippet={(snippet) => setAttachedSnippet(snippet)}
-      />
     </div>
-  )
+
+    {/* Code Snippet Modal */}
+    <CodeSnippetModal
+      open={isCodeModalOpen}
+      onOpenChange={setIsCodeModalOpen}
+      initialData={attachedSnippet}
+      onSaveSnippet={(snippet) => setAttachedSnippet(snippet)}
+    />
+  </>
+)
 }
