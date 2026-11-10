@@ -421,22 +421,22 @@ export function CarbonCodeBlock({
             <button
               type="button"
               onClick={handleCopy}
-              className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded transition-all duration-150 cursor-pointer ${
+              className={`w-[70px] h-[22px] flex items-center justify-center gap-1 text-[10px] font-semibold rounded border transition-colors duration-150 cursor-pointer whitespace-nowrap select-none shrink-0 ${
                 copied 
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
-                  : 'bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 active:scale-95'
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' 
+                  : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10 active:scale-95'
               }`}
-              title="Copy code"
+              aria-label="Copy code"
             >
               {copied ? (
                 <>
-                  <Check className="w-3 h-3 stroke-[2.5]" />
-                  <span>Copied!</span>
+                  <Check className="w-3 h-3 stroke-[2.5] shrink-0" />
+                  <span className="leading-none">Copied!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3 h-3" />
-                  <span>Copy</span>
+                  <Copy className="w-3 h-3 shrink-0" />
+                  <span className="leading-none">Copy</span>
                 </>
               )}
             </button>
