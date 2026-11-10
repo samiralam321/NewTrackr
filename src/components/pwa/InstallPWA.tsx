@@ -271,7 +271,15 @@ export function InstallPWA() {
   )
 }
 
-export function InstallButton({ className = "" }: { className?: string }) {
+export function InstallButton({ 
+  className = "", 
+  iconClassName = "w-6 h-6", 
+  textClassName = "" 
+}: { 
+  className?: string
+  iconClassName?: string
+  textClassName?: string
+}) {
   const { isMounted, isStandalone, isIOS, canInstall, promptInstall } = usePWA()
   const [showIOS, setShowIOS] = useState(false)
   const [showAndroid, setShowAndroid] = useState(false)
@@ -294,10 +302,10 @@ export function InstallButton({ className = "" }: { className?: string }) {
     <>
       <button
         onClick={handleClick}
-        className={className || "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors text-left cursor-pointer w-full"}
+        className={className || "flex items-center gap-4 px-4 py-2.5 rounded-full font-medium text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors text-left cursor-pointer w-full"}
       >
-        <Download className="w-5 h-5 shrink-0" />
-        <span>Install App</span>
+        <Download className={`${iconClassName} shrink-0`} />
+        <span className={textClassName}>Install App</span>
       </button>
 
       {showAndroid && (
