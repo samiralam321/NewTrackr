@@ -37,13 +37,29 @@ export const NOTIFS_CACHE_KEY = 'user_notifications_cache'
 const NOTIFS_STORAGE_KEY_PREFIX = 'trackr_notifications_'
 
 /**
- * Clean plain-text snippet from post content (stripping markdown code blocks and excess whitespace)
+ * Clean plain-text snippet from post content (stripping HTML tags like <b>, <div>, <br>, markdown code blocks, entities, and excess whitespace)
  */
 export function cleanPostSnippet(content?: string | null): string {
   if (!content) return ''
   return content
-    .replace(/```[\s\S]*?```/g, '')
+    // 1. Remove markdown code blocks and inline backticks
+    .replace(/```[\s\S]*?```/g, ' ')
     .replace(/`([^`]+)`/g, '$1')
+    // 2. Remove CSS/JS comments if present
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    // 3. Convert HTML line breaks and closing block tags to spaces to prevent word merging
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/(div|p|h[1-6]|li|blockquote|section|article)>/gi, ' ')
+    // 4. Strip all remaining HTML tags (e.g. <b>, </b>, <div>, <span>, <strong>)
+    .replace(/<[^>]+>/g, '')
+    // 5. Decode common HTML entities
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&nbsp;/gi, ' ')
+    // 6. Normalize multiple spaces and line breaks
     .replace(/\s+/g, ' ')
     .trim()
 }

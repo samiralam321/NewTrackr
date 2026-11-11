@@ -265,12 +265,28 @@ let passed = 0
   passed++
 }
 
-// SCENARIO 16: Post snippet cleaning removes markdown code blocks and excess whitespace
+// SCENARIO 16: Post snippet cleaning removes HTML tags (<b>, <div>, <br>), entities, code blocks, and excess whitespace
 {
   const markdownContent = "people still asking why DSA is imp\n```js\nconst x = 10\n```\n   Learn it today!  "
   const cleaned = cleanPostSnippet(markdownContent)
   assert.strictEqual(cleaned, 'people still asking why DSA is imp Learn it today!')
-  console.log("  ✓ Scenario 16: Clean plain-text preview generated from rich post content")
+
+  // User's exact screenshot sample 1
+  const htmlSample1 = "<b>Just pushed a major update</b>! 🚀 <div><br></div><div>Maintain your daily streak to unlock premium Verification Badge (<b>Blue, Gold &amp; Diamond)</b></div>"
+  const cleaned1 = cleanPostSnippet(htmlSample1)
+  assert.strictEqual(cleaned1, 'Just pushed a major update! 🚀 Maintain your daily streak to unlock premium Verification Badge (Blue, Gold & Diamond)')
+
+  // User's exact screenshot sample 2
+  const htmlSample2 = "🚀 Update ✅<div><br></div><div> 📍 Now<b> </b>can <b>Bold</b> your text </div>"
+  const cleaned2 = cleanPostSnippet(htmlSample2)
+  assert.strictEqual(cleaned2, '🚀 Update ✅ 📍 Now can Bold your text')
+
+  // User's exact screenshot sample 3
+  const htmlSample3 = "<b>Today is 2 Sep</b> 🚀💻 Working on some important features 🔥 <b>Stay tuned!!</b> ❤️"
+  const cleaned3 = cleanPostSnippet(htmlSample3)
+  assert.strictEqual(cleaned3, 'Today is 2 Sep 🚀💻 Working on some important features 🔥 Stay tuned!! ❤️')
+
+  console.log("  ✓ Scenario 16: Clean plain-text preview strips all HTML tags (<b>, <div>, <br>) & entities")
   passed++
 }
 
