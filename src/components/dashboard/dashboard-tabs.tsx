@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { Feed } from "@/components/dashboard/feed"
 import { InlinePostComposer } from "@/components/dashboard/inline-post-composer"
@@ -26,6 +26,9 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
       : 'for-you'
   )
 
+  const tabsContainerRef = useRef<HTMLDivElement>(null)
+  const tabButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+
   const tabs = [
     { id: "for-you", label: "For You", icon: Globe },
     { id: "following", label: "Following", icon: Users },
@@ -33,6 +36,18 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
     { id: "opportunities", label: "Opportunities", icon: Briefcase },
     { id: "events", label: "Events", icon: Calendar },
   ] as const
+
+  // Automatically scroll the active tab into view if outside the visible viewport
+  useEffect(() => {
+    const activeEl = tabButtonRefs.current[activeTab]
+    if (activeEl && tabsContainerRef.current) {
+      activeEl.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'nearest',
+        block: 'nearest'
+      })
+    }
+  }, [activeTab])
 
   // Sync tab change to URL without full page reload
   const handleTabChange = (tabId: TabType) => {
@@ -66,15 +81,20 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
 
   return (
     <div className="w-full">
-      {/* Sliding Pill Navigation Bar (Previous Trackr Style) */}
-      <div className="sticky top-[49px] md:top-0 z-20 backdrop-blur-md bg-white/90 dark:bg-black/90 px-3 sm:px-3.5 py-2 sm:py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] flex items-center overflow-x-auto no-scrollbar">
-        <div className="inline-flex items-center gap-1 p-1 bg-[#F4F3F7] dark:bg-[#15141D] rounded-full border border-gray-200/70 dark:border-[#2D2B3B]/80">
+      {/* Sliding Pill Navigation Bar (Horizontally swipeable on mobile, fully visible Events tab) */}
+      <div 
+        ref={tabsContainerRef}
+        className="sticky top-[52px] md:top-0 z-20 backdrop-blur-md bg-white/90 dark:bg-black/90 px-3 sm:px-3.5 py-2 sm:py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] flex items-center overflow-x-auto overflow-y-hidden no-scrollbar w-full whitespace-nowrap scroll-smooth touch-pan-x"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        <div className="inline-flex items-center gap-1 p-1 bg-[#F4F3F7] dark:bg-[#15141D] rounded-full border border-gray-200/70 dark:border-[#2D2B3B]/80 shrink-0">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id
             const Icon = tab.icon
             return (
               <button
                 key={tab.id}
+                ref={(el) => { tabButtonRefs.current[tab.id] = el }}
                 onClick={() => {
                   if (isActive) {
                     scrollToFeedTop()
@@ -82,7 +102,7 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
                     handleTabChange(tab.id)
                   }
                 }}
-                className={`relative px-3.5 sm:px-4.5 py-1.5 sm:py-2 text-[13.5px] sm:text-[14.5px] font-semibold rounded-full transition-colors duration-200 flex items-center gap-2 select-none shrink-0 cursor-pointer ${
+                className={`relative px-3 sm:px-4.5 py-1.5 sm:py-2 text-[13px] sm:text-[14.5px] font-semibold rounded-full transition-colors duration-200 flex items-center gap-1.5 sm:gap-2 select-none shrink-0 cursor-pointer whitespace-nowrap ${
                   isActive
                     ? "text-white font-bold"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
@@ -96,15 +116,17 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
                   />
                 )}
                 <Icon
-                  className={`w-4 h-4 relative z-10 transition-colors duration-200 ${
+                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 relative z-10 transition-colors duration-200 shrink-0 ${
                     isActive ? "text-white" : "text-gray-400 dark:text-gray-500"
                   }`}
                 />
-                <span className="relative z-10">{tab.label}</span>
+                <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
               </button>
             )
           })}
         </div>
+        {/* Generous trailing spacer so the Events tab can be fully swiped into view without clipping */}
+        <div className="w-6 shrink-0 h-4" aria-hidden="true" />
       </div>
 
       {/* When in Opportunities mode: Render the dedicated Opportunities Discovery Feed */}
