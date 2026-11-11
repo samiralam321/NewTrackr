@@ -4,12 +4,13 @@ import Link from "next/link"
 export default function AuthPage() {
   return (
     <div className="flex min-h-screen bg-gray-50/50 p-4 sm:p-6 lg:p-8 items-center justify-center">
-      <div className="mx-auto flex w-full max-w-6xl overflow-hidden rounded-[2.5rem] bg-white shadow-xl ring-1 ring-gray-100">
+      {/* Stable fixed-height card container on desktop to completely eliminate layout shifts */}
+      <div className="mx-auto flex w-full max-w-6xl overflow-hidden rounded-[2.5rem] bg-white shadow-xl ring-1 ring-gray-100 lg:h-[680px]">
         
-        {/* Left Side - Brand & Features Overview */}
-        <div className="relative hidden w-[45%] flex-col bg-[#FCFBFF] p-12 pb-0 lg:flex overflow-hidden">
+        {/* Left Side - Brand & Features Overview (Fixed dimensions, never shifts) */}
+        <div className="relative hidden w-[45%] h-full flex-col bg-[#FCFBFF] p-12 pb-0 lg:flex overflow-hidden shrink-0">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1 mb-10 relative z-20 group w-fit">
+          <Link href="/" className="flex items-center gap-1 mb-8 relative z-20 group w-fit">
             <img 
               src="/logo.png" 
               alt="Trackr Logo" 
@@ -19,7 +20,7 @@ export default function AuthPage() {
           </Link>
 
           {/* Feature List */}
-          <div className="flex flex-col gap-7 relative z-20">
+          <div className="flex flex-col gap-6 relative z-20">
             {/* Feature 1 */}
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEECFF] text-[22px]">
@@ -76,24 +77,24 @@ export default function AuthPage() {
         </div>
 
         {/* Right Side - Interactive Authentication Center */}
-        <div className="flex w-full flex-col items-center justify-center p-6 sm:p-12 lg:w-[55%]">
-          <div className="w-full max-w-[420px] text-center">
+        <div className="flex w-full h-full flex-col items-center justify-center p-6 sm:p-10 lg:w-[55%] overflow-y-auto">
+          <div className="w-full max-w-[420px] text-center my-auto py-2">
             
             {/* Logo Icon inside circle */}
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-violet-50 relative">
-               <div className="absolute -top-2 -left-4 text-yellow-300"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
-               <div className="absolute -top-6 right-0 text-violet-200"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
-               <div className="absolute top-10 -right-6 text-yellow-300"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-violet-100/50">
-                <img src="/logo.png" alt="Trackr Logo" className="w-10 h-10 object-contain drop-shadow-sm scale-[1.3]" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-violet-50 relative">
+               <div className="absolute -top-2 -left-3 text-yellow-300"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
+               <div className="absolute -top-4 right-0 text-violet-200"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
+               <div className="absolute top-8 -right-4 text-yellow-300"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-100/50">
+                <img src="/logo.png" alt="Trackr Logo" className="w-9 h-9 object-contain drop-shadow-sm scale-[1.3]" />
               </div>
             </div>
 
             {/* Welcome Text */}
-            <h1 className="mb-2 text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+            <h1 className="mb-1 text-2xl sm:text-[26px] font-bold tracking-tight text-gray-900">
               Welcome to <span className="text-violet-600">Trackr</span>
             </h1>
-            <p className="mb-7 text-sm text-gray-500 max-w-[320px] mx-auto leading-relaxed">
+            <p className="mb-5 text-xs text-gray-500 max-w-[320px] mx-auto leading-relaxed">
               Track daily learning progress, build streaks, and grow with 25,000+ student developers.
             </p>
 
