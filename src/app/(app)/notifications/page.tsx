@@ -16,7 +16,6 @@ import {
   Check
 } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { getBadgeLevel } from "@/lib/utils/streak"
 import { formatTimeCompact } from "@/lib/utils/date"
@@ -40,7 +39,6 @@ const TABS: { id: FilterTab; label: string }[] = [
 ]
 
 export default function NotificationsPage() {
-  const router = useRouter()
   const [notifications, setNotifications] = useState<GroupedNotification[]>(() => {
     return getCachedNotifications() || []
   })
@@ -139,17 +137,10 @@ export default function NotificationsPage() {
   }
 
   const handleNotificationClick = (n: GroupedNotification) => {
-    // Optimistically mark group as read
+    // Only mark group as read if unread, never navigate away
     if (!n.is_read) {
       setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, is_read: true } : item))
       markNotificationsAsRead(n.raw_ids)
-    }
-
-    if (n.post_id && !['badge', 'follow'].includes(n.type)) {
-      router.push(`/post/${n.post_id}`)
-    } else if (n.actors && n.actors[0]) {
-      const handle = n.actors[0].username ? n.actors[0].username.replace(/^@/, '') : n.actors[0].id
-      router.push(`/profile/${handle}`)
     }
   }
 
@@ -181,8 +172,6 @@ export default function NotificationsPage() {
     const count = n.total_actors_count || n.actors.length || 1
     const actor1 = n.actors[0] || { id: 'unknown', full_name: 'Someone' }
     const actor2 = n.actors[1] || { id: 'unknown', full_name: 'Someone' }
-    const actor1Url = `/profile/${actor1.username ? actor1.username.replace(/^@/, '') : actor1.id}`
-    const actor2Url = `/profile/${actor2.username ? actor2.username.replace(/^@/, '') : actor2.id}`
     const remainingCount = Math.max(0, count - 2)
     const remainingNoun = remainingCount === 1 ? 'other' : 'others'
 
@@ -203,30 +192,30 @@ export default function NotificationsPage() {
       if (count === 1) {
         return (
           <span>
-            <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+            <span className="font-bold text-gray-900 dark:text-white">
               {actor1.full_name}
-            </Link> liked your post
+            </span> liked your post
           </span>
         )
       }
       if (count === 2) {
         return (
           <span>
-            <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+            <span className="font-bold text-gray-900 dark:text-white">
               {actor1.full_name}
-            </Link> and <Link href={actor2Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+            </span> and <span className="font-bold text-gray-900 dark:text-white">
               {actor2.full_name}
-            </Link> liked your post
+            </span> liked your post
           </span>
         )
       }
       return (
         <span>
-          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+          <span className="font-bold text-gray-900 dark:text-white">
             {actor1.full_name}
-          </Link>, <Link href={actor2Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+          </span>, <span className="font-bold text-gray-900 dark:text-white">
             {actor2.full_name}
-          </Link> and {remainingCount} {remainingNoun} liked your post
+          </span> and {remainingCount} {remainingNoun} liked your post
         </span>
       )
     }
@@ -235,30 +224,30 @@ export default function NotificationsPage() {
       if (count === 1) {
         return (
           <span>
-            <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+            <span className="font-bold text-gray-900 dark:text-white">
               {actor1.full_name}
-            </Link> started following you
+            </span> started following you
           </span>
         )
       }
       if (count === 2) {
         return (
           <span>
-            <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+            <span className="font-bold text-gray-900 dark:text-white">
               {actor1.full_name}
-            </Link> and <Link href={actor2Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+            </span> and <span className="font-bold text-gray-900 dark:text-white">
               {actor2.full_name}
-            </Link> started following you
+            </span> started following you
           </span>
         )
       }
       return (
         <span>
-          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+          <span className="font-bold text-gray-900 dark:text-white">
             {actor1.full_name}
-          </Link>, <Link href={actor2Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+          </span>, <span className="font-bold text-gray-900 dark:text-white">
             {actor2.full_name}
-          </Link> and {remainingCount} {remainingNoun} started following you
+          </span> and {remainingCount} {remainingNoun} started following you
         </span>
       )
     }
@@ -267,17 +256,17 @@ export default function NotificationsPage() {
       if (count === 1) {
         return (
           <span>
-            <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+            <span className="font-bold text-gray-900 dark:text-white">
               {actor1.full_name}
-            </Link> reposted your post
+            </span> reposted your post
           </span>
         )
       }
       return (
         <span>
-          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+          <span className="font-bold text-gray-900 dark:text-white">
             {actor1.full_name}
-          </Link> and {count - 1} {count - 1 === 1 ? 'other' : 'others'} reposted your post
+          </span> and {count - 1} {count - 1 === 1 ? 'other' : 'others'} reposted your post
         </span>
       )
     }
@@ -285,9 +274,9 @@ export default function NotificationsPage() {
     if (n.type === 'comment') {
       return (
         <span>
-          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+          <span className="font-bold text-gray-900 dark:text-white">
             {actor1.full_name}
-          </Link> commented on your post
+          </span> commented on your post
         </span>
       )
     }
@@ -295,9 +284,9 @@ export default function NotificationsPage() {
     if (n.type === 'mention') {
       return (
         <span>
-          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+          <span className="font-bold text-gray-900 dark:text-white">
             {actor1.full_name}
-          </Link> mentioned you
+          </span> mentioned you
         </span>
       )
     }
@@ -305,14 +294,14 @@ export default function NotificationsPage() {
     if (n.type === 'quote') {
       return (
         <span>
-          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline">
+          <span className="font-bold text-gray-900 dark:text-white">
             {actor1.full_name}
-          </Link> quoted your post
+          </span> quoted your post
         </span>
       )
     }
 
-    return <span>New notification from {actor1.full_name}</span>
+    return <span>New notification from <span className="font-bold text-gray-900 dark:text-white">{actor1.full_name}</span></span>
   }
 
   // Filtered notifications
@@ -443,15 +432,7 @@ export default function NotificationsPage() {
                 <article
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      handleNotificationClick(notification)
-                    }
-                  }}
-                  className={`p-4 sm:p-5 flex gap-3.5 transition-colors cursor-pointer select-text text-left hover:bg-black/[0.02] dark:hover:bg-white/[0.03] ${
+                  className={`p-4 sm:p-5 flex gap-3.5 transition-colors select-text text-left cursor-default ${
                     !notification.is_read ? 'bg-violet-50/30 dark:bg-violet-950/15' : ''
                   }`}
                 >
@@ -465,36 +446,31 @@ export default function NotificationsPage() {
 
                   {/* Middle Column: Avatars Row + Headline + Post Text Preview */}
                   <div className="flex-1 min-w-0">
-                    {/* Horizontal Avatar Row: Twitter/X Style */}
+                    {/* Horizontal Avatar Row: Twitter/X Style (Non-navigable preview) */}
                     {notification.actors && notification.actors.length > 0 && (
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-2">
-                        {notification.actors.map((actor) => {
-                          const profileUrl = `/profile/${actor.username ? actor.username.replace(/^@/, '') : actor.id}`
-                          return (
-                            <Link
-                              key={actor.id}
-                              href={profileUrl}
-                              onClick={(e) => e.stopPropagation()}
-                              title={actor.full_name}
-                              className="group/avatar relative"
-                            >
-                              <img
-                                src={actor.avatar_url || getFallbackAvatar(actor.full_name)}
-                                alt={actor.full_name}
-                                className="w-8 h-8 rounded-full object-cover border border-white dark:border-[#0B0A10] shadow-2xs group-hover/avatar:opacity-85 group-hover/avatar:scale-105 transition-all"
-                                loading="lazy"
-                                onError={(e) => {
-                                  e.currentTarget.src = getFallbackAvatar(actor.full_name)
-                                }}
-                              />
-                            </Link>
-                          )
-                        })}
+                        {notification.actors.map((actor) => (
+                          <div
+                            key={actor.id}
+                            title={actor.full_name}
+                            className="relative select-none pointer-events-none"
+                          >
+                            <img
+                              src={actor.avatar_url || getFallbackAvatar(actor.full_name)}
+                              alt={actor.full_name}
+                              className="w-8 h-8 rounded-full object-cover border border-white dark:border-[#0B0A10] shadow-2xs"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.src = getFallbackAvatar(actor.full_name)
+                              }}
+                            />
+                          </div>
+                        ))}
                       </div>
                     )}
 
                     {/* Grouped Headline + Timestamp */}
-                    <div className="text-[14.5px] sm:text-[15px] leading-snug text-gray-900 dark:text-gray-100 font-normal">
+                    <div className="text-[14.5px] sm:text-[15px] leading-snug text-gray-900 dark:text-gray-100 font-normal select-text">
                       {renderNotificationMessage(notification)}
                       <span 
                         className="text-gray-400 dark:text-gray-500 text-xs font-normal ml-1.5 select-none"
@@ -506,7 +482,7 @@ export default function NotificationsPage() {
 
                     {/* Post Content Text Snippet Preview (Muted Twitter Style) */}
                     {postContent && (
-                      <p className="text-[13.5px] sm:text-[14px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 font-normal leading-snug">
+                      <p className="text-[13.5px] sm:text-[14px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 font-normal leading-snug select-text">
                         {cleanPostSnippet(postContent)}
                       </p>
                     )}
@@ -514,11 +490,11 @@ export default function NotificationsPage() {
 
                   {/* Right Column: Compact Post Image Thumbnail Preview (only if post has an image) */}
                   {hasPost && postImage && (
-                    <div className="shrink-0 self-center pl-2">
+                    <div className="shrink-0 self-center pl-2 select-none pointer-events-none">
                       <img
                         src={postImage}
                         alt="Post thumbnail"
-                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-gray-100 dark:border-white/10 shadow-2xs hover:opacity-90 transition-opacity"
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-gray-100 dark:border-white/10 shadow-2xs"
                         loading="lazy"
                       />
                     </div>
