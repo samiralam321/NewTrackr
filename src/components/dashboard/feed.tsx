@@ -1195,13 +1195,15 @@ export function Feed({
                       {getUserHandle(post.profiles)}
                     </span>
                     <span className="text-[#536471] dark:text-[#71767b] text-[14px] font-normal">·</span>
-                    <span 
+                    <Link 
+                      href={`/post/${post.id}`}
                       className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal hover:underline shrink-0"
                       title={formatFullDateTime(post.created_at)}
                       suppressHydrationWarning
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {formatTimeCompact(post.created_at)}
-                    </span>
+                    </Link>
 
                     {post.time_spent && (
                       <span className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#1A1A24] px-2 py-0.5 rounded-md inline-flex items-center gap-1">

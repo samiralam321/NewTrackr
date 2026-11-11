@@ -322,7 +322,7 @@ export function QuoteModal({
 
           {/* Embedded Quoted Post Preview */}
           <div className="ml-13 mt-2">
-            <EmbeddedQuoteCard quotedPost={targetPost} quotedPostId={targetPost.id} />
+            <EmbeddedQuoteCard quotedPost={targetPost} quotedPostId={targetPost.id} interactive={false} />
           </div>
         </div>
 

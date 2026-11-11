@@ -5,21 +5,26 @@ import { Post } from '@/lib/supabase/types'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
 import { getBadgeLevel } from '@/lib/utils/streak'
 import { getUserHandle } from '@/lib/utils/user'
-import { formatTimeCompact } from '@/lib/utils/date'
+import { formatTimeCompact, formatFullDateTime } from '@/lib/utils/date'
 import { AlertCircle, Code2 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface EmbeddedQuoteCardProps {
   quotedPost?: Post | null
   quotedPostId?: string | null
   onImageClick?: (imageUrl: string) => void
+  interactive?: boolean
 }
 
 export function EmbeddedQuoteCard({
   quotedPost,
   quotedPostId,
-  onImageClick
+  onImageClick,
+  interactive = true
 }: EmbeddedQuoteCardProps) {
+  const router = useRouter()
+
   // If quoted post was deleted or unavailable
   if (!quotedPost) {
     return (
@@ -34,6 +39,8 @@ export function EmbeddedQuoteCard({
   const handle = getUserHandle(quotedPost.profiles)
   const badgeLevel = getBadgeLevel(quotedPost.profiles?.consistency_score, quotedPost.profiles?.full_name)
   const avatarUrl = quotedPost.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=7C3AED&color=fff&size=80`
+  const profileUrl = `/profile/${quotedPost.profiles?.username ? quotedPost.profiles.username.replace(/^@/, '') : quotedPost.user_id}`
+  const postUrl = `/post/${quotedPost.id}`
 
   // Detect code block inside content
   const codeBlockMatch = quotedPost.content ? quotedPost.content.match(/```([a-zA-Z0-9_:-]*)\n([\s\S]*?)```/) : null
@@ -45,12 +52,46 @@ export function EmbeddedQuoteCard({
     ? quotedPost.content.replace(/```[\s\S]*?```/g, '').trim()
     : ''
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (!interactive) return
+    // If user is highlighting text, do not navigate
+    const selection = window.getSelection()
+    if (selection && selection.toString().length > 0) return
+
+    e.stopPropagation()
+    router.push(postUrl)
+  }
+
+  const handleMouseEnter = () => {
+    if (interactive && postUrl) {
+      try {
+        router.prefetch(postUrl)
+      } catch {}
+    }
+  }
+
   return (
-    <div className="mt-2.5 mb-2 rounded-2xl border border-gray-200 dark:border-white/10 bg-white/50 dark:bg-[#12101A]/60 hover:bg-gray-50/70 dark:hover:bg-[#161420] transition-all p-3 sm:p-3.5 overflow-hidden group/quote">
+    <div 
+      onClick={handleCardClick}
+      onMouseEnter={handleMouseEnter}
+      role={interactive ? "link" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (interactive && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault()
+          router.push(postUrl)
+        }
+      }}
+      className={`mt-2.5 mb-2 rounded-2xl border border-gray-200 dark:border-white/10 bg-white/50 dark:bg-[#12101A]/60 transition-all p-3 sm:p-3.5 overflow-hidden group/quote ${
+        interactive 
+          ? 'cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] hover:border-gray-300 dark:hover:border-white/20 active:scale-[0.995]' 
+          : ''
+      }`}
+    >
       {/* Quoted Author Header */}
       <div className="flex items-center gap-2 mb-1.5 min-w-0">
         <Link 
-          href={`/profile/${quotedPost.user_id}`}
+          href={profileUrl}
           onClick={(e) => e.stopPropagation()}
           className="shrink-0 group/avatar"
         >
@@ -64,7 +105,7 @@ export function EmbeddedQuoteCard({
 
         <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
           <Link
-            href={`/profile/${quotedPost.user_id}`}
+            href={profileUrl}
             onClick={(e) => e.stopPropagation()}
             className="font-bold text-[13px] text-gray-900 dark:text-gray-100 hover:underline truncate"
           >
@@ -77,7 +118,10 @@ export function EmbeddedQuoteCard({
           {quotedPost.created_at && (
             <>
               <span className="text-gray-400 dark:text-gray-600 text-xs select-none">·</span>
-              <span className="text-[11.5px] text-gray-400 dark:text-gray-500 font-normal shrink-0">
+              <span 
+                className="text-[11.5px] text-gray-400 dark:text-gray-500 font-normal shrink-0 hover:underline"
+                title={formatFullDateTime(quotedPost.created_at)}
+              >
                 {formatTimeCompact(quotedPost.created_at)}
               </span>
             </>
