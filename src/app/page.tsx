@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { InstallButton } from "@/components/pwa/InstallPWA"
-import { Flame, Code2, Trophy, Briefcase, AtSign, ShieldCheck, Sparkles, Star, Users, BookOpen, Target, Award, Rocket, CheckCircle2 } from "lucide-react"
+import { Flame, Code2, Trophy, Briefcase, AtSign, ShieldCheck, Star, Users, BookOpen, Target, Award, Rocket, CheckCircle2 } from "lucide-react"
 
 export default function LandingPage() {
   return (
@@ -49,8 +49,7 @@ export default function LandingPage() {
           </div>
           
           <div className="flex-1 text-left relative z-20">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-semibold mb-6">
-              <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+            <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-semibold mb-6">
               <span>Track progress. Build daily discipline.</span>
             </div>
 
