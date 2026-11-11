@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
 import { useState, useEffect, useRef } from "react"
+import { motion } from "framer-motion"
 import { Loader2, Mail, Lock, Check, Eye, EyeOff, User, AlertCircle, ShieldCheck, ArrowLeft, CheckCircle2 } from "lucide-react"
 import { 
   normalizeEmail, 
@@ -458,8 +459,8 @@ export function AuthForm() {
   // Standard Login / Sign Up Slate
   return (
     <div className="space-y-5 text-left">
-      {/* Mode Switch Tabs (Sign In vs Create Account) */}
-      <div className="flex rounded-xl bg-gray-100/80 p-1 border border-gray-200/60">
+      {/* Mode Switch Tabs (Sign In vs Create Account) with Sliding Pill Animation */}
+      <div className="relative flex rounded-xl bg-gray-100/90 p-1 border border-gray-200/60">
         <button
           type="button"
           onClick={() => {
@@ -467,13 +468,20 @@ export function AuthForm() {
             setErrorMsg(null)
             setSuccessMsg(null)
           }}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+          className={`relative z-10 flex-1 py-2 text-xs font-bold rounded-lg transition-colors duration-200 cursor-pointer select-none text-center ${
             !isSignUp 
-              ? 'bg-white text-gray-900 shadow-xs' 
+              ? 'text-gray-900' 
               : 'text-gray-500 hover:text-gray-800'
           }`}
         >
-          Sign In
+          {!isSignUp && (
+            <motion.div
+              layoutId="auth-sliding-pill"
+              className="absolute inset-0 bg-white rounded-lg shadow-sm"
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+            />
+          )}
+          <span className="relative z-10">Sign In</span>
         </button>
         <button
           type="button"
@@ -482,13 +490,20 @@ export function AuthForm() {
             setErrorMsg(null)
             setSuccessMsg(null)
           }}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+          className={`relative z-10 flex-1 py-2 text-xs font-bold rounded-lg transition-colors duration-200 cursor-pointer select-none text-center ${
             isSignUp 
-              ? 'bg-white text-gray-900 shadow-xs' 
+              ? 'text-gray-900' 
               : 'text-gray-500 hover:text-gray-800'
           }`}
         >
-          Create Account
+          {isSignUp && (
+            <motion.div
+              layoutId="auth-sliding-pill"
+              className="absolute inset-0 bg-white rounded-lg shadow-sm"
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+            />
+          )}
+          <span className="relative z-10">Create Account</span>
         </button>
       </div>
 
