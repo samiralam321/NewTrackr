@@ -6,7 +6,7 @@ import { VerifiedBadge } from '@/components/ui/verified-badge'
 import { getBadgeLevel } from '@/lib/utils/streak'
 import { getUserHandle } from '@/lib/utils/user'
 import { formatTimeCompact, formatFullDateTime } from '@/lib/utils/date'
-import { AlertCircle, Code2, ChevronDown, ChevronUp, Maximize2, X } from 'lucide-react'
+import { AlertCircle, Code2, ChevronDown, ChevronUp } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { CarbonCodeBlock } from '@/components/ui/carbon-code-block'
@@ -26,7 +26,6 @@ export function EmbeddedQuoteCard({
 }: EmbeddedQuoteCardProps) {
   const [localPost, setLocalPost] = useState<Post | null>(quotedPost || null)
   const [isExpanded, setIsExpanded] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(!quotedPost && !!quotedPostId)
 
   // Fetch quoted post on-demand if only quotedPostId was provided and quotedPost was missing
@@ -70,17 +69,6 @@ export function EmbeddedQuoteCard({
     }
   }, [quotedPost, quotedPostId])
 
-  // ESC key listener to close quick view modal
-  useEffect(() => {
-    if (!isModalOpen) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsModalOpen(false)
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isModalOpen])
 
   // If loading quoted post
   if (isLoading) {
@@ -193,19 +181,9 @@ export function EmbeddedQuoteCard({
             </div>
           </div>
 
-          {/* Top-Right Toggle & Modal Button (Fixed width to prevent ANY layout shift) */}
+          {/* Top-Right Toggle Button (Fixed width to prevent ANY layout shift) */}
           {interactive && (
-            <div className="flex items-center gap-1.5 shrink-0 ml-auto" onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(true)}
-                title="View in popup modal"
-                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
-                aria-label="View in popup modal"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-              </button>
-
+            <div className="flex items-center shrink-0 ml-auto" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
                 onClick={() => setIsExpanded(prev => !prev)}
@@ -268,10 +246,10 @@ export function EmbeddedQuoteCard({
           </div>
         )}
 
-        {/* Bottom Expansion Bar (visible when expanded) */}
+        {/* Bottom Collapse Bar (visible when expanded) */}
         {isExpanded && interactive && (
           <div 
-            className="flex items-center justify-between text-xs pt-2 mt-2.5 border-t border-gray-100 dark:border-white/5 text-gray-500 dark:text-gray-400"
+            className="flex items-center justify-end text-xs pt-2 mt-2.5 border-t border-gray-100 dark:border-white/5 text-gray-500 dark:text-gray-400"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -282,121 +260,9 @@ export function EmbeddedQuoteCard({
               <ChevronUp className="w-3.5 h-3.5" />
               <span>Show less</span>
             </button>
-
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1 text-violet-600 dark:text-violet-400 hover:underline font-semibold cursor-pointer"
-            >
-              <Maximize2 className="w-3.5 h-3.5" />
-              <span>Open in popup modal</span>
-            </button>
           </div>
         )}
       </div>
-
-      {/* ================= QUICK POST MODAL OVERLAY (ON SAME PAGE, NO NAVIGATION) ================= */}
-      {isModalOpen && (
-        <div 
-          className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={(e) => {
-            e.stopPropagation()
-            setIsModalOpen(false)
-          }}
-        >
-          <div 
-            className="bg-white dark:bg-[#12101A] border border-gray-200 dark:border-[#2D2B3B] rounded-3xl max-w-xl w-full max-h-[85vh] overflow-y-auto no-scrollbar shadow-2xl p-5 sm:p-6 animate-in zoom-in-95 duration-200 relative text-left"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-100 dark:border-white/10">
-              <div className="flex items-center gap-3">
-                <Link 
-                  href={profileUrl}
-                  onClick={() => setIsModalOpen(false)}
-                  className="shrink-0 group/avatar"
-                >
-                  <img 
-                    src={avatarUrl} 
-                    alt={authorName} 
-                    className="w-10 h-10 rounded-full object-cover group-hover/avatar:opacity-85 transition-opacity"
-                  />
-                </Link>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <Link
-                      href={profileUrl}
-                      onClick={() => setIsModalOpen(false)}
-                      className="font-bold text-[15px] text-gray-900 dark:text-white hover:underline"
-                    >
-                      {authorName}
-                    </Link>
-                    <VerifiedBadge level={badgeLevel} nameOrHandle={authorName} size="sm" />
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <span>{handle}</span>
-                    {localPost.created_at && (
-                      <>
-                        <span>·</span>
-                        <span>{formatFullDateTime(localPost.created_at)}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
-                aria-label="Close modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body: Full Post Text Content */}
-            {plainText && (
-              <div className="text-[15px] leading-relaxed text-gray-900 dark:text-[#e7e9ea] font-normal mb-4 whitespace-pre-wrap">
-                {plainText}
-              </div>
-            )}
-
-            {/* Modal Code Snippet */}
-            {codeBlockMatch && (
-              <div className="mb-4 rounded-xl overflow-hidden text-left">
-                <CarbonCodeBlock
-                  code={codeBlockMatch[2]}
-                  language={codeBlockMatch[1]?.split(':')[0] || 'text'}
-                  title={codeBlockMatch[1]?.split(':')[2] || undefined}
-                />
-              </div>
-            )}
-
-            {/* Modal Image if any */}
-            {localPost.image_url && (
-              <div className="rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10 mb-4 bg-black/5">
-                <img 
-                  src={localPost.image_url} 
-                  alt="Post attachment" 
-                  className="w-full max-h-[420px] object-contain"
-                />
-              </div>
-            )}
-
-            {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-white/10">
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="px-5 py-2 rounded-xl text-sm font-semibold bg-violet-600 hover:bg-violet-700 text-white shadow-sm transition-colors cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }
