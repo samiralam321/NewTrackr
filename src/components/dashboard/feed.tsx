@@ -878,6 +878,20 @@ export function Feed({
       if (currentlyLiked) {
         const { error } = await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', uid)
         if (error) throw error
+
+        // Automatically clean up like notification on unlike
+        const post = posts.find(p => p.id === postId)
+        if (post && post.user_id !== uid) {
+          try {
+            await supabase
+              .from('notifications')
+              .delete()
+              .eq('user_id', post.user_id)
+              .eq('actor_id', uid)
+              .eq('type', 'like')
+              .eq('post_id', postId)
+          } catch (notifErr) {}
+        }
       } else {
         const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: uid })
         if (error) {

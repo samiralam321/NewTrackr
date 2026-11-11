@@ -72,9 +72,35 @@ export function PostDetailClient({
         if (error && (error as any).code !== '23505') {
           throw error
         }
+
+        // Send like notification to post author if not self
+        if (post.user_id !== currentUserId) {
+          try {
+            await supabase.from('notifications').insert({
+              user_id: post.user_id,
+              actor_id: currentUserId,
+              type: 'like',
+              post_id: post.id,
+              is_read: false
+            })
+          } catch (e) {}
+        }
       } else {
         const { error } = await supabase.from('likes').delete().eq('post_id', post.id).eq('user_id', currentUserId)
         if (error) throw error
+
+        // Automatically clean up like notification on unlike
+        if (post.user_id !== currentUserId) {
+          try {
+            await supabase
+              .from('notifications')
+              .delete()
+              .eq('user_id', post.user_id)
+              .eq('actor_id', currentUserId)
+              .eq('type', 'like')
+              .eq('post_id', post.id)
+          } catch (e) {}
+        }
       }
     } catch (err) {
       console.warn("Error toggling like:", err)
