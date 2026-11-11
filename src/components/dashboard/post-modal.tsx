@@ -691,7 +691,7 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
                 value={content}
                 onChange={handleTextChange}
                 onPaste={handlePaste}
-                placeholder={`What's on your mind, ${firstName}? (Paste image with Ctrl+V)`}
+                placeholder={`What's on your mind, ${firstName}?`}
                 className={`w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-snug overflow-hidden transition-[height] duration-75 ${
                   (imagePreview || attachedSnippet) ? 'min-h-[36px]' : 'min-h-[64px]'
                 }`}
