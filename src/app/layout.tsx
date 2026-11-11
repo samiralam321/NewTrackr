@@ -60,7 +60,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} font-sans h-full antialiased`}
+      className={`${inter.variable} font-sans h-full antialiased scroll-smooth`}
       suppressHydrationWarning
     >
       <head>
