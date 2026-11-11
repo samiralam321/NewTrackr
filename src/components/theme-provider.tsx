@@ -47,18 +47,46 @@ export function ThemeProvider({
     }
   }, [defaultTheme])
 
-  const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem('trackr-theme', theme)
-      setTheme(theme)
+  const setThemeHandler = (newTheme: Theme) => {
+    localStorage.setItem('trackr-theme', newTheme)
+    
+    const applyTheme = () => {
       const root = window.document.documentElement
-      if (theme === 'dark') {
+      if (newTheme === 'dark') {
         root.classList.add('dark')
       } else {
         root.classList.remove('dark')
       }
-    },
+      setTheme(newTheme)
+    }
+
+    // Use GPU-accelerated View Transitions API if supported for 60fps butter-smooth transition
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      const root = window.document.documentElement
+      root.classList.add('theme-transitioning')
+      try {
+        const transition = (document as any).startViewTransition(() => {
+          applyTheme()
+        })
+        if (transition && transition.finished) {
+          transition.finished.finally(() => {
+            root.classList.remove('theme-transitioning')
+          })
+        } else {
+          setTimeout(() => root.classList.remove('theme-transitioning'), 300)
+        }
+      } catch (err) {
+        root.classList.remove('theme-transitioning')
+        applyTheme()
+      }
+    } else {
+      applyTheme()
+    }
+  }
+
+  const value = {
+    theme,
+    setTheme: setThemeHandler,
   }
 
   return (

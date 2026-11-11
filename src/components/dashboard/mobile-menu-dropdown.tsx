@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useRef, useEffect } from "react"
-import { Menu, Trophy, Medal, Bookmark, Bell, MessageSquare } from "lucide-react"
+import { Menu, Trophy, Medal, Bookmark, Bell, MessageSquare, Sun, Moon } from "lucide-react"
 import Link from "next/link"
+import { useTheme } from "@/components/theme-provider"
 
 export function MobileMenuDropdown({ profile }: { profile?: any }) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const { theme, setTheme } = useTheme()
+  const isDark = theme === 'dark'
 
   // Contact States
   const [isContactOpen, setIsContactOpen] = useState(false)
@@ -102,6 +105,20 @@ export function MobileMenuDropdown({ profile }: { profile?: any }) {
             >
               <MessageSquare className="w-[18px] h-[18px] text-violet-500" />
               <span>Contact</span>
+            </button>
+            <div className="my-1 border-t border-gray-100 dark:border-[#2D2B3B]" />
+            <button 
+              onClick={() => {
+                setTheme(isDark ? 'light' : 'dark')
+                setIsOpen(false)
+              }} 
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#2D2B3B] text-gray-700 dark:text-gray-300 transition-colors text-left font-semibold text-[15px]"
+            >
+              <div className="flex items-center gap-3">
+                {isDark ? <Sun className="w-[18px] h-[18px] text-amber-400" /> : <Moon className="w-[18px] h-[18px] text-violet-500" />}
+                <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+              </div>
+              <span className="text-xs text-gray-400 font-normal">{isDark ? 'On' : 'Off'}</span>
             </button>
           </div>
         </div>

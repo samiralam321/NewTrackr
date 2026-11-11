@@ -166,9 +166,13 @@ export function SearchBar({ userProfile }: SearchBarProps) {
       <button
         onClick={() => setTheme(isDark ? 'light' : 'dark')}
         title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        className="w-9 h-9 rounded-full flex items-center justify-center text-[#536471] dark:text-[#71767b] hover:text-[#0f1419] dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05] border border-[#eff3f4] dark:border-[#2f3336] transition-colors shrink-0"
+        aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        className="w-9 h-9 rounded-full flex items-center justify-center text-[#536471] dark:text-[#71767b] hover:text-[#0f1419] dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.05] border border-[#eff3f4] dark:border-[#2f3336] transition-transform duration-150 active:scale-90 cursor-pointer shrink-0 relative overflow-hidden"
       >
-        {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[#7C3AED]" />}
+        <div className="relative w-4 h-4 flex items-center justify-center">
+          <Sun className={`w-4 h-4 text-amber-400 absolute transition-all duration-300 transform ${isDark ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'}`} />
+          <Moon className={`w-4 h-4 text-[#7C3AED] absolute transition-all duration-300 transform ${isDark ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}`} />
+        </div>
       </button>
 
       {/* Notifications Icon with Badge */}
