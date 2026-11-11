@@ -108,7 +108,7 @@ export default function LandingPage() {
         </section>
 
         {/* ================= HOW IT WORKS SECTION ================= */}
-        <section id="how-it-works" className="scroll-mt-24 py-20 md:py-28 bg-[#F8F7FF] text-center relative border-y border-violet-100/50">
+        <section id="how-it-works" className="scroll-mt-6 md:scroll-mt-3 py-20 md:py-28 bg-[#F8F7FF] text-center relative border-y border-violet-100/50">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100/80 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
               Simple Daily Rhythm
@@ -169,7 +169,7 @@ export default function LandingPage() {
         </section>
 
         {/* ================= FEATURES SECTION ================= */}
-        <section id="features" className="scroll-mt-24 py-20 md:py-28 bg-white">
+        <section id="features" className="scroll-mt-6 md:scroll-mt-3 py-20 md:py-28 bg-white">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
@@ -284,7 +284,7 @@ export default function LandingPage() {
         </section>
 
         {/* ================= WHY TRACKR? SECTION ================= */}
-        <section id="why-trackr" className="scroll-mt-24 py-20 md:py-28 bg-[#FBFBFE] border-y border-violet-100/50">
+        <section id="why-trackr" className="scroll-mt-6 md:scroll-mt-3 py-20 md:py-28 bg-[#FBFBFE] border-y border-violet-100/50">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
@@ -371,7 +371,7 @@ export default function LandingPage() {
         </section>
 
         {/* ================= COMMUNITY SECTION ================= */}
-        <section id="community" className="scroll-mt-24 py-20 md:py-28 bg-white relative overflow-hidden">
+        <section id="community" className="scroll-mt-6 md:scroll-mt-3 py-20 md:py-28 bg-white relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
