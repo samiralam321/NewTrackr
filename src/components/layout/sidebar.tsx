@@ -34,6 +34,17 @@ export function Sidebar({ profile }: { profile?: any }) {
 
   // Sync state if initial props change (prevent stale server refreshes from overwriting local state)
   useEffect(() => {
+    if (profile?.id || profile?.avatar_url) {
+      try {
+        localStorage.setItem('trackr_current_user_profile', JSON.stringify({
+          id: profile.id,
+          full_name: profile.full_name,
+          username: profile.username,
+          avatar_url: profile.avatar_url
+        }))
+      } catch {}
+    }
+
     setProfileState((prev: any) => {
       if (prev && prev.id === profile?.id) {
         const serverScore = profile?.consistency_score || 0
@@ -57,10 +68,16 @@ export function Sidebar({ profile }: { profile?: any }) {
     const handleProfileUpdate = (e: Event) => {
       const customEvent = e as CustomEvent
       if (customEvent.detail) {
-        setProfileState((prev: any) => ({
-          ...prev,
-          ...customEvent.detail
-        }))
+        setProfileState((prev: any) => {
+          const next = {
+            ...prev,
+            ...customEvent.detail
+          }
+          try {
+            localStorage.setItem('trackr_current_user_profile', JSON.stringify(next))
+          } catch {}
+          return next
+        })
       }
     }
 

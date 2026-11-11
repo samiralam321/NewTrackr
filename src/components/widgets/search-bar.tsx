@@ -9,9 +9,10 @@ import { createClient } from "@/lib/supabase/client"
 
 interface SearchBarProps {
   userProfile?: {
-    id: string
+    id?: string
     full_name?: string | null
     avatar_url?: string | null
+    username?: string | null
   } | null
 }
 
@@ -28,14 +29,111 @@ export function SearchBar({ userProfile }: SearchBarProps) {
 
   const isDark = theme === 'dark'
 
+  // Local state for the logged-in user profile, initialized with userProfile or cached localStorage
+  const [profileState, setProfileState] = useState<{
+    id?: string
+    full_name?: string | null
+    avatar_url?: string | null
+    username?: string | null
+  } | null>(() => {
+    if (userProfile?.avatar_url) return userProfile
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('trackr_current_user_profile')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          return {
+            ...parsed,
+            ...(userProfile || {})
+          }
+        }
+      } catch {}
+    }
+    return userProfile || null
+  })
+
+  const [imageError, setImageError] = useState(false)
+
+  // Sync state when userProfile prop changes
   useEffect(() => {
-    if (!userProfile?.id) return
+    if (userProfile?.avatar_url || userProfile?.id) {
+      setProfileState(prev => {
+        const updated = { ...prev, ...userProfile }
+        try {
+          localStorage.setItem('trackr_current_user_profile', JSON.stringify(updated))
+        } catch {}
+        return updated
+      })
+      setImageError(false)
+    }
+  }, [userProfile])
+
+  // Resolve user profile from Supabase auth session if missing avatar_url
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchAuthProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user || !isMounted) return
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, username')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (profile && isMounted) {
+          setProfileState(prev => {
+            const merged = { ...prev, ...profile }
+            try {
+              localStorage.setItem('trackr_current_user_profile', JSON.stringify(merged))
+            } catch {}
+            return merged
+          })
+          setImageError(false)
+        }
+      } catch (e) {
+        // Silent fail
+      }
+    }
+
+    if (!profileState?.avatar_url || !profileState?.id) {
+      fetchAuthProfile()
+    }
+
+    // Listen for custom profile-updated event (from settings, post creation, avatar upload)
+    const handleProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent
+      if (customEvent.detail && isMounted) {
+        setProfileState(prev => {
+          const updated = { ...prev, ...customEvent.detail }
+          try {
+            localStorage.setItem('trackr_current_user_profile', JSON.stringify(updated))
+          } catch {}
+          return updated
+        })
+        setImageError(false)
+      }
+    }
+
+    window.addEventListener('profile-updated', handleProfileUpdate)
+    return () => {
+      isMounted = false
+      window.removeEventListener('profile-updated', handleProfileUpdate)
+    }
+  }, [profileState?.avatar_url, profileState?.id, supabase])
+
+  const effectiveUserId = userProfile?.id || profileState?.id
+
+  useEffect(() => {
+    if (!effectiveUserId) return
 
     const fetchUnread = async () => {
       const { count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userProfile.id)
+        .eq('user_id', effectiveUserId)
         .eq('is_read', false)
       setUnreadCount(count || 0)
     }
@@ -43,7 +141,7 @@ export function SearchBar({ userProfile }: SearchBarProps) {
     fetchUnread()
 
     const channel = supabase
-      .channel(`navbar-notifs:${userProfile.id}`)
+      .channel(`navbar-notifs:${effectiveUserId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
         fetchUnread()
       })
@@ -52,7 +150,7 @@ export function SearchBar({ userProfile }: SearchBarProps) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userProfile?.id])
+  }, [effectiveUserId, supabase])
 
   // Live debounced search across profiles and tags
   useEffect(() => {
@@ -191,15 +289,20 @@ export function SearchBar({ userProfile }: SearchBarProps) {
       <Link
         href="/profile"
         title="Your Profile"
-        className="w-9 h-9 rounded-full overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] hover:ring-2 hover:ring-[#7C3AED] hover:ring-offset-2 dark:hover:ring-offset-black transition-all shrink-0"
+        className="w-9 h-9 rounded-full overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] hover:ring-2 hover:ring-[#7C3AED] hover:ring-offset-2 dark:hover:ring-offset-black transition-all shrink-0 bg-[#eff3f4] dark:bg-[#202327]"
       >
         <img
-          src={userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`}
-          alt={userProfile?.full_name || "Profile"}
+          src={
+            (!imageError && (profileState?.avatar_url || userProfile?.avatar_url))
+              ? (profileState?.avatar_url || userProfile?.avatar_url)!
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(profileState?.full_name || userProfile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`
+          }
+          alt={profileState?.full_name || userProfile?.full_name || "Profile"}
           width={36}
           height={36}
           loading="lazy"
           decoding="async"
+          onError={() => setImageError(true)}
           className="w-full h-full object-cover"
         />
       </Link>

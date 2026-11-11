@@ -72,7 +72,7 @@ export default async function PostDetailPage({
           currentUserProfile={profile}
         />
       </main>
-      <RightSidebar />
+      <RightSidebar profile={profile} currentUserId={user.id} />
     </div>
   )
 }

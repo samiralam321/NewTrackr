@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/widgets/search-bar"
 import { TrendingWidget } from "@/components/widgets/trending-widget"
 import { UpcomingHackathons } from "@/components/widgets/upcoming-hackathons"
@@ -11,11 +12,30 @@ interface RightSidebarProps {
 }
 
 export function RightSidebar({ profile, currentUserId }: RightSidebarProps) {
+  const [activeProfile, setActiveProfile] = useState(profile || null)
+
+  useEffect(() => {
+    if (profile) {
+      setActiveProfile(profile)
+      return
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('trackr_current_user_profile')
+        if (stored) {
+          setActiveProfile(JSON.parse(stored))
+        }
+      } catch {}
+    }
+  }, [profile])
+
+  const effectiveUserId = currentUserId || profile?.id || activeProfile?.id
+
   return (
     <aside className="w-full min-h-full py-3 px-3 xl:px-4 flex flex-col gap-4 shrink-0 bg-transparent self-start">
       {/* Top Search & Actions Bar (Sticky) */}
       <div className="sticky top-0 z-20 bg-white/85 dark:bg-black/85 backdrop-blur-md pt-0.5 pb-2">
-        <SearchBar userProfile={profile} />
+        <SearchBar userProfile={profile || activeProfile} />
       </div>
 
       {/* Trending Topics Widget */}
@@ -25,7 +45,7 @@ export function RightSidebar({ profile, currentUserId }: RightSidebarProps) {
       <UpcomingHackathons />
 
       {/* Real Supabase Students Discovery */}
-      <WhoToFollow currentUserId={currentUserId || profile?.id} />
+      <WhoToFollow currentUserId={effectiveUserId} />
 
       {/* Footer Branding & Legal (Twitter style) */}
       <div className="px-3 pt-1 pb-8 text-left">
