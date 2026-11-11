@@ -368,31 +368,108 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
     }, 10)
   }
 
+  // Process image from file input, clipboard paste, or drag-and-drop
+  const processImageFile = (file: File, source: 'upload' | 'paste' | 'drop' = 'upload') => {
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif']
+    
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      setStatusMessage({ text: "Please select or paste a JPG, PNG, WEBP, or GIF image", type: 'error' })
+      setTimeout(() => setStatusMessage(null), 3500)
+      return false
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setStatusMessage({ text: "Image size must be less than 5MB", type: 'error' })
+      setTimeout(() => setStatusMessage(null), 3500)
+      return false
+    }
+
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview)
+    }
+
+    const ext = file.type.split('/')[1]?.replace('jpeg', 'jpg') || 'png'
+    const fileName = file.name && file.name !== 'image.png' && file.name !== 'blob'
+      ? file.name
+      : `pasted-${Date.now()}.${ext}`
+    const namedFile = new File([file], fileName, { type: file.type })
+
+    setImageFile(namedFile)
+    setImagePreview(URL.createObjectURL(namedFile))
+
+    if (source === 'paste') {
+      setStatusMessage({ text: "Image pasted from clipboard! 📋✨", type: 'success' })
+      setTimeout(() => setStatusMessage(null), 3000)
+    } else if (source === 'drop') {
+      setStatusMessage({ text: "Image attached! 🖼️✨", type: 'success' })
+      setTimeout(() => setStatusMessage(null), 3000)
+    }
+
+    return true
+  }
+
   // Image Upload handler
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
-      
-      if (!validTypes.includes(file.type.toLowerCase())) {
-        setStatusMessage({ text: "Please select a JPG, PNG, or WEBP image", type: 'error' })
-        setTimeout(() => setStatusMessage(null), 3500)
-        return
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        setStatusMessage({ text: "Image size must be less than 5MB", type: 'error' })
-        setTimeout(() => setStatusMessage(null), 3500)
-        return
-      }
-
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview)
-      }
-
-      setImageFile(file)
-      setImagePreview(URL.createObjectURL(file))
+      processImageFile(e.target.files[0], 'upload')
     }
+  }
+
+  // Paste image directly from clipboard (e.g. Snipping Tool, screenshot, copied image)
+  const handlePaste = (e: React.ClipboardEvent) => {
+    // 1. Check e.clipboardData.files first
+    if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
+      for (let i = 0; i < e.clipboardData.files.length; i++) {
+        const file = e.clipboardData.files[i]
+        if (file && file.type.startsWith('image/')) {
+          e.preventDefault()
+          processImageFile(file, 'paste')
+          return
+        }
+      }
+    }
+
+    // 2. Check e.clipboardData.items
+    const items = e.clipboardData?.items
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile()
+          if (file) {
+            e.preventDefault()
+            processImageFile(file, 'paste')
+            return
+          }
+        }
+      }
+    }
+  }
+
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+      for (let i = 0; i < e.dataTransfer.files.length; i++) {
+        const file = e.dataTransfer.files[i]
+        if (file && file.type.startsWith('image/')) {
+          processImageFile(file, 'drop')
+          return
+        }
+      }
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
   }
 
   const removeImage = () => {
@@ -558,7 +635,13 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
         }}
       >
         <div 
-          className="bg-white dark:bg-[#000000] sm:rounded-2xl border border-transparent sm:border-[#eff3f4] dark:sm:border-[#2f3336] shadow-2xl w-full max-w-[600px] flex flex-col overflow-visible max-h-screen sm:max-h-[90vh] animate-in zoom-in-95 duration-200 relative"
+          onPaste={handlePaste}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          className={`bg-white dark:bg-[#000000] sm:rounded-2xl border border-transparent sm:border-[#eff3f4] dark:sm:border-[#2f3336] shadow-2xl w-full max-w-[600px] flex flex-col overflow-visible max-h-screen sm:max-h-[90vh] animate-in zoom-in-95 duration-200 relative transition-all ${
+            isDragging ? 'ring-2 ring-violet-500 bg-violet-50/20 dark:bg-violet-950/20' : ''
+          }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Header Row: Close button */}
@@ -607,7 +690,8 @@ function PostModalDialog({ user, profile, onClose }: PostModalDialogProps) {
                 rows={(imagePreview || attachedSnippet) ? 1 : 2}
                 value={content}
                 onChange={handleTextChange}
-                placeholder={`What's on your mind, ${firstName}?`}
+                onPaste={handlePaste}
+                placeholder={`What's on your mind, ${firstName}? (Paste image with Ctrl+V)`}
                 className={`w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-snug overflow-hidden transition-[height] duration-75 ${
                   (imagePreview || attachedSnippet) ? 'min-h-[36px]' : 'min-h-[64px]'
                 }`}

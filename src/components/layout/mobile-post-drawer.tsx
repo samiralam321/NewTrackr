@@ -55,6 +55,46 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
     setIsOpen(false)
   }
 
+  const handlePasteImage = (file: File) => {
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif']
+    if (!validTypes.includes(file.type.toLowerCase())) return
+    if (file.size > 5 * 1024 * 1024) return
+
+    const ext = file.type.split('/')[1]?.replace('jpeg', 'jpg') || 'png'
+    const fileName = file.name && file.name !== 'image.png' && file.name !== 'blob'
+      ? file.name
+      : `pasted-${Date.now()}.${ext}`
+    const namedFile = new File([file], fileName, { type: file.type })
+    setImageFile(namedFile)
+  }
+
+  const handleGlobalPaste = (e: React.ClipboardEvent) => {
+    if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
+      for (let i = 0; i < e.clipboardData.files.length; i++) {
+        const file = e.clipboardData.files[i]
+        if (file && file.type.startsWith('image/')) {
+          e.preventDefault()
+          handlePasteImage(file)
+          return
+        }
+      }
+    }
+    const items = e.clipboardData?.items
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile()
+          if (file) {
+            e.preventDefault()
+            handlePasteImage(file)
+            return
+          }
+        }
+      }
+    }
+  }
+
   const handlePost = async () => {
     if (!content.trim() && !imageFile && !attachedSnippet) return
 
@@ -182,7 +222,10 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
 
       {/* Full Screen Twitter/X Style Native Android Composer */}
       {isOpen && (
-        <div className="md:hidden fixed inset-0 z-[100] bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom duration-200">
+        <div 
+          onPaste={handleGlobalPaste}
+          className="md:hidden fixed inset-0 z-[100] bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom duration-200"
+        >
           
           {/* Top Bar: Close on left, Character counter + Post pill on right */}
           <div className="flex items-center justify-between px-3 h-14 border-b border-gray-100 dark:border-neutral-900 bg-white dark:bg-black shrink-0">
@@ -327,6 +370,7 @@ export function MobilePostDrawer({ profile }: { profile?: any }) {
                 value={content}
                 onChange={setContent}
                 onKeyDown={handleKeyDown}
+                onPasteImage={handlePasteImage}
                 placeholder="What did you work on today? Share a breakthrough, win, or challenge..."
                 className="w-full text-[16px] leading-relaxed bg-transparent mobile-rich-editor text-gray-900 dark:text-white border-none p-1 focus-visible:ring-0 min-h-[140px]"
               />

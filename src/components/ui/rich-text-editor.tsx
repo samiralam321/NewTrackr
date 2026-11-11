@@ -9,6 +9,7 @@ type RichTextEditorProps = {
   className?: string
   placeholderClassName?: string
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void
+  onPasteImage?: (file: File) => void
 }
 
 export function RichTextEditor({ 
@@ -17,7 +18,8 @@ export function RichTextEditor({
   placeholder = "", 
   className = "", 
   placeholderClassName = "",
-  onKeyDown 
+  onKeyDown,
+  onPasteImage
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const [isEmpty, setIsEmpty] = useState(true)
@@ -52,6 +54,33 @@ export function RichTextEditor({
   }
 
   const handlePaste = (e: React.ClipboardEvent) => {
+    if (onPasteImage) {
+      if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
+        for (let i = 0; i < e.clipboardData.files.length; i++) {
+          const file = e.clipboardData.files[i]
+          if (file && file.type.startsWith('image/')) {
+            e.preventDefault()
+            onPasteImage(file)
+            return
+          }
+        }
+      }
+      const items = e.clipboardData?.items
+      if (items) {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i]
+          if (item.type.startsWith('image/')) {
+            const file = item.getAsFile()
+            if (file) {
+              e.preventDefault()
+              onPasteImage(file)
+              return
+            }
+          }
+        }
+      }
+    }
+
     e.preventDefault()
     const text = e.clipboardData.getData("text/plain")
     document.execCommand("insertText", false, text)
