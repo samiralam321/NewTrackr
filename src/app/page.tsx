@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { InstallButton } from "@/components/pwa/InstallPWA"
-import { Flame, Code2, Trophy, Briefcase, AtSign, ShieldCheck, Sparkles, Check, ArrowRight, Star, Heart, Users, Compass, BookOpen } from "lucide-react"
+import { Flame, Code2, Trophy, Briefcase, AtSign, ShieldCheck, Sparkles, Star, Users, BookOpen, Target, Award, Rocket, CheckCircle2 } from "lucide-react"
 
 export default function LandingPage() {
   return (
@@ -14,24 +14,24 @@ export default function LandingPage() {
             alt="Trackr Logo" 
             className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm scale-[1.3] origin-center transition-transform group-hover:scale-[1.35]" 
           />
-          <span className="text-xl font-black text-gray-900 ml-1 tracking-tight">Trackr</span>
+          <span className="text-xl font-bold text-gray-900 ml-1 tracking-tight">Trackr</span>
         </Link>
         
         {/* Navigation Links with Smooth Anchor Scrolling */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-600">
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
           <a href="#features" className="hover:text-violet-600 transition-colors">Features</a>
           <a href="#how-it-works" className="hover:text-violet-600 transition-colors">How it Works</a>
+          <a href="#why-trackr" className="hover:text-violet-600 transition-colors">Why Trackr?</a>
           <a href="#community" className="hover:text-violet-600 transition-colors">Community</a>
-          <a href="#pricing" className="hover:text-violet-600 transition-colors">Pricing</a>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-4">
           <InstallButton className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-200 bg-violet-50 hover:bg-violet-100 active:scale-95 text-violet-700 text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer" />
-          <Link href="/auth" className="text-xs sm:text-sm font-semibold text-gray-600 hover:text-gray-900 px-2 py-1">
+          <Link href="/auth" className="text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 px-2 py-1">
             Log in
           </Link>
           <Link href="/auth">
-            <Button className="bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-full px-3.5 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm font-bold shadow-sm transition-all hover:shadow-md hover:scale-105 active:scale-95">
+            <Button className="bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-full px-3.5 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm font-semibold shadow-sm transition-all hover:shadow-md hover:scale-105 active:scale-95">
               Get Started
             </Button>
           </Link>
@@ -49,12 +49,12 @@ export default function LandingPage() {
           </div>
           
           <div className="flex-1 text-left relative z-20">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-bold mb-6">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-semibold mb-6">
               <Sparkles className="w-3.5 h-3.5 text-violet-600" />
               <span>Track progress. Build daily discipline.</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-[#2D2459] leading-[1.1]">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#2D2459] leading-[1.1]">
               Share Progress.<br/>
               <span className="text-[#6B46C1]">Stay Accountable.</span><br/>
               <span className="text-[#48BB78]">Grow Together.</span>
@@ -66,7 +66,7 @@ export default function LandingPage() {
 
             <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <Link href="/auth" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-xl px-8 py-6 text-base font-bold shadow-md shadow-violet-200 transition-all hover:scale-105 active:scale-95">
+                <Button className="w-full sm:w-auto bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-xl px-8 py-6 text-base font-semibold shadow-md shadow-violet-200 transition-all hover:scale-105 active:scale-95">
                   Start Your Journey
                 </Button>
               </Link>
@@ -85,7 +85,7 @@ export default function LandingPage() {
                 <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover aspect-square shadow-sm" src="/student-3.png" alt="Student 3"/>
               </div>
               <div className="text-sm">
-                <p className="font-bold text-[#2D2459]">Join 25,000+ students</p>
+                <p className="font-semibold text-[#2D2459]">Join 25,000+ students</p>
                 <p className="text-[#615C75]">building their future together.</p>
               </div>
             </div>
@@ -111,10 +111,10 @@ export default function LandingPage() {
         {/* ================= HOW IT WORKS SECTION ================= */}
         <section id="how-it-works" className="scroll-mt-24 py-20 md:py-28 bg-[#F8F7FF] text-center relative border-y border-violet-100/50">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100/80 text-violet-700 text-xs font-bold uppercase tracking-wider mb-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100/80 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
               Simple Daily Rhythm
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-3 tracking-tight">How Trackr Works</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#2D2459] mb-3 tracking-tight">How Trackr Works</h2>
             <p className="text-gray-500 mb-16 max-w-xl mx-auto text-base sm:text-lg">
               A frictionless daily loop designed to turn small daily efforts into exponential career outcomes.
             </p>
@@ -125,7 +125,7 @@ export default function LandingPage() {
                 <div className="h-16 w-16 bg-violet-100 text-violet-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
                   <BookOpen className="w-8 h-8" />
                 </div>
-                <h3 className="font-bold text-gray-900 text-lg mb-2">1. Learn</h3>
+                <h3 className="font-semibold text-gray-900 text-lg mb-2">1. Learn</h3>
                 <p className="text-sm text-gray-500 px-4 leading-relaxed">
                   Spend 30+ minutes daily learning DSA, Web Dev, AI, or Core CS concepts.
                 </p>
@@ -138,7 +138,7 @@ export default function LandingPage() {
                 <div className="h-16 w-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
                   <Code2 className="w-8 h-8" />
                 </div>
-                <h3 className="font-bold text-gray-900 text-lg mb-2">2. Log Progress</h3>
+                <h3 className="font-semibold text-gray-900 text-lg mb-2">2. Log Progress</h3>
                 <p className="text-sm text-gray-500 px-4 leading-relaxed">
                   Post what you built, problems solved, and paste syntax-highlighted code.
                 </p>
@@ -149,7 +149,7 @@ export default function LandingPage() {
                 <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
                   <Flame className="w-8 h-8 text-orange-500" />
                 </div>
-                <h3 className="font-bold text-gray-900 text-lg mb-2">3. Keep The Streak</h3>
+                <h3 className="font-semibold text-gray-900 text-lg mb-2">3. Keep The Streak</h3>
                 <p className="text-sm text-gray-500 px-4 leading-relaxed">
                   Earn streak flames, unlock milestone badges, and climb campus leaderboards.
                 </p>
@@ -160,7 +160,7 @@ export default function LandingPage() {
                 <div className="h-16 w-16 bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
                   <Trophy className="w-8 h-8 text-pink-600" />
                 </div>
-                <h3 className="font-bold text-gray-900 text-lg mb-2">4. Unlock Opportunities</h3>
+                <h3 className="font-semibold text-gray-900 text-lg mb-2">4. Unlock Opportunities</h3>
                 <p className="text-sm text-gray-500 px-4 leading-relaxed">
                   Discover curated hackathons, placement opportunities, and partner teams.
                 </p>
@@ -173,10 +173,10 @@ export default function LandingPage() {
         <section id="features" className="scroll-mt-24 py-20 md:py-28 bg-white">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-bold uppercase tracking-wider mb-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
                 Engineered for Serious Coders
               </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4 tracking-tight">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#2D2459] mb-4 tracking-tight">
                 Everything You Need to Stay 100% Consistent
               </h2>
               <p className="text-gray-500 text-base sm:text-lg">
@@ -191,7 +191,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <Code2 className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-2">Rich Code Snippets</h3>
+                  <h3 className="font-semibold text-xl text-gray-900 mb-2">Rich Code Snippets</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     Share clean, syntax-highlighted code blocks with line numbering, language tags, and instant one-click copy.
                   </p>
@@ -207,7 +207,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <Flame className="w-6 h-6 fill-current text-orange-500" />
                   </div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-2">Authentic Streak Engine</h3>
+                  <h3 className="font-semibold text-xl text-gray-900 mb-2">Authentic Streak Engine</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     Show up every day to build your streak score. Track consistency on your profile with Twitter-style streak badges.
                   </p>
@@ -223,7 +223,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <Trophy className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-2">Campus & Global Ranks</h3>
+                  <h3 className="font-semibold text-xl text-gray-900 mb-2">Campus & Global Ranks</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     Filter leaderboards by your specific college or compete globally across engineering students nationwide.
                   </p>
@@ -239,7 +239,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <Briefcase className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-2">Curated Opportunities</h3>
+                  <h3 className="font-semibold text-xl text-gray-900 mb-2">Curated Opportunities</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     Stay ahead with real-time updates for SIH, nationwide hackathons, internships, placements, and coding contests.
                   </p>
@@ -255,7 +255,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <AtSign className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-2">Smart @Mentions & Tags</h3>
+                  <h3 className="font-semibold text-xl text-gray-900 mb-2">Smart @Mentions & Tags</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     Tag classmates using their exact @username, discuss problem approaches, quote posts, and receive instant alerts.
                   </p>
@@ -271,7 +271,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <ShieldCheck className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-2">Pure Focus, Zero Noise</h3>
+                  <h3 className="font-semibold text-xl text-gray-900 mb-2">Pure Focus, Zero Noise</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     No doomscrolling algorithms or vanity traps. Every feed item represents authentic student learning and progress.
                   </p>
@@ -284,14 +284,101 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ================= COMMUNITY SECTION ================= */}
-        <section id="community" className="scroll-mt-24 py-20 md:py-28 bg-[#FBFBFE] border-y border-violet-100/50 relative overflow-hidden">
+        {/* ================= WHY TRACKR? SECTION ================= */}
+        <section id="why-trackr" className="scroll-mt-24 py-20 md:py-28 bg-[#FBFBFE] border-y border-violet-100/50">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-bold uppercase tracking-wider mb-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
+                The Trackr Advantage
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#2D2459] mb-4 tracking-tight">
+                Why Trackr? Four Key Benefits
+              </h2>
+              <p className="text-gray-500 text-base sm:text-lg">
+                Designed from the ground up to solve the consistency problem for student developers.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Benefit 1 */}
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-violet-200 hover:shadow-md transition-all flex flex-col justify-between group">
+                <div>
+                  <div className="text-4xl mb-6 group-hover:scale-110 transition-transform">🪴</div>
+                  <h3 className="font-semibold text-xl text-gray-900 mb-3">
+                    Built for Serious Learners
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    No distractions, memes, or doomscrolling algorithms. A clean, purpose-built space focused 100% on skills, problem solving, and growth.
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Zero algorithmic noise</span>
+                </div>
+              </div>
+              
+              {/* Benefit 2 */}
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-violet-200 hover:shadow-md transition-all flex flex-col justify-between group">
+                <div>
+                  <div className="text-4xl mb-6 group-hover:scale-110 transition-transform">🔥</div>
+                  <h3 className="font-semibold text-xl text-gray-900 mb-3">
+                    Real Daily Accountability
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    Streaks, flame milestone badges, and peer check-ins keep you disciplined when motivation fades. You show up because consistency compounds.
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-1.5 text-xs font-semibold text-orange-600">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Daily habit compounding</span>
+                </div>
+              </div>
+
+              {/* Benefit 3 */}
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-violet-200 hover:shadow-md transition-all flex flex-col justify-between group">
+                <div>
+                  <div className="text-4xl mb-6 group-hover:scale-110 transition-transform">📊</div>
+                  <h3 className="font-semibold text-xl text-gray-900 mb-3">
+                    Visible Proof of Work
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    Every daily log, solved LeetCode problem, and syntax-highlighted code block builds a living timeline of your real engineering journey.
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-1.5 text-xs font-semibold text-violet-600">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Show your actual journey</span>
+                </div>
+              </div>
+
+              {/* Benefit 4 */}
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-violet-200 hover:shadow-md transition-all flex flex-col justify-between group">
+                <div>
+                  <div className="text-4xl mb-6 group-hover:scale-110 transition-transform text-pink-400">🤝</div>
+                  <h3 className="font-semibold text-xl text-gray-900 mb-3">
+                    Supportive Campus Community
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    Find teammates for hackathons like SIH, ask questions, learn from seniors, and connect with peers across 100+ colleges nationwide.
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-1.5 text-xs font-semibold text-pink-600">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>100+ colleges connected</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= COMMUNITY SECTION ================= */}
+        <section id="community" className="scroll-mt-24 py-20 md:py-28 bg-white relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
                 Thriving Student Network
               </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4 tracking-tight">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#2D2459] mb-4 tracking-tight">
                 Built by Students, Powered by Community
               </h2>
               <p className="text-gray-500 text-base sm:text-lg">
@@ -301,27 +388,27 @@ export default function LandingPage() {
 
             {/* Impact Metrics Banner */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 text-center">
-              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <span className="text-3xl sm:text-4xl font-black text-violet-600">25K+</span>
-                <p className="text-xs sm:text-sm font-semibold text-gray-500 mt-1">Active Students</p>
+              <div className="bg-[#FAF9FF] p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <span className="text-3xl sm:text-4xl font-bold text-violet-600">25K+</span>
+                <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1">Active Students</p>
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <span className="text-3xl sm:text-4xl font-black text-emerald-600">150K+</span>
-                <p className="text-xs sm:text-sm font-semibold text-gray-500 mt-1">Daily Logs Shared</p>
+              <div className="bg-[#FAF9FF] p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <span className="text-3xl sm:text-4xl font-bold text-emerald-600">150K+</span>
+                <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1">Daily Logs Shared</p>
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <span className="text-3xl sm:text-4xl font-black text-blue-600">100+</span>
-                <p className="text-xs sm:text-sm font-semibold text-gray-500 mt-1">Colleges Connected</p>
+              <div className="bg-[#FAF9FF] p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <span className="text-3xl sm:text-4xl font-bold text-blue-600">100+</span>
+                <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1">Colleges Connected</p>
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <span className="text-3xl sm:text-4xl font-black text-orange-500">98%</span>
-                <p className="text-xs sm:text-sm font-semibold text-gray-500 mt-1">Consistency Rate</p>
+              <div className="bg-[#FAF9FF] p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <span className="text-3xl sm:text-4xl font-bold text-orange-500">98%</span>
+                <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1">Consistency Rate</p>
               </div>
             </div>
 
             {/* Student Stories Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <div className="bg-[#FAF9FF] p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-1 text-amber-400 mb-4">
                     <Star className="w-4 h-4 fill-current" />
@@ -331,19 +418,19 @@ export default function LandingPage() {
                     <Star className="w-4 h-4 fill-current" />
                   </div>
                   <p className="text-gray-600 text-sm leading-relaxed mb-6 italic">
-                    "Trackr helped me maintain a 90-day DSA streak without missing a single day. Logging each question solved kept me accountable, and I recently cracked an SDE intern offer!"
+                    &ldquo;Trackr helped me maintain a 90-day DSA streak without missing a single day. Logging each question solved kept me accountable, and I recently cracked an SDE intern offer!&rdquo;
                   </p>
                 </div>
                 <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
                   <img src="/student-1.png" alt="Aarav" className="w-10 h-10 rounded-full object-cover" />
                   <div>
-                    <h4 className="text-sm font-bold text-gray-900">Aarav Sharma</h4>
+                    <h4 className="text-sm font-semibold text-gray-900">Aarav Sharma</h4>
                     <p className="text-xs text-gray-400">DTU · 92 Day Streak 🔥</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <div className="bg-[#FAF9FF] p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-1 text-amber-400 mb-4">
                     <Star className="w-4 h-4 fill-current" />
@@ -353,19 +440,19 @@ export default function LandingPage() {
                     <Star className="w-4 h-4 fill-current" />
                   </div>
                   <p className="text-gray-600 text-sm leading-relaxed mb-6 italic">
-                    "I used to start a web development project and abandon it after 3 days. Sharing daily milestone updates with my campus peers on Trackr completely changed my discipline."
+                    &ldquo;I used to start a web development project and abandon it after 3 days. Sharing daily milestone updates with my campus peers on Trackr completely changed my discipline.&rdquo;
                   </p>
                 </div>
                 <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
                   <img src="/student-2.png" alt="Priya" className="w-10 h-10 rounded-full object-cover" />
                   <div>
-                    <h4 className="text-sm font-bold text-gray-900">Priya Patel</h4>
+                    <h4 className="text-sm font-semibold text-gray-900">Priya Patel</h4>
                     <p className="text-xs text-gray-400">IIT Delhi · Full-Stack Dev</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <div className="bg-[#FAF9FF] p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-1 text-amber-400 mb-4">
                     <Star className="w-4 h-4 fill-current" />
@@ -375,149 +462,16 @@ export default function LandingPage() {
                     <Star className="w-4 h-4 fill-current" />
                   </div>
                   <p className="text-gray-600 text-sm leading-relaxed mb-6 italic">
-                    "The hackathon opportunities tab and college leaderboards are pure gold. Found teammates for Smart India Hackathon directly from our university leaderboard!"
+                    &ldquo;The hackathon opportunities tab and college leaderboards are pure gold. Found teammates for Smart India Hackathon directly from our university leaderboard!&rdquo;
                   </p>
                 </div>
                 <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
                   <img src="/student-3.png" alt="Rohan" className="w-10 h-10 rounded-full object-cover" />
                   <div>
-                    <h4 className="text-sm font-bold text-gray-900">Rohan Verma</h4>
+                    <h4 className="text-sm font-semibold text-gray-900">Rohan Verma</h4>
                     <p className="text-xs text-gray-400">VIT · SIH 2026 Finalist</p>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ================= PRICING SECTION ================= */}
-        <section id="pricing" className="scroll-mt-24 py-20 md:py-28 bg-white">
-          <div className="max-w-7xl mx-auto px-6 sm:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-3">
-                100% Free Forever
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4 tracking-tight">
-                Simple, Honest & Free for Students
-              </h2>
-              <p className="text-gray-500 text-base sm:text-lg">
-                Education should never be gated. All core features of Trackr are free forever, funded by student community love.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Card 1: Student Free */}
-              <div className="bg-[#FAF9FF] p-8 sm:p-10 rounded-3xl border-2 border-violet-500 relative shadow-xl shadow-violet-100 flex flex-col justify-between">
-                <div className="absolute -top-3.5 right-6 bg-violet-600 text-white text-[11px] uppercase tracking-wider font-extrabold px-3 py-1 rounded-full shadow-sm">
-                  Recommended
-                </div>
-
-                <div>
-                  <h3 className="text-2xl font-black text-gray-900 mb-1">Student Free</h3>
-                  <p className="text-sm text-gray-500 mb-6">Everything you need to track progress and stay consistent.</p>
-
-                  <div className="flex items-baseline gap-1 mb-8">
-                    <span className="text-5xl font-black text-gray-900">₹0</span>
-                    <span className="text-gray-500 font-semibold text-sm">/ forever</span>
-                  </div>
-
-                  <ul className="space-y-3.5 text-sm text-gray-700 mb-8">
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>Unlimited daily progress posts & code blocks</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>Streak tracker & flame badges</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>Campus & global leaderboard access</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>Hackathon & tech opportunity discovery</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>Direct messaging & @mention notifications</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>Mobile PWA install on iOS & Android</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <Link href="/auth" className="w-full">
-                  <Button className="w-full bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-xl py-6 font-bold shadow-md shadow-violet-200 transition-all hover:scale-105 active:scale-95">
-                    Get Started Free
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Card 2: Campus Lead / Club */}
-              <div className="bg-white p-8 sm:p-10 rounded-3xl border border-gray-200 shadow-sm flex flex-col justify-between">
-                <div>
-                  <h3 className="text-2xl font-black text-gray-900 mb-1">Campus Club</h3>
-                  <p className="text-sm text-gray-500 mb-6">For college society heads, GDG leads & coding clubs.</p>
-
-                  <div className="flex items-baseline gap-1 mb-8">
-                    <span className="text-5xl font-black text-gray-900">₹0</span>
-                    <span className="text-gray-500 font-semibold text-sm">/ student leads</span>
-                  </div>
-
-                  <ul className="space-y-3.5 text-sm text-gray-700 mb-8">
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>All Student Free features included</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>Verified Club Badge on campus profiles</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>Internal college leaderboard & batch filter</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>Host club-exclusive coding challenges</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>Priority community support & swag</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <Link href="/auth" className="w-full">
-                  <Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-xl py-6 font-bold transition-all hover:scale-105 active:scale-95">
-                    Register Your Club
-                  </Button>
-                </Link>
               </div>
             </div>
           </div>
@@ -544,7 +498,7 @@ export default function LandingPage() {
 
               {/* Center/Right Content */}
               <div className="relative z-20 w-full max-w-xl mx-auto md:ml-[40%] lg:ml-[45%] py-12 px-6 md:px-0 text-center md:text-left">
-                <h2 className="text-3xl lg:text-4xl font-black text-[#2D2459] mb-4 tracking-tight">
+                <h2 className="text-3xl lg:text-4xl font-bold text-[#2D2459] mb-4 tracking-tight">
                   Ready to build your future?
                 </h2>
                 <p className="text-base text-[#615C75] mb-8 leading-relaxed">
@@ -552,7 +506,7 @@ export default function LandingPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4">
                   <Link href="/auth" className="w-full sm:w-auto">
-                    <Button className="w-full sm:w-auto bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-xl px-8 py-6 text-base font-bold shadow-md shadow-violet-200 transition-all hover:scale-105 active:scale-95">
+                    <Button className="w-full sm:w-auto bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-xl px-8 py-6 text-base font-semibold shadow-md shadow-violet-200 transition-all hover:scale-105 active:scale-95">
                       Get Started for Free
                     </Button>
                   </Link>
@@ -580,15 +534,15 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Trackr" className="w-8 h-8 object-contain" />
-            <span className="font-black text-gray-900 tracking-tight text-lg">Trackr</span>
+            <span className="font-bold text-gray-900 tracking-tight text-lg">Trackr</span>
             <span className="text-xs text-gray-400 ml-2">© 2026 Trackr. Built for ambitious students.</span>
           </div>
 
-          <div className="flex items-center gap-6 text-sm font-semibold text-gray-500">
+          <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
             <a href="#features" className="hover:text-violet-600 transition-colors">Features</a>
             <a href="#how-it-works" className="hover:text-violet-600 transition-colors">How it Works</a>
+            <a href="#why-trackr" className="hover:text-violet-600 transition-colors">Why Trackr?</a>
             <a href="#community" className="hover:text-violet-600 transition-colors">Community</a>
-            <a href="#pricing" className="hover:text-violet-600 transition-colors">Pricing</a>
             <Link href="/auth" className="hover:text-violet-600 transition-colors">Log In</Link>
           </div>
         </div>
