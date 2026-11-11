@@ -9,7 +9,7 @@ import { formatTimeCompact, formatFullDateTime } from '@/lib/utils/date'
 import { AlertCircle, Code2, ChevronDown, ChevronUp, Maximize2, X } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { RichTextRenderer } from '@/components/ui/rich-text-renderer'
+import { CarbonCodeBlock } from '@/components/ui/carbon-code-block'
 
 interface EmbeddedQuoteCardProps {
   quotedPost?: Post | null
@@ -116,15 +116,15 @@ export function EmbeddedQuoteCard({
   const codeLang = codeBlockMatch ? (codeBlockMatch[1].split(':')[0] || 'Code') : null
   const codeLines = codeBlockMatch ? codeBlockMatch[2].split('\n').length : 0
 
-  // Text content without code block for clean preview when collapsed
+  // Text content without code block for clean preview
   const plainText = localPost.content 
     ? localPost.content.replace(/```[\s\S]*?```/g, '').trim()
     : ''
 
-  // Card click toggles expansion on the same page without navigating or refreshing
+  // Card click toggles expansion on the same page with zero layout shift and zero buffering
   const handleCardClick = (e: React.MouseEvent) => {
     if (!interactive) return
-    // If user is highlighting text, do not toggle
+    // If user is selecting text, do not toggle
     const selection = window.getSelection()
     if (selection && selection.toString().length > 0) return
 
@@ -145,9 +145,9 @@ export function EmbeddedQuoteCard({
             setIsExpanded(prev => !prev)
           }
         }}
-        className={`mt-2.5 mb-2 rounded-2xl border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-[#12101A]/70 transition-all duration-200 p-3 sm:p-3.5 overflow-hidden group/quote select-text text-left ${
+        className={`mt-2.5 mb-2 rounded-2xl border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-[#12101A]/70 transition-colors duration-150 p-3 sm:p-3.5 overflow-hidden group/quote select-text text-left ${
           interactive 
-            ? 'cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] hover:border-gray-300 dark:hover:border-white/20 active:scale-[0.998]' 
+            ? 'cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] hover:border-gray-300 dark:hover:border-white/20' 
             : ''
         }`}
       >
@@ -193,14 +193,15 @@ export function EmbeddedQuoteCard({
             </div>
           </div>
 
-          {/* Top-Right Toggle & Modal Button */}
+          {/* Top-Right Toggle & Modal Button (Fixed width to prevent ANY layout shift) */}
           {interactive && (
-            <div className="flex items-center gap-1 shrink-0 ml-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-1.5 shrink-0 ml-auto" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                title="View in full popup modal"
-                className="p-1 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                title="View in popup modal"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                aria-label="View in popup modal"
               >
                 <Maximize2 className="w-3.5 h-3.5" />
               </button>
@@ -209,7 +210,7 @@ export function EmbeddedQuoteCard({
                 type="button"
                 onClick={() => setIsExpanded(prev => !prev)}
                 title={isExpanded ? "Collapse post" : "Expand full post"}
-                className="flex items-center gap-0.5 text-[11px] font-semibold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-900/50 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-1 w-[72px] h-6 text-[11px] font-semibold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-900/50 rounded-full transition-colors cursor-pointer select-none"
               >
                 <span>{isExpanded ? "Less" : "Full Post"}</span>
                 {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -218,31 +219,33 @@ export function EmbeddedQuoteCard({
           )}
         </div>
 
-        {/* ================= POST CONTENT ================= */}
-        {isExpanded ? (
-          /* Full Post View (Expanded Inline on Same Page) */
-          <div className="text-[14px] leading-relaxed text-gray-900 dark:text-[#e7e9ea] font-normal mb-2 mt-1">
-            <RichTextRenderer content={localPost.content} />
+        {/* Post Text: Identical typography and DOM structure for both collapsed and expanded to eliminate any layout shift */}
+        {plainText && (
+          <div className={`text-[14px] text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap font-normal my-1.5 ${
+            !isExpanded ? 'line-clamp-3' : ''
+          }`}>
+            {plainText}
           </div>
-        ) : (
-          /* Truncated Preview View */
-          <>
-            {plainText && (
-              <p className="text-[13.5px] text-gray-800 dark:text-gray-200 line-clamp-3 leading-relaxed whitespace-pre-wrap font-normal mb-1.5">
-                {plainText}
-              </p>
-            )}
+        )}
 
-            {/* Code snippet badge if post contains code */}
-            {codeBlockMatch && (
-              <div className="my-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-50 dark:bg-violet-950/40 border border-violet-200/60 dark:border-violet-900/40 text-[11px] font-medium text-violet-700 dark:text-violet-300">
-                <Code2 className="w-3.5 h-3.5 shrink-0 text-violet-500" />
-                <span className="font-semibold uppercase">{codeLang} Snippet</span>
-                <span className="text-gray-400 dark:text-gray-500">·</span>
-                <span>{codeLines} {codeLines === 1 ? 'line' : 'lines'}</span>
-              </div>
-            )}
-          </>
+        {/* Code Snippet: Compact badge when collapsed, full CarbonCodeBlock when expanded */}
+        {codeBlockMatch && (
+          isExpanded ? (
+            <div className="my-2.5 rounded-xl overflow-hidden text-left" onClick={(e) => e.stopPropagation()}>
+              <CarbonCodeBlock
+                code={codeBlockMatch[2]}
+                language={codeBlockMatch[1]?.split(':')[0] || 'text'}
+                title={codeBlockMatch[1]?.split(':')[2] || undefined}
+              />
+            </div>
+          ) : (
+            <div className="my-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-50 dark:bg-violet-950/40 border border-violet-200/60 dark:border-violet-900/40 text-[11px] font-medium text-violet-700 dark:text-violet-300">
+              <Code2 className="w-3.5 h-3.5 shrink-0 text-violet-500" />
+              <span className="font-semibold uppercase">{codeLang} Snippet</span>
+              <span className="text-gray-400 dark:text-gray-500">·</span>
+              <span>{codeLines} {codeLines === 1 ? 'line' : 'lines'}</span>
+            </div>
+          )
         )}
 
         {/* Image attachment thumbnail / full image */}
@@ -251,7 +254,7 @@ export function EmbeddedQuoteCard({
             <img 
               src={localPost.image_url} 
               alt="Quoted attachment" 
-              className={`w-full h-auto object-cover hover:scale-[1.01] transition-transform cursor-pointer ${
+              className={`w-full h-auto object-cover hover:opacity-95 transition-opacity cursor-pointer ${
                 isExpanded ? 'max-h-96' : 'max-h-48'
               }`}
               loading="lazy" 
@@ -285,7 +288,7 @@ export function EmbeddedQuoteCard({
               onClick={() => setIsModalOpen(true)}
               className="flex items-center gap-1 text-violet-600 dark:text-violet-400 hover:underline font-semibold cursor-pointer"
             >
-              <Maximize2 className="w-3 h-3" />
+              <Maximize2 className="w-3.5 h-3.5" />
               <span>Open in popup modal</span>
             </button>
           </div>
@@ -352,10 +355,23 @@ export function EmbeddedQuoteCard({
               </button>
             </div>
 
-            {/* Modal Body: Full Post Content */}
-            <div className="text-[15.5px] leading-relaxed text-gray-900 dark:text-[#e7e9ea] font-normal mb-4">
-              <RichTextRenderer content={localPost.content} />
-            </div>
+            {/* Modal Body: Full Post Text Content */}
+            {plainText && (
+              <div className="text-[15px] leading-relaxed text-gray-900 dark:text-[#e7e9ea] font-normal mb-4 whitespace-pre-wrap">
+                {plainText}
+              </div>
+            )}
+
+            {/* Modal Code Snippet */}
+            {codeBlockMatch && (
+              <div className="mb-4 rounded-xl overflow-hidden text-left">
+                <CarbonCodeBlock
+                  code={codeBlockMatch[2]}
+                  language={codeBlockMatch[1]?.split(':')[0] || 'text'}
+                  title={codeBlockMatch[1]?.split(':')[2] || undefined}
+                />
+              </div>
+            )}
 
             {/* Modal Image if any */}
             {localPost.image_url && (
