@@ -432,12 +432,12 @@ export default function NotificationsPage() {
                 <article
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`p-4 sm:p-5 flex gap-3.5 transition-colors select-text text-left cursor-default ${
+                  className={`p-4 sm:p-5 flex gap-3.5 transition-colors duration-150 select-text text-left cursor-default hover:bg-black/[0.03] dark:hover:bg-white/[0.04] ${
                     !notification.is_read ? 'bg-violet-50/30 dark:bg-violet-950/15' : ''
                   }`}
                 >
                   {/* Left Column: Notification Icon (Pink Heart, UserPlus, etc.) */}
-                  <div className="pt-0.5 shrink-0 flex flex-col items-center">
+                  <div className="pt-0.5 shrink-0 flex flex-col items-center select-none">
                     {getIcon(notification)}
                     {!notification.is_read && (
                       <span className="w-1.5 h-1.5 rounded-full bg-violet-600 dark:bg-violet-400 mt-2" title="Unread" />
@@ -446,19 +446,19 @@ export default function NotificationsPage() {
 
                   {/* Middle Column: Avatars Row + Headline + Post Text Preview */}
                   <div className="flex-1 min-w-0">
-                    {/* Horizontal Avatar Row: Twitter/X Style (Non-navigable preview) */}
+                    {/* Horizontal Avatar Row: Twitter/X Style (Non-navigable preview with hover effect) */}
                     {notification.actors && notification.actors.length > 0 && (
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-2">
                         {notification.actors.map((actor) => (
                           <div
                             key={actor.id}
                             title={actor.full_name}
-                            className="relative select-none pointer-events-none"
+                            className="relative select-none"
                           >
                             <img
                               src={actor.avatar_url || getFallbackAvatar(actor.full_name)}
                               alt={actor.full_name}
-                              className="w-8 h-8 rounded-full object-cover border border-white dark:border-[#0B0A10] shadow-2xs"
+                              className="w-8 h-8 rounded-full object-cover border border-white dark:border-[#0B0A10] shadow-2xs hover:scale-110 transition-transform duration-150 cursor-default"
                               loading="lazy"
                               onError={(e) => {
                                 e.currentTarget.src = getFallbackAvatar(actor.full_name)
@@ -490,11 +490,11 @@ export default function NotificationsPage() {
 
                   {/* Right Column: Compact Post Image Thumbnail Preview (only if post has an image) */}
                   {hasPost && postImage && (
-                    <div className="shrink-0 self-center pl-2 select-none pointer-events-none">
+                    <div className="shrink-0 self-center pl-2 select-none">
                       <img
                         src={postImage}
                         alt="Post thumbnail"
-                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-gray-100 dark:border-white/10 shadow-2xs"
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-gray-100 dark:border-white/10 shadow-2xs hover:scale-105 transition-transform duration-150 cursor-default"
                         loading="lazy"
                       />
                     </div>
