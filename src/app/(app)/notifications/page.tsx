@@ -21,6 +21,7 @@ import { getBadgeLevel } from "@/lib/utils/streak"
 import { formatTimeCompact } from "@/lib/utils/date"
 import { 
   GroupedNotification, 
+  NotificationActor,
   getCachedNotifications, 
   fetchNotifications, 
   markNotificationsAsRead,
@@ -168,10 +169,17 @@ export default function NotificationsPage() {
     }
   }
 
+  const getActorProfileUrl = (actor: NotificationActor) => {
+    const handle = actor.username ? actor.username.replace(/^@/, '') : actor.id
+    return `/profile/${handle}`
+  }
+
   const renderNotificationMessage = (n: GroupedNotification) => {
     const count = n.total_actors_count || n.actors.length || 1
     const actor1 = n.actors[0] || { id: 'unknown', full_name: 'Someone' }
     const actor2 = n.actors[1] || { id: 'unknown', full_name: 'Someone' }
+    const actor1Url = getActorProfileUrl(actor1)
+    const actor2Url = getActorProfileUrl(actor2)
     const remainingCount = Math.max(0, count - 2)
     const remainingNoun = remainingCount === 1 ? 'other' : 'others'
 
@@ -192,30 +200,30 @@ export default function NotificationsPage() {
       if (count === 1) {
         return (
           <span>
-            <span className="font-bold text-gray-900 dark:text-white">
+            <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
               {actor1.full_name}
-            </span> liked your post
+            </Link> liked your post
           </span>
         )
       }
       if (count === 2) {
         return (
           <span>
-            <span className="font-bold text-gray-900 dark:text-white">
+            <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
               {actor1.full_name}
-            </span> and <span className="font-bold text-gray-900 dark:text-white">
+            </Link> and <Link href={actor2Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
               {actor2.full_name}
-            </span> liked your post
+            </Link> liked your post
           </span>
         )
       }
       return (
         <span>
-          <span className="font-bold text-gray-900 dark:text-white">
+          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
             {actor1.full_name}
-          </span>, <span className="font-bold text-gray-900 dark:text-white">
+          </Link>, <Link href={actor2Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
             {actor2.full_name}
-          </span> and {remainingCount} {remainingNoun} liked your post
+          </Link> and {remainingCount} {remainingNoun} liked your post
         </span>
       )
     }
@@ -224,30 +232,30 @@ export default function NotificationsPage() {
       if (count === 1) {
         return (
           <span>
-            <span className="font-bold text-gray-900 dark:text-white">
+            <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
               {actor1.full_name}
-            </span> started following you
+            </Link> started following you
           </span>
         )
       }
       if (count === 2) {
         return (
           <span>
-            <span className="font-bold text-gray-900 dark:text-white">
+            <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
               {actor1.full_name}
-            </span> and <span className="font-bold text-gray-900 dark:text-white">
+            </Link> and <Link href={actor2Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
               {actor2.full_name}
-            </span> started following you
+            </Link> started following you
           </span>
         )
       }
       return (
         <span>
-          <span className="font-bold text-gray-900 dark:text-white">
+          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
             {actor1.full_name}
-          </span>, <span className="font-bold text-gray-900 dark:text-white">
+          </Link>, <Link href={actor2Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
             {actor2.full_name}
-          </span> and {remainingCount} {remainingNoun} started following you
+          </Link> and {remainingCount} {remainingNoun} started following you
         </span>
       )
     }
@@ -256,17 +264,17 @@ export default function NotificationsPage() {
       if (count === 1) {
         return (
           <span>
-            <span className="font-bold text-gray-900 dark:text-white">
+            <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
               {actor1.full_name}
-            </span> reposted your post
+            </Link> reposted your post
           </span>
         )
       }
       return (
         <span>
-          <span className="font-bold text-gray-900 dark:text-white">
+          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
             {actor1.full_name}
-          </span> and {count - 1} {count - 1 === 1 ? 'other' : 'others'} reposted your post
+          </Link> and {count - 1} {count - 1 === 1 ? 'other' : 'others'} reposted your post
         </span>
       )
     }
@@ -274,9 +282,9 @@ export default function NotificationsPage() {
     if (n.type === 'comment') {
       return (
         <span>
-          <span className="font-bold text-gray-900 dark:text-white">
+          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
             {actor1.full_name}
-          </span> commented on your post
+          </Link> commented on your post
         </span>
       )
     }
@@ -284,9 +292,9 @@ export default function NotificationsPage() {
     if (n.type === 'mention') {
       return (
         <span>
-          <span className="font-bold text-gray-900 dark:text-white">
+          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
             {actor1.full_name}
-          </span> mentioned you
+          </Link> mentioned you
         </span>
       )
     }
@@ -294,14 +302,14 @@ export default function NotificationsPage() {
     if (n.type === 'quote') {
       return (
         <span>
-          <span className="font-bold text-gray-900 dark:text-white">
+          <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
             {actor1.full_name}
-          </span> quoted your post
+          </Link> quoted your post
         </span>
       )
     }
 
-    return <span>New notification from <span className="font-bold text-gray-900 dark:text-white">{actor1.full_name}</span></span>
+    return <span>New notification from <Link href={actor1Url} onClick={(e) => e.stopPropagation()} className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">{actor1.full_name}</Link></span>
   }
 
   // Filtered notifications
@@ -449,26 +457,31 @@ export default function NotificationsPage() {
 
                     {/* Middle Column: Avatars Row + Headline + Post Text Preview */}
                     <div className="flex-1 min-w-0">
-                      {/* Horizontal Avatar Row: Twitter/X Style (Non-navigable preview with hover effect) */}
+                      {/* Horizontal Avatar Row: Twitter/X Style (Clickable to visit profile) */}
                       {notification.actors && notification.actors.length > 0 && (
                         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-2">
-                          {notification.actors.map((actor) => (
-                            <div
-                              key={actor.id}
-                              title={actor.full_name}
-                              className="relative select-none"
-                            >
-                              <img
-                                src={actor.avatar_url || getFallbackAvatar(actor.full_name)}
-                                alt={actor.full_name}
-                                className="w-8 h-8 rounded-full object-cover border border-white/80 dark:border-white/20 shadow-2xs hover:scale-110 transition-transform duration-150 cursor-default"
-                                loading="lazy"
-                                onError={(e) => {
-                                  e.currentTarget.src = getFallbackAvatar(actor.full_name)
-                                }}
-                              />
-                            </div>
-                          ))}
+                          {notification.actors.map((actor) => {
+                            const profileUrl = getActorProfileUrl(actor)
+                            return (
+                              <Link
+                                key={actor.id}
+                                href={profileUrl}
+                                onClick={(e) => e.stopPropagation()}
+                                title={actor.full_name}
+                                className="group/avatar relative block cursor-pointer select-none"
+                              >
+                                <img
+                                  src={actor.avatar_url || getFallbackAvatar(actor.full_name)}
+                                  alt={actor.full_name}
+                                  className="w-8 h-8 rounded-full object-cover border border-white/80 dark:border-white/20 shadow-2xs group-hover/avatar:scale-110 group-hover/avatar:opacity-90 transition-all duration-150"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.currentTarget.src = getFallbackAvatar(actor.full_name)
+                                  }}
+                                />
+                              </Link>
+                            )
+                          })}
                         </div>
                       )}
 
