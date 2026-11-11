@@ -33,6 +33,7 @@ export function Feed({
   isJourneyMode,
   highlightsOnlyFilter,
   currentUserIdProp,
+  currentUserProfileProp,
   sortBy = 'new'
 }: { 
   userIdFilter?: string,
@@ -46,6 +47,7 @@ export function Feed({
   isJourneyMode?: boolean,
   highlightsOnlyFilter?: boolean,
   currentUserIdProp?: string,
+  currentUserProfileProp?: any,
   sortBy?: 'popular' | 'new' | 'relevant'
 }) {
   const currentFeedKey = `feed_${userIdFilter || 'all'}_sv${Boolean(savedOnlyFilter)}_lk${likedByFilter || 'none'}_cm${commentedByFilter || 'none'}_hl${Boolean(highlightsOnlyFilter)}_f${Boolean(followingOnlyFilter)}_c${Boolean(collegeOnlyFilter)}_o${Boolean(opportunitiesOnlyFilter)}_e${Boolean(eventsOnlyFilter)}_s${sortBy}_u${currentUserIdProp || 'anon'}`
@@ -56,6 +58,7 @@ export function Feed({
     return entry?.data || []
   })
   const [currentUserId, setCurrentUserId] = useState<string | null>(currentUserIdProp || null)
+  const [currentUserProfile, setCurrentUserProfile] = useState<any>(currentUserProfileProp || null)
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({})
   const [repostedPosts, setRepostedPosts] = useState<Record<string, boolean>>(() => {
     try {
@@ -401,6 +404,19 @@ export function Feed({
       currentUid = userData.user?.id || null
     }
     setCurrentUserId(currentUid)
+
+    if (currentUid && (!currentUserProfile || !currentUserProfile.avatar_url)) {
+      try {
+        const { data: profData } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url, bio, college, consistency_score, streak')
+          .eq('id', currentUid)
+          .single()
+        if (profData) {
+          setCurrentUserProfile(profData)
+        }
+      } catch (e) {}
+    }
 
     let query = supabase
       .from('posts')
@@ -1707,7 +1723,7 @@ export function Feed({
         onOpenChange={setIsQuoteModalOpen}
         targetPost={quoteTargetPost}
         user={{ id: currentUserId }}
-        profile={{ id: currentUserId, full_name: 'You' }}
+        profile={currentUserProfile || currentUserProfileProp || { id: currentUserId, full_name: 'You' }}
         onSuccess={() => {
           if (quoteTargetPost) {
             setPosts(prev => prev.map(p => {

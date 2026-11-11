@@ -119,6 +119,7 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
           <Feed 
             key={activeTab}
             currentUserIdProp={currentUserId}
+            currentUserProfileProp={profile}
             followingOnlyFilter={activeTab === "following"}
             collegeOnlyFilter={activeTab === "college"}
             eventsOnlyFilter={activeTab === "events"}

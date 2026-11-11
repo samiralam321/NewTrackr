@@ -6,7 +6,7 @@ import { getAuthenticatedUserAndProfile } from "@/lib/auth/get-user-profile"
 export const dynamic = 'force-dynamic'
 
 export default async function SavedPage() {
-  const { user } = await getAuthenticatedUserAndProfile()
+  const { user, profile } = await getAuthenticatedUserAndProfile()
 
   return (
     <div className="h-full w-full overflow-y-auto px-4 md:px-10 py-6 md:py-8 bg-[#FCFBFF] dark:bg-[#050505] transition-colors duration-300">
@@ -25,7 +25,7 @@ export default async function SavedPage() {
         </div>
 
         <div className="bg-white dark:bg-[#0B0A10] rounded-3xl border border-gray-100 dark:border-[#2D2B3B] p-6 shadow-sm min-h-[500px] transition-colors duration-300">
-          <Feed savedOnlyFilter={true} currentUserIdProp={user?.id} />
+          <Feed savedOnlyFilter={true} currentUserIdProp={user?.id} currentUserProfileProp={profile} />
         </div>
       </div>
     </div>

@@ -29,11 +29,59 @@ export function QuoteModal({
   const [commentary, setCommentary] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showEmojis, setShowEmojis] = useState(false)
+  const [currentUserProfile, setCurrentUserProfile] = useState<any>(profile || null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const emojiRef = useRef<HTMLDivElement>(null)
   const emojiButtonRef = useRef<HTMLButtonElement>(null)
   const pickerContainerRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
+
+  // Sync profile prop if provided or updated
+  useEffect(() => {
+    if (profile && (profile.avatar_url || profile.full_name !== 'You')) {
+      setCurrentUserProfile(profile)
+    }
+  }, [profile])
+
+  // Resolve user profile if missing or missing avatar_url
+  useEffect(() => {
+    if (!open) return
+
+    const resolveProfile = async () => {
+      if (currentUserProfile?.avatar_url) return
+
+      const uid = user?.id || profile?.id || currentUserProfile?.id
+      if (uid) {
+        try {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('id, full_name, username, avatar_url')
+            .eq('id', uid)
+            .single()
+          if (prof) {
+            setCurrentUserProfile((prev: any) => ({ ...prev, ...prof }))
+            return
+          }
+        } catch (e) {}
+      }
+
+      try {
+        const { data: authData } = await supabase.auth.getUser()
+        if (authData.user) {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('id, full_name, username, avatar_url')
+            .eq('id', authData.user.id)
+            .single()
+          if (prof) {
+            setCurrentUserProfile((prev: any) => ({ ...prev, ...prof }))
+          }
+        }
+      } catch (e) {}
+    }
+
+    resolveProfile()
+  }, [open, user?.id, profile?.id, currentUserProfile?.avatar_url])
 
   // Auto-focus and reset on open
   useEffect(() => {
@@ -146,7 +194,7 @@ export function QuoteModal({
 
   const handlePost = async () => {
     if (!commentary.trim() || !targetPost) return
-    const currentUid = user?.id || profile?.id
+    const currentUid = user?.id || profile?.id || currentUserProfile?.id
     if (!currentUid) {
       window.location.href = '/login'
       return
@@ -252,7 +300,17 @@ export function QuoteModal({
 
   if (!open || !targetPost) return null
 
-  const userAvatar = profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'You')}&background=7C3AED&color=fff&size=80`
+  const resolvedProfile = currentUserProfile?.avatar_url
+    ? currentUserProfile
+    : profile?.avatar_url
+    ? profile
+    : currentUserProfile || profile
+
+  const displayName = resolvedProfile?.full_name && resolvedProfile.full_name !== 'You'
+    ? resolvedProfile.full_name
+    : 'User'
+
+  const userAvatar = resolvedProfile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=7C3AED&color=fff&size=80`
 
   return (
     <div 
@@ -305,8 +363,11 @@ export function QuoteModal({
           <div className="flex items-start gap-3">
             <img 
               src={userAvatar} 
-              alt="You" 
-              className="w-10 h-10 rounded-full object-cover shrink-0 mt-0.5" 
+              alt={displayName} 
+              className="w-10 h-10 rounded-full object-cover shrink-0 mt-0.5 border border-black/5 dark:border-white/10"
+              onError={(e) => {
+                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=7C3AED&color=fff&size=80`
+              }} 
             />
             <div className="flex-1 min-w-0">
               <textarea
