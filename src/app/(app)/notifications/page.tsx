@@ -512,21 +512,15 @@ export default function NotificationsPage() {
                     )}
                   </div>
 
-                  {/* Right Column: Compact Post Thumbnail Preview (if post exists) */}
-                  {hasPost && notification.post && (
+                  {/* Right Column: Compact Post Image Thumbnail Preview (only if post has an image) */}
+                  {hasPost && postImage && (
                     <div className="shrink-0 self-center pl-2">
-                      {postImage ? (
-                        <img
-                          src={postImage}
-                          alt="Post thumbnail"
-                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-gray-100 dark:border-white/10 shadow-2xs hover:opacity-90 transition-opacity"
-                          loading="lazy"
-                        />
-                      ) : postContent ? (
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03] p-1.5 overflow-hidden text-[9px] text-gray-400 dark:text-gray-500 leading-tight select-none">
-                          <span className="line-clamp-3">{cleanPostSnippet(postContent)}</span>
-                        </div>
-                      ) : null}
+                      <img
+                        src={postImage}
+                        alt="Post thumbnail"
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-gray-100 dark:border-white/10 shadow-2xs hover:opacity-90 transition-opacity"
+                        loading="lazy"
+                      />
                     </div>
                   )}
                 </article>
