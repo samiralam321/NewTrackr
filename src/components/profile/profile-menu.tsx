@@ -43,18 +43,21 @@ export function ProfileMenu() {
     setIsSendingSupport(true)
     
     try {
-      await fetch('https://formsubmit.co/ajax/sa8103339@gmail.com', {
+      const res = await fetch('/api/contact', {
         method: "POST",
         headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            email: supportEmail,
-            message: supportMessage,
-            _subject: "Support Request from Trackr"
+          email: supportEmail,
+          message: supportMessage,
+          subject: "Support Request from Trackr"
         })
       })
+
+      if (!res.ok) {
+        throw new Error("Failed to send message")
+      }
       
       setSupportSent(true)
       setTimeout(() => {

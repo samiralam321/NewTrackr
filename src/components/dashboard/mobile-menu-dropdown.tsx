@@ -41,19 +41,22 @@ export function MobileMenuDropdown({ profile }: { profile?: any }) {
     setIsSendingContact(true)
     
     try {
-      await fetch('https://formsubmit.co/ajax/sa8103339@gmail.com', {
+      const res = await fetch('/api/contact', {
         method: "POST",
         headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            name: contactName,
-            email: contactEmail,
-            message: contactMessage,
-            _subject: "Trackr Creator Contact Form (Mobile)"
+          name: contactName,
+          email: contactEmail,
+          message: contactMessage,
+          subject: "Trackr Creator Contact Form (Mobile)"
         })
       })
+
+      if (!res.ok) {
+        throw new Error("Failed to send message")
+      }
       
       setContactSent(true)
       setTimeout(() => {
