@@ -579,7 +579,7 @@ export function AuthForm() {
                     <Input 
                       id="fullname" 
                       type="text" 
-                      placeholder="Samir Alam"
+                      placeholder="Your name"
                       value={fullName}
                       onChange={(e) => {
                         setFullName(e.target.value)
