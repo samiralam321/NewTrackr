@@ -550,8 +550,8 @@ export function AuthForm() {
         </span>
       </div>
 
-      {/* Main Form */}
-      <form onSubmit={handleEmailAuth} className="space-y-3">
+      {/* Main Form with Fixed Height Envelope to Prevent Vertical Jumps */}
+      <form onSubmit={handleEmailAuth} className="space-y-3 text-left">
         {errorMsg && (
           <div className="p-2.5 text-xs font-medium text-red-700 bg-red-50 rounded-xl border border-red-200 animate-in fade-in flex items-start gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
@@ -565,211 +565,237 @@ export function AuthForm() {
           </div>
         )}
 
-        {/* Sign Up: Row 1 - Full Name & Username side-by-side */}
-        {isSignUp && (
-          <div className="grid grid-cols-2 gap-2.5 animate-in fade-in">
-            <div className="space-y-1">
-              <Label htmlFor="fullname" className="text-xs font-semibold text-gray-700">Full Name</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
-                <Input 
-                  id="fullname" 
-                  type="text" 
-                  placeholder="Samir Alam"
-                  value={fullName}
-                  onChange={(e) => {
-                    setFullName(e.target.value)
-                    if (errorMsg) setErrorMsg(null)
-                  }}
-                  maxLength={50}
-                  disabled={isLoading}
-                  autoComplete="name"
-                  className="pl-8 h-9 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
-                  required
-                />
+        {/* Dynamic Fields Container */}
+        <div className="min-h-[175px]">
+          {isSignUp ? (
+            /* Create Account Fields */
+            <div className="space-y-2.5 animate-in fade-in duration-150">
+              {/* Row 1: Full Name & Handle */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1">
+                  <Label htmlFor="fullname" className="text-xs font-semibold text-gray-700">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                    <Input 
+                      id="fullname" 
+                      type="text" 
+                      placeholder="Samir Alam"
+                      value={fullName}
+                      onChange={(e) => {
+                        setFullName(e.target.value)
+                        if (errorMsg) setErrorMsg(null)
+                      }}
+                      maxLength={50}
+                      disabled={isLoading}
+                      autoComplete="name"
+                      className="pl-8 h-9 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="username" className="text-xs font-semibold text-gray-700">Handle</Label>
+                    {usernameStatus.checking ? (
+                      <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
+                    ) : usernameStatus.available === true ? (
+                      <span className="text-[10px] text-emerald-600 font-semibold">Available</span>
+                    ) : usernameStatus.available === false ? (
+                      <span className="text-[10px] text-rose-500 font-semibold">Taken</span>
+                    ) : null}
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-xs font-bold text-gray-400 select-none">@</span>
+                    <Input 
+                      id="username" 
+                      type="text" 
+                      placeholder="username"
+                      value={username}
+                      onChange={(e) => {
+                        handleUsernameChange(e.target.value)
+                        if (errorMsg) setErrorMsg(null)
+                      }}
+                      maxLength={20}
+                      disabled={isLoading}
+                      autoComplete="username"
+                      className={`pl-7 pr-3 h-9 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs ${
+                        usernameStatus.available === false ? 'border-rose-400 focus-visible:ring-rose-400' : 
+                        usernameStatus.available === true ? 'border-emerald-400 focus-visible:ring-emerald-400' : ''
+                      }`} 
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Email Address */}
+              <div className="space-y-1">
+                <Label htmlFor="email-signup" className="text-xs font-semibold text-gray-700">Email address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-3 h-3.5 w-3.5 text-gray-400" />
+                  <Input 
+                    id="email-signup" 
+                    type="email" 
+                    placeholder="name@university.edu"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (errorMsg) setErrorMsg(null)
+                    }}
+                    disabled={isLoading}
+                    autoComplete="email"
+                    className="pl-9 h-9.5 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Password & Confirm Password */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1">
+                  <Label htmlFor="password-signup" className="text-xs font-semibold text-gray-700">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                    <Input 
+                      id="password-signup" 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="8+ chars"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value)
+                        if (errorMsg) setErrorMsg(null)
+                      }}
+                      disabled={isLoading}
+                      autoComplete="new-password"
+                      className="pl-8 pr-7 h-9 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-2 top-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="confirm-password" className="text-xs font-semibold text-gray-700">Confirm</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                    <Input 
+                      id="confirm-password" 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      placeholder="Repeat"
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value)
+                        if (errorMsg) setErrorMsg(null)
+                      }}
+                      disabled={isLoading}
+                      autoComplete="new-password"
+                      className="pl-8 pr-7 h-9 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                      className="absolute right-2 top-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="username" className="text-xs font-semibold text-gray-700">Handle</Label>
-                {usernameStatus.checking ? (
-                  <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
-                ) : usernameStatus.available === true ? (
-                  <span className="text-[10px] text-emerald-600 font-semibold">Available</span>
-                ) : usernameStatus.available === false ? (
-                  <span className="text-[10px] text-rose-500 font-semibold">Taken</span>
-                ) : null}
+          ) : (
+            /* Sign In Fields */
+            <div className="space-y-3 animate-in fade-in duration-150">
+              {/* Email Address */}
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-xs font-semibold text-gray-700">Email address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-3 h-3.5 w-3.5 text-gray-400" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="name@university.edu"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (errorMsg) setErrorMsg(null)
+                    }}
+                    disabled={isLoading}
+                    autoComplete="email"
+                    className="pl-9 h-9.5 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
+                    required
+                  />
+                </div>
               </div>
-              <div className="relative">
-                <span className="absolute left-3 top-2 text-xs font-bold text-gray-400 select-none">@</span>
-                <Input 
-                  id="username" 
-                  type="text" 
-                  placeholder="username"
-                  value={username}
-                  onChange={(e) => {
-                    handleUsernameChange(e.target.value)
-                    if (errorMsg) setErrorMsg(null)
-                  }}
-                  maxLength={20}
-                  disabled={isLoading}
-                  autoComplete="username"
-                  className={`pl-7 pr-3 h-9 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs ${
-                    usernameStatus.available === false ? 'border-rose-400 focus-visible:ring-rose-400' : 
-                    usernameStatus.available === true ? 'border-emerald-400 focus-visible:ring-emerald-400' : ''
-                  }`} 
-                  required
+
+              {/* Password */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-xs font-semibold text-gray-700">Password</Label>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setIsForgotPassword(true)
+                      setErrorMsg(null)
+                      setSuccessMsg(null)
+                    }}
+                    className="text-xs font-bold text-violet-600 hover:text-violet-700 hover:underline cursor-pointer focus:outline-none"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-3 h-3.5 w-3.5 text-gray-400" />
+                  <Input 
+                    id="password" 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      if (errorMsg) setErrorMsg(null)
+                    }}
+                    disabled={isLoading}
+                    autoComplete="current-password"
+                    className="pl-9 pr-9 h-9.5 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Remember Me Option */}
+              <div className="flex items-center gap-2 pt-1">
+                <input 
+                  id="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-gray-300 text-violet-600 focus:ring-violet-500 cursor-pointer"
                 />
+                <label htmlFor="remember-me" className="text-xs font-medium text-gray-600 cursor-pointer select-none">
+                  Remember me on this device
+                </label>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Email Address - Row 2 */}
-        <div className="space-y-1">
-          <Label htmlFor="email" className="text-xs font-semibold text-gray-700">Email address</Label>
-          <div className="relative">
-            <Mail className="absolute left-3.5 top-3 h-3.5 w-3.5 text-gray-400" />
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="name@university.edu"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value)
-                if (errorMsg) setErrorMsg(null)
-              }}
-              disabled={isLoading}
-              autoComplete="email"
-              className="pl-9 h-9.5 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
-              required
-            />
-          </div>
+          )}
         </div>
-
-        {/* Row 3: Passwords */}
-        {isSignUp ? (
-          /* Sign Up: Password & Confirm Password side-by-side */
-          <div className="grid grid-cols-2 gap-2.5 animate-in fade-in">
-            <div className="space-y-1">
-              <Label htmlFor="password" className="text-xs font-semibold text-gray-700">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
-                <Input 
-                  id="password" 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="8+ chars"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    if (errorMsg) setErrorMsg(null)
-                  }}
-                  disabled={isLoading}
-                  autoComplete="new-password"
-                  className="pl-8 pr-7 h-9 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-2 top-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                >
-                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="confirm-password" className="text-xs font-semibold text-gray-700">Confirm</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
-                <Input 
-                  id="confirm-password" 
-                  type={showConfirmPassword ? "text" : "password"} 
-                  placeholder="Repeat"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value)
-                    if (errorMsg) setErrorMsg(null)
-                  }}
-                  disabled={isLoading}
-                  autoComplete="new-password"
-                  className="pl-8 pr-7 h-9 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                  className="absolute right-2 top-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Sign In: Single Password field */
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-xs font-semibold text-gray-700">Password</Label>
-              <button 
-                type="button" 
-                onClick={() => {
-                  setIsForgotPassword(true)
-                  setErrorMsg(null)
-                  setSuccessMsg(null)
-                }}
-                className="text-xs font-bold text-violet-600 hover:text-violet-700 hover:underline cursor-pointer focus:outline-none"
-              >
-                Forgot password?
-              </button>
-            </div>
-            <div className="relative">
-              <Lock className="absolute left-3.5 top-3 h-3.5 w-3.5 text-gray-400" />
-              <Input 
-                id="password" 
-                type={showPassword ? "text" : "password"} 
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value)
-                  if (errorMsg) setErrorMsg(null)
-                }}
-                disabled={isLoading}
-                autoComplete="current-password"
-                className="pl-9 pr-9 h-9.5 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-xs" 
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Remember Me Option (Sign In only) */}
-        {!isSignUp && (
-          <div className="flex items-center gap-2 pt-0.5">
-            <input 
-              id="remember-me"
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-3.5 h-3.5 rounded border-gray-300 text-violet-600 focus:ring-violet-500 cursor-pointer"
-            />
-            <label htmlFor="remember-me" className="text-xs font-medium text-gray-600 cursor-pointer select-none">
-              Remember me on this device
-            </label>
-          </div>
-        )}
 
         {/* Submit Button */}
         <Button 

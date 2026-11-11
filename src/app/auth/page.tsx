@@ -76,12 +76,12 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* Right Side - Interactive Authentication Center */}
-        <div className="flex w-full h-full flex-col items-center justify-center p-6 sm:p-10 lg:w-[55%] overflow-y-auto">
-          <div className="w-full max-w-[420px] text-center my-auto py-2">
+        {/* Right Side - Interactive Authentication Center (Pinned top alignment to eliminate all layout shift) */}
+        <div className="flex w-full h-full flex-col items-center justify-start pt-7 sm:pt-9 pb-6 px-6 sm:px-10 lg:w-[55%] overflow-y-auto">
+          <div className="w-full max-w-[420px] text-center">
             
             {/* Logo Icon inside circle */}
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-violet-50 relative">
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-violet-50 relative">
                <div className="absolute -top-2 -left-3 text-yellow-300"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
                <div className="absolute -top-4 right-0 text-violet-200"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
                <div className="absolute top-8 -right-4 text-yellow-300"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
@@ -94,7 +94,7 @@ export default function AuthPage() {
             <h1 className="mb-1 text-2xl sm:text-[26px] font-bold tracking-tight text-gray-900">
               Welcome to <span className="text-violet-600">Trackr</span>
             </h1>
-            <p className="mb-5 text-xs text-gray-500 max-w-[320px] mx-auto leading-relaxed">
+            <p className="mb-4 text-xs text-gray-500 max-w-[320px] mx-auto leading-relaxed">
               Track daily learning progress, build streaks, and grow with 25,000+ student developers.
             </p>
 
