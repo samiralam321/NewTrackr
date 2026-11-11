@@ -19,7 +19,11 @@ export async function POST(req: NextRequest) {
     const senderName = name?.trim() || 'Trackr User'
     const senderEmail = email?.trim() || 'noreply@trackr.app'
     const messageContent = message.trim()
-    const emailSubject = subject || `New Feedback/Message from ${senderName} on Trackr`
+    
+    // Dynamic subject line prevents Gmail from threading/collapsing messages under [...]
+    const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    const preview = messageContent.length > 40 ? `${messageContent.slice(0, 40)}...` : messageContent
+    const emailSubject = subject || `[Trackr Message] ${senderName}: "${preview}" (${timeStr})`
 
     // 1. Forward directly to Creator's email via FormSubmit server-side
     // Running server-side bypasses browser ad-blockers and CORS restrictions
@@ -29,15 +33,18 @@ export async function POST(req: NextRequest) {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'User-Agent': 'Trackr-Server/1.0',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+          'Origin': 'https://trackr-connect.vercel.app',
+          'Referer': 'https://trackr-connect.vercel.app/dashboard',
         },
         body: JSON.stringify({
-          name: senderName,
-          email: senderEmail,
-          message: messageContent,
-          _subject: emailSubject,
-          _template: 'table',
-          _captcha: 'false',
+          "Sender Name": senderName,
+          "Sender Email": senderEmail,
+          "Message Content": messageContent,
+          "Timestamp": new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }),
+          "_subject": emailSubject,
+          "_replyto": senderEmail,
+          "_captcha": "false",
         }),
       })
     } catch (emailErr) {

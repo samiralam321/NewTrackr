@@ -49,8 +49,7 @@ export function MobileMenuDropdown({ profile }: { profile?: any }) {
         body: JSON.stringify({
           name: contactName,
           email: contactEmail,
-          message: contactMessage,
-          subject: "Trackr Creator Contact Form (Mobile)"
+          message: contactMessage
         })
       })
 

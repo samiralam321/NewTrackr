@@ -120,8 +120,7 @@ export function Sidebar({ profile }: { profile?: any }) {
         body: JSON.stringify({
           name: contactName,
           email: contactEmail,
-          message: contactMessage,
-          subject: "Trackr Creator Contact Form"
+          message: contactMessage
         })
       })
 

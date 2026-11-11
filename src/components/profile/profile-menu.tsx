@@ -50,8 +50,7 @@ export function ProfileMenu() {
         },
         body: JSON.stringify({
           email: supportEmail,
-          message: supportMessage,
-          subject: "Support Request from Trackr"
+          message: supportMessage
         })
       })
 
