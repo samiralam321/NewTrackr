@@ -144,6 +144,11 @@ export function aggregateNotificationsFromRaw(
   const groupMap = new Map<string, GroupedNotification>()
 
   for (const item of rawList) {
+    // Skip self-notifications: actions by a user on their own post must never create or count in a notification
+    if (item.actor_id && item.user_id && item.actor_id === item.user_id) {
+      continue
+    }
+
     let groupKey: string
     if (item.type === 'like' && item.post_id) {
       groupKey = `like:${item.post_id}`
@@ -204,18 +209,26 @@ export function aggregateNotificationsFromRaw(
   // Cross-reference with real active database records for exact liker counts and profile pictures
   for (const group of groups) {
     if (group.type === 'like' && group.post_id && activeLikesMap && activeLikesMap[group.post_id]) {
-      const activeList = activeLikesMap[group.post_id]
-      if (activeList.length > 0) {
-        group.total_actors_count = activeList.length
-        group.actors = activeList.slice(0, 10)
-      }
+      // Exclude the post author / notification recipient from active likers
+      const activeList = activeLikesMap[group.post_id].filter(a => a.id !== group.user_id)
+      group.total_actors_count = activeList.length
+      group.actors = activeList.slice(0, 10)
     } else if (group.type === 'follow' && activeFollowers && activeFollowers.length > 0) {
-      group.total_actors_count = activeFollowers.length
-      group.actors = activeFollowers.slice(0, 10)
+      const activeList = activeFollowers.filter(a => a.id !== group.user_id)
+      group.total_actors_count = activeList.length
+      group.actors = activeList.slice(0, 10)
     }
   }
 
-  return groups.sort(
+  // Exclude like groups where there are zero external likers (e.g. only self-like)
+  const validGroups = groups.filter(g => {
+    if (g.type === 'like') {
+      return g.total_actors_count > 0 && g.actors.length > 0
+    }
+    return true
+  })
+
+  return validGroups.sort(
     (a, b) => new Date(b.latest_created_at).getTime() - new Date(a.latest_created_at).getTime()
   )
 }
@@ -318,6 +331,7 @@ export async function fetchNotifications(
         actor:profiles!notifications_actor_id_fkey(id, full_name, username, avatar_url, consistency_score)
       `)
       .eq('user_id', targetUserId)
+      .neq('actor_id', targetUserId)
       .order('created_at', { ascending: false })
       .limit(60)
 
@@ -402,7 +416,9 @@ export function mergeRealtimeNotification(
   actorProfile?: NotificationActor,
   postSnippet?: PostSnippet
 ): GroupedNotification[] {
-  if (!incoming) return current
+  if (!incoming || (incoming.actor_id && incoming.user_id && incoming.actor_id === incoming.user_id)) {
+    return current
+  }
 
   const actor: NotificationActor = actorProfile || {
     id: incoming.actor_id,

@@ -307,6 +307,55 @@ let passed = 0
   passed++
 }
 
+// SCENARIO 18: Liking own post is strictly excluded from notification group counts and avatars
+{
+  // A) Post with external likers + self like
+  const rawWithSelf = [
+    { id: 'n1', user_id: 'user_samir', actor_id: 'actor_ritik', type: 'like', post_id: 'p_own', is_read: false, created_at: '2026-11-11T12:00:00Z', actor: { full_name: 'Ritik' } },
+    { id: 'n2', user_id: 'user_samir', actor_id: 'user_samir', type: 'like', post_id: 'p_own', is_read: false, created_at: '2026-11-11T12:01:00Z', actor: { full_name: 'Samir Alam' } },
+    { id: 'n3', user_id: 'user_samir', actor_id: 'actor_aman', type: 'like', post_id: 'p_own', is_read: false, created_at: '2026-11-11T12:02:00Z', actor: { full_name: 'Aman' } }
+  ]
+
+  const activeLikesWithSelf = {
+    p_own: [
+      { id: 'actor_aman', full_name: 'Aman' },
+      { id: 'user_samir', full_name: 'Samir Alam' },
+      { id: 'actor_ritik', full_name: 'Ritik' }
+    ]
+  }
+
+  const groups = aggregateNotificationsFromRaw(rawWithSelf, undefined, activeLikesWithSelf)
+  assert.strictEqual(groups.length, 1, 'Must still produce 1 grouped notification')
+  assert.strictEqual(groups[0].total_actors_count, 2, 'Total likers count must exclude author self-like (2, not 3)')
+  assert.strictEqual(groups[0].actors.length, 2)
+  assert.strictEqual(groups[0].actors.some(a => a.id === 'user_samir'), false, 'Author must not be in displayed actors stack')
+  const { headline } = formatGroupedNotificationText(groups[0])
+  assert.strictEqual(headline, 'Aman and Ritik liked your post', 'Headline must only cite external likers')
+
+  // B) Post where ONLY author liked their own post
+  const rawOnlySelf = [
+    { id: 'n_self', user_id: 'user_samir', actor_id: 'user_samir', type: 'like', post_id: 'p_solo', is_read: false, created_at: '2026-11-11T12:05:00Z', actor: { full_name: 'Samir Alam' } }
+  ]
+  const activeLikesOnlySelf = {
+    p_solo: [{ id: 'user_samir', full_name: 'Samir Alam' }]
+  }
+  const soloGroups = aggregateNotificationsFromRaw(rawOnlySelf, undefined, activeLikesOnlySelf)
+  assert.strictEqual(soloGroups.length, 0, 'No notification group should exist if only self liked')
+
+  // C) Realtime merge of self like
+  const rtMerged = mergeRealtimeNotification(groups, {
+    id: 'rt_self',
+    user_id: 'user_samir',
+    actor_id: 'user_samir',
+    type: 'like',
+    post_id: 'p_own'
+  })
+  assert.strictEqual(rtMerged[0].total_actors_count, 2, 'Realtime merge must drop self-like without incrementing count')
+
+  console.log("  ✓ Scenario 18: Liking own post is strictly excluded from notification group counts and avatars")
+  passed++
+}
+
 console.log("\n==================================================================")
 console.log(`TEST RESULTS: ${passed} PASSED, 0 FAILED`)
 console.log("==================================================================\n")

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // 1. Fetch raw notifications for the authenticated user
+    // 1. Fetch raw notifications for the authenticated user (strictly excluding self-actions)
     const { data: rawNotifs, error: notifsError } = await supabase
       .from('notifications')
       .select(`
@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
         actor:profiles!notifications_actor_id_fkey(id, full_name, username, avatar_url, consistency_score)
       `)
       .eq('user_id', user.id)
+      .neq('actor_id', user.id)
       .order('created_at', { ascending: false })
       .limit(100)
 
@@ -90,6 +91,7 @@ export async function GET(req: NextRequest) {
             profile:profiles!likes_user_id_fkey(id, full_name, username, avatar_url, consistency_score)
           `)
           .in('post_id', likePostIds)
+          .neq('user_id', user.id)
           .order('created_at', { ascending: false })
 
         if (likesData) {
@@ -123,6 +125,7 @@ export async function GET(req: NextRequest) {
             profile:profiles!follows_follower_id_fkey(id, full_name, username, avatar_url, consistency_score)
           `)
           .eq('following_id', user.id)
+          .neq('follower_id', user.id)
           .order('created_at', { ascending: false })
           .limit(30)
 
