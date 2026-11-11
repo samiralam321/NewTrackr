@@ -430,16 +430,16 @@ export function OpportunitiesFeed({ currentUserId }: OpportunitiesFeedProps) {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-5 shadow-sm animate-pulse space-y-3"
+              className="bg-white dark:bg-[#0B0A10] border border-gray-100 dark:border-[#2D2B3B] rounded-2xl p-5 shadow-sm space-y-3"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-[#1A1825]"></div>
+                <div className="w-10 h-10 rounded-xl skeleton-shimmer"></div>
                 <div className="flex-1 space-y-1.5">
-                  <div className="h-4 bg-gray-200 dark:bg-[#1A1825] rounded w-1/3"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-[#1A1825] rounded w-1/4"></div>
+                  <div className="h-4 skeleton-shimmer rounded w-1/3"></div>
+                  <div className="h-3 skeleton-shimmer rounded w-1/4"></div>
                 </div>
               </div>
-              <div className="h-10 bg-gray-100 dark:bg-[#151320] rounded-xl"></div>
+              <div className="h-10 skeleton-shimmer rounded-xl"></div>
             </div>
           ))}
         </div>

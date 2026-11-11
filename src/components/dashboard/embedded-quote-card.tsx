@@ -245,23 +245,6 @@ export function EmbeddedQuoteCard({
             />
           </div>
         )}
-
-        {/* Bottom Collapse Bar (visible when expanded) */}
-        {isExpanded && interactive && (
-          <div 
-            className="flex items-center justify-end text-xs pt-2 mt-2.5 border-t border-gray-100 dark:border-white/5 text-gray-500 dark:text-gray-400"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setIsExpanded(false)}
-              className="flex items-center gap-1 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors cursor-pointer"
-            >
-              <ChevronUp className="w-3.5 h-3.5" />
-              <span>Show less</span>
-            </button>
-          </div>
-        )}
       </div>
     </>
   )

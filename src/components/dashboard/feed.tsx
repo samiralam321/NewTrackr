@@ -19,6 +19,7 @@ import { RepostButton } from "@/components/ui/repost-button"
 import { ActionTooltip } from "@/components/ui/action-tooltip"
 import { EmbeddedQuoteCard } from "@/components/dashboard/embedded-quote-card"
 import { QuoteModal } from "@/components/dashboard/quote-modal"
+import { FeedListSkeleton } from "@/components/dashboard/dashboard-skeleton"
 
 export function Feed({ 
   userIdFilter,
@@ -1105,18 +1106,7 @@ export function Feed({
   return (
     <div className={`divide-y divide-[#eff3f4] dark:divide-[#2f3336] bg-white dark:bg-[#000000] pb-28 md:pb-8 ${isJourneyMode ? 'pl-2' : ''}`}>
       {isLoading ? (
-        <div className="divide-y divide-[#eff3f4] dark:divide-[#2f3336]">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="px-4 py-4 animate-pulse flex gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-[#1A1A24] shrink-0"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 dark:bg-[#1A1A24] rounded w-1/3"></div>
-                <div className="h-4 bg-gray-200 dark:bg-[#1A1A24] rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 dark:bg-[#1A1A24] rounded w-1/2"></div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <FeedListSkeleton count={4} />
       ) : posts.length === 0 ? (
         <div className="text-center py-16 text-[#536471] dark:text-[#71767b] text-[15px]">No progress shared yet. Be the first to post!</div>
       ) : posts
