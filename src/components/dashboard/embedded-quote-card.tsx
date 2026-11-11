@@ -226,23 +226,28 @@ export function EmbeddedQuoteCard({
           )
         )}
 
-        {/* Image attachment thumbnail / full image */}
+        {/* Compact, natural-aspect Quoted Image Attachment (Twitter embedded standard) */}
         {localPost.image_url && (
-          <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 dark:border-white/5 bg-black/5">
-            <img 
-              src={localPost.image_url} 
-              alt="Quoted attachment" 
-              className={`w-full h-auto object-cover hover:opacity-95 transition-opacity cursor-pointer ${
-                isExpanded ? 'max-h-96' : 'max-h-48'
-              }`}
-              loading="lazy" 
+          <div className="mt-2 w-fit max-w-full">
+            <div 
+              className="rounded-xl overflow-hidden border border-gray-200/80 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] inline-block w-fit max-w-full shadow-2xs group/quoteimg cursor-pointer"
               onClick={(e) => {
                 if (onImageClick) {
                   e.stopPropagation()
                   onImageClick(localPost.image_url!)
                 }
               }}
-            />
+            >
+              <img 
+                src={localPost.image_url} 
+                alt="Quoted attachment" 
+                className={`block w-auto max-w-full h-auto object-contain rounded-xl hover:opacity-95 transition-all ${
+                  isExpanded ? 'max-h-[260px] sm:max-h-[290px]' : 'max-h-[180px] sm:max-h-[210px]'
+                }`}
+                loading="lazy" 
+                decoding="async"
+              />
+            </div>
           </div>
         )}
       </div>
