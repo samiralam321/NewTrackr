@@ -38,13 +38,14 @@ export async function POST(req: NextRequest) {
           'Referer': 'https://trackr-connect.vercel.app/dashboard',
         },
         body: JSON.stringify({
-          "Sender Name": senderName,
-          "Sender Email": senderEmail,
-          "Message Content": messageContent,
-          "Timestamp": new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }),
           "_subject": emailSubject,
-          "_replyto": senderEmail,
+          "_template": "box",
           "_captcha": "false",
+          "_replyto": senderEmail,
+          "Sender": senderName,
+          "Email": senderEmail,
+          "Message": messageContent,
+          "Sent At": new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }),
         }),
       })
     } catch (emailErr) {

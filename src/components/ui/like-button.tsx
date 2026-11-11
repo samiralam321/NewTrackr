@@ -23,6 +23,7 @@ export function LikeButton({
   const prevCountRef = useRef(likesCount)
   const [direction, setDirection] = useState<number>(1)
   const isInitialRender = useRef(true)
+  const hasInteractedRef = useRef(false)
 
   // Track increment vs decrement direction for vertical number roll
   useEffect(() => {
@@ -35,12 +36,14 @@ export function LikeButton({
     if (likesCount !== prevCountRef.current) {
       setDirection(likesCount > prevCountRef.current ? 1 : -1)
       prevCountRef.current = likesCount
+      hasInteractedRef.current = true
     }
   }, [likesCount])
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()
     if (disabled) return
+    hasInteractedRef.current = true
     onToggle(e)
   }
 
@@ -59,13 +62,23 @@ export function LikeButton({
       <ActionTooltip label={isLiked ? 'Unlike' : 'Like'} disabled={disabled}>
         <div className="p-2 rounded-full group-hover/btn:bg-rose-50 dark:group-hover/btn:bg-rose-950/40 transition-colors">
           <motion.div
-            animate={isLiked ? {
-              scale: [1, 0.78, 1.28, 1],
-              transition: { duration: 0.26, times: [0, 0.22, 0.62, 1], ease: [0.16, 1, 0.3, 1] }
-            } : {
-              scale: [1, 0.88, 1],
-              transition: { duration: 0.18, ease: "easeOut" }
-            }}
+            animate={
+              hasInteractedRef.current
+                ? isLiked
+                  ? {
+                      scale: [1, 0.75, 1.3, 1],
+                      transition: {
+                        duration: 0.3,
+                        times: [0, 0.2, 0.6, 1],
+                        ease: [0.175, 0.885, 0.32, 1.275]
+                      }
+                    }
+                  : {
+                      scale: [1, 0.85, 1],
+                      transition: { duration: 0.18, ease: "easeOut" }
+                    }
+                : { scale: 1 }
+            }
             className="relative flex items-center justify-center shrink-0"
           >
             <Heart 
@@ -79,40 +92,53 @@ export function LikeButton({
         </div>
       </ActionTooltip>
 
-      {/* Vertical Rolling Counter */}
+      {/* Vertical Rolling Counter (Twitter/X Spring Animation) */}
       <div className="relative overflow-hidden h-[18px] min-w-[12px] inline-flex items-center justify-center leading-none">
-        <AnimatePresence mode="popLayout" custom={direction} initial={false}>
-          <motion.span
-            key={likesCount}
-            custom={direction}
-            variants={{
-              initial: (dir: number) => ({
-                y: dir > 0 ? 12 : -12,
-                opacity: 0,
-              }),
-              animate: {
-                y: 0,
-                opacity: 1,
-              },
-              exit: (dir: number) => ({
-                y: dir > 0 ? -12 : 12,
-                opacity: 0,
-              }),
-            }}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{
-              duration: 0.22,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className={`tabular-nums text-[14px] font-medium leading-none block ${
+        {!hasInteractedRef.current ? (
+          <span
+            className={`tabular-nums text-[14px] font-medium leading-none block select-none ${
               isLiked ? 'text-[#F91880]' : 'text-inherit'
             }`}
           >
             {likesCount}
-          </motion.span>
-        </AnimatePresence>
+          </span>
+        ) : (
+          <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+            <motion.span
+              key={likesCount}
+              custom={direction}
+              variants={{
+                initial: (dir: number) => ({
+                  y: dir > 0 ? "100%" : "-100%",
+                  opacity: 0,
+                }),
+                animate: {
+                  y: "0%",
+                  opacity: 1,
+                },
+                exit: (dir: number) => ({
+                  y: dir > 0 ? "-100%" : "100%",
+                  opacity: 0,
+                }),
+              }}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{
+                type: "spring",
+                stiffness: 450,
+                damping: 30,
+                mass: 0.8,
+              }}
+              style={{ willChange: "transform, opacity" }}
+              className={`tabular-nums text-[14px] font-medium leading-none block select-none ${
+                isLiked ? 'text-[#F91880]' : 'text-inherit'
+              }`}
+            >
+              {likesCount}
+            </motion.span>
+          </AnimatePresence>
+        )}
       </div>
     </button>
   )

@@ -89,6 +89,7 @@ export function Feed({
   })
   const liveChannelRef = useRef<any>(null)
   const realtimeDebounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const likingPendingRef = useRef<Set<string>>(new Set())
   
   const supabase = createClient()
 
@@ -169,6 +170,9 @@ export function Feed({
       // Real-time broadcast events for instant live sync between all clients
       .on('broadcast', { event: 'like_toggled' }, ({ payload }) => {
         if (!payload) return
+        const currentUid = currentUserId || currentUserIdProp
+        // Ignore own broadcast to prevent duplicate incrementing or overwriting optimistic UI
+        if (payload.userId && payload.userId === currentUid) return
         setPosts(prev => prev.map(p => {
           if (p.id === payload.postId) {
             const count = (p as any).likes_count || 0
@@ -197,6 +201,8 @@ export function Feed({
       })
       .on('broadcast', { event: 'repost_toggled' }, ({ payload }) => {
         if (!payload) return
+        const currentUid = currentUserId || currentUserIdProp
+        if (payload.userId && payload.userId === currentUid) return
         setPosts(prev => prev.map(p => {
           if (p.id === payload.postId) {
             const count = (p as any).reposts_count || 0
@@ -209,8 +215,6 @@ export function Feed({
         }))
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, debouncedRealtimeRefresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, debouncedRealtimeRefresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookmarks' }, debouncedRealtimeRefresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, (payload) => {
         const pid = (payload.new as any)?.post_id || (payload.old as any)?.post_id
         if (pid) fetchComments(pid)
@@ -814,6 +818,10 @@ export function Feed({
       return
     }
 
+    // In-flight guard: prevent duplicate rapid clicks from causing DB race conditions & primary key collisions
+    if (likingPendingRef.current.has(postId)) return
+    likingPendingRef.current.add(postId)
+
     // 1. Instant optimistic update
     setPosts(prev => prev.map(p => {
       if (p.id === postId) {
@@ -852,9 +860,16 @@ export function Feed({
     // 3. Persist to Supabase likes table
     try {
       if (currentlyLiked) {
-        await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', uid)
+        const { error } = await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', uid)
+        if (error) throw error
       } else {
-        await supabase.from('likes').insert({ post_id: postId, user_id: uid })
+        const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: uid })
+        if (error) {
+          // If error is 23505 (unique_violation / already liked in db), keep optimistic state
+          if ((error as any).code !== '23505') {
+            throw error
+          }
+        }
 
         // Create notification for post owner if not self
         const post = posts.find(p => p.id === postId)
@@ -872,7 +887,7 @@ export function Feed({
       }
     } catch (err) {
       console.error("Like toggle error:", err)
-      // Rollback on error
+      // Rollback on genuine error
       setPosts(prev => prev.map(p => {
         if (p.id === postId) {
           const currentCount = (p as any).likes_count || 0
@@ -884,6 +899,8 @@ export function Feed({
         }
         return p
       }))
+    } finally {
+      likingPendingRef.current.delete(postId)
     }
   }
 

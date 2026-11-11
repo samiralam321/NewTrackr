@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Post, Comment } from '@/lib/supabase/types'
 import { ArrowLeft, MessageCircle, Bookmark, Share2, Send, Loader2, Pin } from 'lucide-react'
 import Link from 'next/link'
@@ -52,22 +52,37 @@ export function PostDetailClient({
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false)
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
 
+  const previewImageUrlRef = useRef<string | null>(null)
+  const isLikingInFlightRef = useRef(false)
+
   const supabase = createClient()
 
-  // Like toggle
+  // Like toggle with in-flight debounce to prevent race conditions
   const handleToggleLike = async () => {
+    if (isLikingInFlightRef.current) return
+    isLikingInFlightRef.current = true
+
     const nextLiked = !isLiked
     setIsLiked(nextLiked)
     setLikesCount(prev => Math.max(0, prev + (nextLiked ? 1 : -1)))
 
     try {
       if (nextLiked) {
-        await supabase.from('likes').insert({ post_id: post.id, user_id: currentUserId })
+        const { error } = await supabase.from('likes').insert({ post_id: post.id, user_id: currentUserId })
+        if (error && (error as any).code !== '23505') {
+          throw error
+        }
       } else {
-        await supabase.from('likes').delete().eq('post_id', post.id).eq('user_id', currentUserId)
+        const { error } = await supabase.from('likes').delete().eq('post_id', post.id).eq('user_id', currentUserId)
+        if (error) throw error
       }
     } catch (err) {
       console.warn("Error toggling like:", err)
+      // Rollback on genuine error
+      setIsLiked(isLiked)
+      setLikesCount(prev => Math.max(0, prev + (nextLiked ? -1 : 1)))
+    } finally {
+      isLikingInFlightRef.current = false
     }
   }
 
