@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from "react"
+import { motion } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
 import { 
   Bell, 
@@ -30,7 +31,13 @@ import {
   mergeRealtimeNotification
 } from "@/lib/notifications/notifications-service"
 
-type FilterTab = 'all' | 'unread' | 'likes' | 'mentions'
+type FilterTab = 'all' | 'likes' | 'mentions'
+
+const TABS: { id: FilterTab; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'likes', label: 'Likes' },
+  { id: 'mentions', label: 'Mentions & Replies' },
+]
 
 export default function NotificationsPage() {
   const router = useRouter()
@@ -310,20 +317,19 @@ export default function NotificationsPage() {
 
   // Filtered notifications
   const filteredNotifications = notifications.filter(n => {
-    if (activeTab === 'unread') return !n.is_read
     if (activeTab === 'likes') return n.type === 'like'
-    if (activeTab === 'mentions') return ['mention', 'quote', 'comment'].includes(n.type)
+    if (activeTab === 'mentions') return ['mention', 'quote', 'comment', 'repost'].includes(n.type)
     return true
   })
 
   const unreadCount = notifications.filter(n => !n.is_read).length
 
   return (
-    <div className="h-full w-full overflow-y-auto px-0 sm:px-4 md:px-10 py-0 sm:py-6 md:py-8 bg-[#FCFBFF] dark:bg-[#000000] transition-colors duration-300">
-      <div className="max-w-2xl mx-auto">
+    <div className="h-full w-full overflow-y-scroll [scrollbar-gutter:stable] px-0 sm:px-4 md:px-10 py-0 sm:py-6 md:py-8 bg-[#FCFBFF] dark:bg-[#000000] transition-colors duration-300">
+      <div className="max-w-2xl mx-auto min-h-[500px]">
         {/* Sticky Header with Mark All Read */}
-        <div className="sticky top-0 z-20 bg-white/90 dark:bg-black/90 backdrop-blur-md border-b border-gray-100 dark:border-[#2f3336] px-4 py-3 sm:rounded-t-2xl">
-          <div className="flex items-center justify-between gap-3">
+        <div className="sticky top-0 z-20 bg-white/90 dark:bg-black/90 backdrop-blur-md px-4 py-3 sm:rounded-t-2xl border-b border-gray-100 dark:border-[#2f3336] border-x-0 sm:border-x border-t-0 sm:border-t">
+          <div className="flex items-center justify-between gap-3 min-h-[36px]">
             <div className="flex items-center gap-3">
               <Link 
                 href="/dashboard" 
@@ -351,57 +357,32 @@ export default function NotificationsPage() {
             )}
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-2 mt-3 pt-1 overflow-x-auto no-scrollbar">
-            <button
-              type="button"
-              onClick={() => setActiveTab('all')}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer select-none ${
-                activeTab === 'all'
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-black shadow-xs'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-black/[0.05] dark:hover:bg-white/[0.08]'
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('unread')}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer select-none flex items-center gap-1.5 ${
-                activeTab === 'unread'
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-black shadow-xs'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-black/[0.05] dark:hover:bg-white/[0.08]'
-              }`}
-            >
-              <span>Unread</span>
-              {unreadCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-violet-600 text-white text-[10px] inline-flex items-center justify-center font-bold">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('likes')}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer select-none ${
-                activeTab === 'likes'
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-black shadow-xs'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-black/[0.05] dark:hover:bg-white/[0.08]'
-              }`}
-            >
-              Likes
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('mentions')}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer select-none ${
-                activeTab === 'mentions'
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-black shadow-xs'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-black/[0.05] dark:hover:bg-white/[0.08]'
-              }`}
-            >
-              Mentions & Replies
-            </button>
+          {/* Filter Tabs with Animated Sliding Pill */}
+          <div className="flex items-center gap-1.5 mt-3 pt-1">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative px-4 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer select-none focus:outline-hidden ${
+                    isActive
+                      ? 'text-white dark:text-black'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="notification-tab-pill"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      className="absolute inset-0 bg-gray-900 dark:bg-white rounded-full -z-10 shadow-xs"
+                    />
+                  )}
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -432,21 +413,27 @@ export default function NotificationsPage() {
             ))}
           </div>
         ) : filteredNotifications.length === 0 ? (
-          <div className="text-center py-16 px-4 bg-white dark:bg-[#0B0A10] sm:rounded-2xl border border-gray-100 dark:border-[#2f3336] shadow-xs transition-colors duration-300">
+          <div className="text-center py-16 px-4 bg-white dark:bg-[#0B0A10] sm:rounded-b-2xl border-x-0 sm:border-x border-b border-gray-100 dark:border-[#2f3336] shadow-xs transition-colors duration-300 min-h-[460px] flex flex-col items-center justify-center">
             <div className="w-16 h-16 bg-gray-50 dark:bg-white/[0.04] rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
               <Bell className="w-8 h-8 text-gray-300 dark:text-gray-600" />
             </div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-              {activeTab === 'unread' ? 'No unread notifications' : 'All caught up!'}
+              {activeTab === 'likes' 
+                ? 'No likes yet' 
+                : activeTab === 'mentions' 
+                ? 'No mentions or replies yet' 
+                : 'All caught up!'}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm mx-auto">
-              {activeTab === 'unread' 
-                ? 'You have viewed all recent activity on your posts.' 
+              {activeTab === 'likes'
+                ? "When people like your posts, you'll see them grouped here."
+                : activeTab === 'mentions'
+                ? "When people reply, quote, or mention you, they will appear here."
                 : "When students like your posts, follow you, or mention you, you'll see them grouped here."}
             </p>
           </div>
         ) : (
-          <div className="bg-white dark:bg-[#0B0A10] sm:rounded-2xl border-x-0 sm:border-x border-b border-gray-100 dark:border-[#2f3336] shadow-xs overflow-hidden transition-colors duration-300 divide-y divide-gray-100 dark:divide-[#2f3336]">
+          <div className="bg-white dark:bg-[#0B0A10] sm:rounded-b-2xl border-x-0 sm:border-x border-b border-gray-100 dark:border-[#2f3336] shadow-xs overflow-hidden transition-colors duration-300 divide-y divide-gray-100 dark:divide-[#2f3336] min-h-[460px]">
             {filteredNotifications.map((notification) => {
               const hasPost = Boolean(notification.post_id)
               const postContent = notification.post?.content
