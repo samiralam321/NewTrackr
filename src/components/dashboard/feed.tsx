@@ -1186,28 +1186,28 @@ export function Feed({
                 )}
 
                 <article 
-                  className={`px-4 py-3.5 hover:bg-black/[0.015] dark:hover:bg-white/[0.02] transition-colors border-b border-[#eff3f4] dark:border-[#2f3336] flex flex-col text-left w-full group/card ${isJourneyMode ? 'relative z-10' : ''}`}
+                  className={`px-3 sm:px-4 py-3 sm:py-3.5 hover:bg-black/[0.015] dark:hover:bg-white/[0.02] transition-colors border-b border-[#eff3f4] dark:border-[#2f3336] flex flex-col text-left w-full group/card ${isJourneyMode ? 'relative z-10' : ''}`}
                 >
               {/* Repost Header Banner: Display "Username reposted" if pure repost */}
               {post.is_repost && (
-                <div className="flex items-center gap-2 text-xs font-bold text-[#536471] dark:text-[#71767b] mb-1.5 ml-11">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#536471] dark:text-[#71767b] mb-1.5 ml-9 sm:ml-11">
                   <Repeat2 className="w-4 h-4 stroke-[2.3] text-emerald-500 shrink-0" />
                   <Link 
                     href={`/profile/${post.reposted_by?.id || ''}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors truncate"
                   >
                     {post.reposted_by?.id === currentUserId ? 'You' : (post.reposted_by?.full_name || 'Someone')} reposted
                   </Link>
                 </div>
               )}
 
-              <div className="flex gap-3 text-left w-full">
+              <div className="flex gap-2.5 sm:gap-3 text-left w-full">
                 {/* Left Column: Author Avatar */}
                 <Link href={`/profile/${post.user_id}`} className="shrink-0 group mt-0.5">
                   <img 
                     src={post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.profiles?.full_name || 'User')}&background=7C3AED&color=fff&size=80`} 
-                    className="w-10 h-10 rounded-full object-cover group-hover:opacity-90 transition-opacity" 
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover group-hover:opacity-90 transition-opacity" 
                     alt={post.profiles?.full_name || "Author"} 
                     width={40} 
                     height={40} 
@@ -1219,22 +1219,24 @@ export function Feed({
                 {/* Right Column: Post Body, Header, Media, Actions */}
                 <div className="flex-1 min-w-0">
                 {/* Twitter-style Header Line: Name · @Handle · Time · Category */}
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                <div className="flex items-center justify-between gap-1 w-full min-w-0 mb-1">
+                  <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 flex-1 overflow-hidden flex-nowrap">
                     <Link 
                       href={`/profile/${post.user_id}`} 
-                      className="text-[15px] sm:text-[16px] font-bold text-[#0f1419] dark:text-[#e7e9ea] hover:underline transition-colors truncate"
+                      className="text-[14px] sm:text-[15px] font-bold text-[#0f1419] dark:text-[#e7e9ea] hover:underline transition-colors truncate shrink min-w-0 max-w-[130px] sm:max-w-none"
                     >
                       {post.profiles?.full_name || 'Anonymous User'}
                     </Link>
-                    <VerifiedBadge level={getBadgeLevel(post.profiles?.consistency_score, post.profiles?.full_name)} nameOrHandle={post.profiles?.full_name} />
-                    <span className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal truncate">
+                    <span className="shrink-0 flex items-center">
+                      <VerifiedBadge level={getBadgeLevel(post.profiles?.consistency_score, post.profiles?.full_name)} nameOrHandle={post.profiles?.full_name} size="sm" />
+                    </span>
+                    <span className="text-[13px] sm:text-[14px] text-[#536471] dark:text-[#71767b] font-normal truncate shrink min-w-[20px] max-w-full">
                       {getUserHandle(post.profiles)}
                     </span>
-                    <span className="text-[#536471] dark:text-[#71767b] text-[14px] font-normal">·</span>
+                    <span className="text-[#536471] dark:text-[#71767b] text-[13px] sm:text-[14px] font-normal shrink-0 select-none">·</span>
                     <Link 
                       href={`/post/${post.id}`}
-                      className="text-[14px] text-[#536471] dark:text-[#71767b] font-normal hover:underline shrink-0"
+                      className="text-[13px] sm:text-[14px] text-[#536471] dark:text-[#71767b] font-normal hover:underline shrink-0 whitespace-nowrap"
                       title={formatFullDateTime(post.created_at)}
                       suppressHydrationWarning
                       onClick={(e) => e.stopPropagation()}
@@ -1243,30 +1245,31 @@ export function Feed({
                     </Link>
 
                     {post.time_spent && (
-                      <span className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#1A1A24] px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                      <span className="hidden sm:inline-flex text-[11px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#1A1A24] px-1.5 py-0.5 rounded-md items-center gap-1 shrink-0">
                         ⏱️ {Math.floor(post.time_spent/60)}h {post.time_spent%60}m
                       </span>
                     )}
                   </div>
 
                   {/* Header Right: Streak & More Options */}
-                  <div className="flex items-center gap-1 text-gray-400 dark:text-gray-500 shrink-0">
+                  <div className="flex items-center gap-0.5 sm:gap-1 text-gray-400 dark:text-gray-500 shrink-0 ml-auto pl-1">
                     {(post.profiles?.consistency_score || 0) > 0 && (
-                      <span className="text-[11px] font-bold text-orange-500 flex items-center gap-0.5 mr-1">
+                      <span className="text-[11px] font-bold text-orange-500 flex items-center gap-0.5 mr-0.5 shrink-0">
                         🔥{post.profiles?.consistency_score}
                       </span>
                     )}
                     
                     {(post as any).is_pinned && (
-                      <span className="text-[11px] font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 px-2 py-0.5 rounded-md flex items-center gap-1 mr-1">
+                      <span className="text-[11px] font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 px-1.5 py-0.5 rounded-md flex items-center gap-1 shrink-0">
                         <Pin className="w-3 h-3 fill-current" /> Pinned
                       </span>
                     )}
                     
-                    <div className="relative post-menu-container">
+                    <div className="relative post-menu-container shrink-0">
                       <button 
                         onClick={() => setOpenMenuId(openMenuId === post.id ? null : post.id)} 
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-[#536471] dark:text-[#71767b] hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/40 dark:hover:text-violet-400 transition-colors"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[#536471] dark:text-[#71767b] hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/40 dark:hover:text-violet-400 transition-colors cursor-pointer"
+                        aria-label="More options"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
@@ -1448,7 +1451,7 @@ export function Feed({
                       </div>
                     </div>
                   ) : (
-                    <div className="text-[16px] leading-[1.5] text-[#0f1419] dark:text-[#e7e9ea] whitespace-pre-wrap font-normal max-w-2xl">
+                    <div className="text-[15px] sm:text-[16px] leading-[1.45] sm:leading-[1.5] text-[#0f1419] dark:text-[#e7e9ea] whitespace-pre-wrap font-normal max-w-2xl">
                       <RichTextRenderer content={post.content} />
                     </div>
                   )}
@@ -1456,7 +1459,7 @@ export function Feed({
                 
                 {/* Compact, Optimized Post Image Attachment (Twitter standard) */}
                 {post.image_url && (
-                  <div className="mt-2.5 mb-1.5 w-fit max-w-full sm:max-w-[504px]">
+                  <div className="mt-2 mb-1.5 w-fit max-w-full sm:max-w-[504px]">
                     <div 
                       className="rounded-2xl overflow-hidden border border-[#eff3f4] dark:border-[#2f3336] bg-black/[0.02] dark:bg-white/[0.02] cursor-pointer hover:opacity-95 transition-all shadow-2xs group/img inline-block w-fit max-w-full" 
                       onClick={() => setPreviewImageUrl(post.image_url!)}
@@ -1464,7 +1467,7 @@ export function Feed({
                       <img 
                         src={post.image_url} 
                         alt="Post attachment" 
-                        className="block w-auto max-w-full h-auto max-h-[280px] sm:max-h-[320px] object-contain rounded-2xl transition-transform duration-150 group-hover/img:scale-[1.005]" 
+                        className="block w-auto max-w-full h-auto max-h-[260px] sm:max-h-[320px] object-contain rounded-2xl transition-transform duration-150 group-hover/img:scale-[1.005]" 
                         loading="lazy" 
                         decoding="async" 
                       />
@@ -1482,7 +1485,7 @@ export function Feed({
                 )}
                   
                 {/* Twitter Action Bar: Comment, Repost, Like, Bookmark, Share */}
-                <div className="flex items-center justify-between pt-1.5 text-[#536471] dark:text-[#71767b] max-w-md -ml-2">
+                <div className="flex items-center justify-between pt-1 sm:pt-1.5 text-[#536471] dark:text-[#71767b] max-w-md -ml-2">
                   {/* Comment */}
                   <button 
                     onClick={() => toggleComments(post.id)} 

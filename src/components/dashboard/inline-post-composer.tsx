@@ -574,12 +574,12 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
-      className={`px-4 py-3.5 border-b border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] relative transition-colors ${
+      className={`px-3 sm:px-4 py-2.5 sm:py-3.5 border-b border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] relative transition-colors ${
         isDragging ? 'ring-2 ring-violet-500 bg-violet-50/20 dark:bg-violet-950/20' : ''
       }`}
     >
       {/* Main Composer Row: Avatar + Text Input */}
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2.5 sm:gap-3">
         <img
           src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Samir')}&background=7C3AED&color=fff&size=80`}
           alt="You"
@@ -587,7 +587,7 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
           height={40}
           loading="lazy"
           decoding="async"
-          className="w-10 h-10 rounded-full object-cover shrink-0 mt-0.5"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover shrink-0 mt-0.5"
         />
 
         <div className="flex-1 min-w-0 relative">
@@ -599,8 +599,8 @@ export function InlinePostComposer({ user, profile }: InlinePostComposerProps) {
             onPaste={handlePaste}
             onFocus={() => setIsFocused(true)}
             placeholder={`What's on your mind, ${firstName}?`}
-            className={`w-full text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-snug overflow-hidden transition-[height] duration-75 ${
-              (imagePreview || attachedSnippet) ? 'min-h-[36px]' : 'min-h-[48px]'
+            className={`w-full text-[16px] sm:text-[18px] font-normal text-[#0f1419] dark:text-[#e7e9ea] placeholder:font-normal placeholder:text-[#536471] dark:placeholder:text-[#71767b] bg-transparent outline-none border-none resize-none leading-snug overflow-hidden transition-[height] duration-75 ${
+              (imagePreview || attachedSnippet) ? 'min-h-[36px]' : 'min-h-[44px] sm:min-h-[48px]'
             }`}
           />
 

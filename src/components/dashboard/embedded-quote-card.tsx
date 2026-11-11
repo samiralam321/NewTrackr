@@ -140,8 +140,8 @@ export function EmbeddedQuoteCard({
         }`}
       >
         {/* Quoted Author Header */}
-        <div className="flex items-center justify-between gap-2 mb-1.5 min-w-0">
-          <div className="flex items-center gap-2 min-w-0 flex-wrap">
+        <div className="flex items-center justify-between gap-1.5 mb-1.5 min-w-0 w-full">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden flex-nowrap">
             <Link 
               href={profileUrl}
               onClick={(e) => e.stopPropagation()}
@@ -155,23 +155,25 @@ export function EmbeddedQuoteCard({
               />
             </Link>
 
-            <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 flex-1 overflow-hidden flex-nowrap">
               <Link
                 href={profileUrl}
                 onClick={(e) => e.stopPropagation()}
-                className="font-bold text-[13px] text-gray-900 dark:text-gray-100 hover:underline truncate"
+                className="font-bold text-[12.5px] sm:text-[13px] text-gray-900 dark:text-gray-100 hover:underline truncate shrink min-w-0 max-w-[110px] sm:max-w-none"
               >
                 {authorName}
               </Link>
-              <VerifiedBadge level={badgeLevel} nameOrHandle={authorName} size="sm" />
-              <span className="text-[11.5px] text-gray-400 dark:text-gray-500 font-normal truncate">
+              <span className="shrink-0 flex items-center">
+                <VerifiedBadge level={badgeLevel} nameOrHandle={authorName} size="xs" />
+              </span>
+              <span className="text-[11px] sm:text-[11.5px] text-gray-400 dark:text-gray-500 font-normal truncate shrink min-w-[15px] max-w-full">
                 {handle}
               </span>
               {localPost.created_at && (
                 <>
-                  <span className="text-gray-400 dark:text-gray-600 text-xs select-none">·</span>
+                  <span className="text-gray-400 dark:text-gray-600 text-xs select-none shrink-0">·</span>
                   <span 
-                    className="text-[11.5px] text-gray-400 dark:text-gray-500 font-normal shrink-0"
+                    className="text-[11px] sm:text-[11.5px] text-gray-400 dark:text-gray-500 font-normal shrink-0 whitespace-nowrap"
                     title={formatFullDateTime(localPost.created_at)}
                   >
                     {formatTimeCompact(localPost.created_at)}

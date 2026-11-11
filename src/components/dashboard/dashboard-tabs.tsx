@@ -67,7 +67,7 @@ export function DashboardTabs({ currentUserId, user, profile }: DashboardTabsPro
   return (
     <div className="w-full">
       {/* Sliding Pill Navigation Bar (Previous Trackr Style) */}
-      <div className="sticky top-0 z-20 backdrop-blur-md bg-white/90 dark:bg-black/90 px-3.5 py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] flex items-center overflow-x-auto no-scrollbar">
+      <div className="sticky top-[49px] md:top-0 z-20 backdrop-blur-md bg-white/90 dark:bg-black/90 px-3 sm:px-3.5 py-2 sm:py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] flex items-center overflow-x-auto no-scrollbar">
         <div className="inline-flex items-center gap-1 p-1 bg-[#F4F3F7] dark:bg-[#15141D] rounded-full border border-gray-200/70 dark:border-[#2D2B3B]/80">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id

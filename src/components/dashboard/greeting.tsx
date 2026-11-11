@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-export function Greeting({ name }: { name: string }) {
+export function Greeting({ name, className }: { name: string; className?: string }) {
   const [greeting, setGreeting] = useState("Good morning")
   const [icon, setIcon] = useState("☀️")
 
@@ -21,11 +21,11 @@ export function Greeting({ name }: { name: string }) {
   }, [])
 
   return (
-    <h1 
+    <span 
       suppressHydrationWarning
-      className="text-xl sm:text-2xl md:text-[25px] font-bold tracking-tight text-[#0f1419] dark:text-[#e7e9ea] transition-colors leading-tight"
+      className={className || "text-xl sm:text-2xl md:text-[25px] font-bold tracking-tight text-[#0f1419] dark:text-[#e7e9ea] transition-colors leading-tight inline-block"}
     >
       {greeting}, {name}! <span className="inline-block select-none">{icon}</span>
-    </h1>
+    </span>
   )
 }

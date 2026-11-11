@@ -113,7 +113,7 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
   }
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[calc(3.75rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 dark:bg-[#0B0A10]/95 backdrop-blur-md border-t border-gray-100 dark:border-[#2D2B3B] flex items-center justify-around px-2 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[calc(3.35rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 dark:bg-[#0B0A10]/95 backdrop-blur-md border-t border-[#eff3f4] dark:border-[#2f3336] flex items-center justify-around px-2 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
       {navItems.map((item) => {
         const isActive = pathname === item.href
         return (
@@ -130,10 +130,10 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
                 }
               } catch {} 
             }}
-            className="flex flex-col items-center justify-center min-w-[56px] h-12 relative active:scale-90 transition-transform"
+            className="flex flex-col items-center justify-center min-w-[50px] h-11 relative active:scale-90 transition-transform"
             aria-label={item.name}
           >
-            <div className={`flex items-center justify-center px-4 py-1 rounded-full transition-all duration-200 ${
+            <div className={`flex items-center justify-center px-3.5 py-1 rounded-full transition-all duration-200 ${
               isActive 
                 ? 'bg-violet-100/80 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300' 
                 : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
@@ -153,7 +153,7 @@ export function MobileBottomNav({ profile }: { profile?: any }) {
         prefetch={true}
         onClick={(e) => handleNavClick(e, '/profile')}
         onTouchStart={() => { try { router.prefetch('/profile') } catch {} }}
-        className="flex flex-col items-center justify-center min-w-[56px] h-12 active:scale-90 transition-transform"
+        className="flex flex-col items-center justify-center min-w-[50px] h-11 active:scale-90 transition-transform"
         aria-label="Profile"
       >
         <div className={`p-0.5 rounded-full transition-all ${

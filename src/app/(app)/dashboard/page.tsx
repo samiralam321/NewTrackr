@@ -24,15 +24,31 @@ export default async function DashboardPage() {
       {/* Central Timeline Column — flush 3-column architecture matching Twitter */}
       <main id="main-feed-container" className="flex-1 min-w-0 max-w-[640px] xl:max-w-[690px] 2xl:max-w-[730px] h-full overflow-y-auto no-scrollbar border-r border-[#eff3f4] dark:border-[#2f3336] flex flex-col bg-white dark:bg-[#000000] shrink-0">
         {/* Mobile Top App Bar (Only visible on mobile screens) */}
-        <div className="flex md:hidden items-center justify-between w-full px-4 py-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] sticky top-0 z-30 bg-white/90 dark:bg-black/90 backdrop-blur-md">
-          <MobileMenuDropdown profile={profile} />
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400 font-bold text-xs bg-orange-50 dark:bg-orange-500/10 border border-orange-200/50 dark:border-orange-500/20 px-2.5 py-1 rounded-full">
+        <div className="flex md:hidden items-center justify-between w-full px-3 py-2 border-b border-[#eff3f4] dark:border-[#2f3336] sticky top-0 z-30 bg-white/90 dark:bg-black/90 backdrop-blur-md gap-2">
+          {/* Hamburger Menu on Left */}
+          <div className="shrink-0 flex items-center">
+            <MobileMenuDropdown profile={profile} />
+          </div>
+
+          {/* Compact Mobile Greeting & Subtitle (fills available content area toward top-right/center) */}
+          <div className="flex-1 min-w-0 flex flex-col justify-center px-1">
+            <Greeting 
+              name={displayName} 
+              className="text-[13px] sm:text-[14px] font-bold text-[#0f1419] dark:text-[#e7e9ea] truncate leading-tight block"
+            />
+            <p className="text-[10px] sm:text-[11px] text-[#536471] dark:text-[#71767b] font-normal truncate leading-tight mt-0.5">
+              Better ideas. Bigger dreams. Keep going! 🚀
+            </p>
+          </div>
+
+          {/* Streak Counter & Profile Avatar on Right */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400 font-bold text-xs bg-orange-50 dark:bg-orange-500/10 border border-orange-200/50 dark:border-orange-500/20 px-2 py-0.5 rounded-full shrink-0">
               🔥 <span>{profile?.consistency_score || 0}</span>
             </div>
             <Link 
               href="/profile" 
-              className="w-8 h-8 rounded-full overflow-hidden border border-gray-200 dark:border-[#2D2B3B] shrink-0"
+              className="w-8 h-8 rounded-full overflow-hidden border border-gray-200 dark:border-[#2D2B3B] shrink-0 hover:opacity-90 transition-opacity"
             >
               <img 
                 src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=7C3AED&color=fff&size=80`} 
@@ -45,8 +61,8 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Top Header: Greeting & Subtitle */}
-        <header className="px-4.5 pt-3.5 pb-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] shrink-0">
+        {/* Desktop Header: Greeting & Subtitle (Strictly Hidden on Mobile) */}
+        <header className="hidden md:block px-4.5 pt-3.5 pb-2.5 border-b border-[#eff3f4] dark:border-[#2f3336] bg-white dark:bg-[#000000] shrink-0">
           <Greeting name={displayName} />
           <p className="text-[13px] sm:text-[14px] text-[#536471] dark:text-[#71767b] font-normal mt-0.5">
             Better ideas. Bigger dreams. Keep going! 🚀

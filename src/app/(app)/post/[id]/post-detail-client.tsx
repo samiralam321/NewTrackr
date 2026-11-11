@@ -400,12 +400,15 @@ export function PostDetailClient({
                 />
               </Link>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <Link href={`/profile/${comment.user_id}`} className="font-bold text-[14px] text-gray-900 dark:text-white hover:underline">
+                <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 flex-nowrap overflow-hidden">
+                  <Link href={`/profile/${comment.user_id}`} className="font-bold text-[13.5px] sm:text-[14px] text-gray-900 dark:text-white hover:underline truncate shrink min-w-0 max-w-[140px] sm:max-w-none">
                     {comment.profiles?.full_name}
                   </Link>
-                  <VerifiedBadge level={getBadgeLevel(comment.profiles?.consistency_score, comment.profiles?.full_name)} size="sm" />
-                  <span className="text-[12px] text-gray-400">· {formatTimeCompact(comment.created_at)}</span>
+                  <span className="shrink-0 flex items-center">
+                    <VerifiedBadge level={getBadgeLevel(comment.profiles?.consistency_score, comment.profiles?.full_name)} size="xs" />
+                  </span>
+                  <span className="text-[12px] text-gray-400 dark:text-gray-500 shrink-0 select-none">·</span>
+                  <span className="text-[12px] text-gray-400 dark:text-gray-500 shrink-0 whitespace-nowrap">{formatTimeCompact(comment.created_at)}</span>
                 </div>
                 <div className="mt-1 text-[14.5px] text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
                   <RichTextRenderer content={comment.content} />
