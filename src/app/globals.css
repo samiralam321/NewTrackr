@@ -191,34 +191,25 @@ body {
   background-color: #000000;
 }
 
-/* Subtle shimmer animation for loading skeletons matching Trackr design */
+/* Subtle opacity pulse for minimal Twitter/X-style loading placeholders */
 @keyframes skeleton-shimmer {
   0% {
-    background-position: -200% 0;
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
   }
   100% {
-    background-position: 200% 0;
+    opacity: 1;
   }
 }
 
 .skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(229, 231, 235, 0.55) 0%,
-    rgba(243, 244, 246, 0.95) 50%,
-    rgba(229, 231, 235, 0.55) 100%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  background-color: #E8EAED;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
 }
 
 :is(.dark .skeleton-shimmer) {
-  background: linear-gradient(
-    90deg,
-    rgba(32, 35, 39, 0.55) 0%,
-    rgba(47, 51, 54, 0.9) 50%,
-    rgba(32, 35, 39, 0.55) 100%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  background-color: #1f2328;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
 }
