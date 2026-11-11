@@ -24,7 +24,7 @@ export async function updateSession(request: NextRequest) {
       cookies: {
         getAll() {
           const all = request.cookies.getAll()
-          // Filter out the legacy malformed cookie so GoTrueClient does not crash with TypeError
+          // Filter out legacy malformed cookie so GoTrueClient does not crash with TypeError
           return all.filter(c => {
             if (c.name === legacyTokenName) {
               return !(c.value.startsWith('%7B') || c.value.startsWith('{'))
@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
           })
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -43,6 +43,7 @@ export async function updateSession(request: NextRequest) {
               maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
               sameSite: 'lax',
               path: '/',
+              secure: process.env.NODE_ENV === 'production',
             })
           )
         },
@@ -78,10 +79,22 @@ export async function updateSession(request: NextRequest) {
     pathname === '/apple-touch-icon.png' ||
     pathname === '/logo.png'
 
+  // If already authenticated and visiting the root /auth page, redirect immediately to /dashboard
+  if (user && (pathname === '/auth' || pathname === '/auth/')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect unauthenticated users attempting to access protected routes
   if (!user && !isPublicRoute) {
-    // redirect unauthenticated users to the auth page
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
+    // Preserve the intended destination so user lands there after authentication
+    const returnTarget = pathname + (request.nextUrl.search || '')
+    if (returnTarget && returnTarget !== '/') {
+      url.searchParams.set('redirectTo', returnTarget)
+    }
     const redirectResponse = NextResponse.redirect(url)
     if (isCorrupted) {
       redirectResponse.cookies.delete(legacyTokenName)

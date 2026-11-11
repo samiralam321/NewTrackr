@@ -102,9 +102,11 @@ export function Sidebar({ profile }: { profile?: any }) {
       localStorage.removeItem('trackr_opp_bookmarks')
       localStorage.removeItem('trackr_user_reposts')
     } catch {}
+    try {
+      await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
+    } catch {}
     await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    window.location.href = '/'
   }
 
   const handleContactSubmit = async (e: React.FormEvent) => {

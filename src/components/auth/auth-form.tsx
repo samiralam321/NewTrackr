@@ -5,30 +5,71 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
 import { useState, useEffect, useRef } from "react"
-import { Loader2, Mail, Lock, Check } from "lucide-react"
-import { cleanUsername, validateUsernameFormat } from "@/lib/utils/user"
+import { Loader2, Mail, Lock, Check, Eye, EyeOff, User, AlertCircle, ShieldCheck, ArrowLeft, CheckCircle2 } from "lucide-react"
+import { 
+  normalizeEmail, 
+  validateEmail, 
+  validateFullName, 
+  validateUsername, 
+  validatePassword,
+  cleanUsername 
+} from "@/lib/auth/validation"
+import { formatAuthError } from "@/lib/auth/auth-errors"
 
 export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
   const [isForgotPassword, setIsForgotPassword] = useState(false)
+  const [emailConfirmationSent, setEmailConfirmationSent] = useState(false)
   
+  // Form fields
+  const [fullName, setFullName] = useState("")
+  const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [resetEmail, setResetEmail] = useState("")
-  const [username, setUsername] = useState("")
-  const [usernameStatus, setUsernameStatus] = useState<{ checking: boolean; available: boolean | null; error?: string }>({
+  const [rememberMe, setRememberMe] = useState(true)
+
+  // Visibility toggles
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Username live check state
+  const [usernameStatus, setUsernameStatus] = useState<{
+    checking: boolean
+    available: boolean | null
+    error?: string
+  }>({
     checking: false,
     available: null
   })
   const usernameCheckTimeout = useRef<NodeJS.Timeout | null>(null)
-  
+
+  // Alert and feedback messages
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const supabase = createClient()
+  const [redirectTo, setRedirectTo] = useState<string>('/dashboard')
 
-  // Client-Side Session Auto-Restore & Redirect
+  const supabase = createClient()
+  const isSubmitting = useRef(false)
+
+  // Extract redirectTo param safely and monitor active sessions
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const target = params.get('redirectTo') || params.get('next')
+      if (target && target.startsWith('/') && !target.startsWith('//')) {
+        setRedirectTo(target)
+      }
+
+      // Check URL error params
+      const urlError = params.get('error_description') || params.get('error')
+      if (urlError) {
+        setErrorMsg(formatAuthError(urlError))
+      }
+    }
+
     const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '').split('.')[0] || 'bsqqdfkdycziocmgiani'
     
     // Proactively clean up any legacy corrupted URL-encoded JSON cookie
@@ -43,7 +84,7 @@ export function AuthForm() {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (session) {
-          window.location.href = '/dashboard'
+          window.location.href = redirectTo || '/dashboard'
         }
       } catch (err) {
         console.warn("Client session restore skipped:", err)
@@ -52,39 +93,52 @@ export function AuthForm() {
 
     checkActiveSession()
 
-    // 2. Set up listener to capture OAuth (Google) or Email auth state changes
+    // Listen to auth state transitions
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event as string) === 'PASSWORD_RECOVERY' || window.location.pathname.includes('/auth/reset-password')) {
         return
       }
 
       if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-        window.location.href = '/dashboard'
+        window.location.href = redirectTo || '/dashboard'
       }
     })
 
     return () => {
       subscription.unsubscribe()
     }
-  }, [supabase])
+  }, [supabase, redirectTo])
 
+  // Google OAuth Authentication
   const handleGoogleLogin = async () => {
+    if (isLoading || isSubmitting.current) return
     setIsLoading(true)
     setErrorMsg(null)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${location.origin}/auth/callback`,
-      },
-    })
-    
-    if (error) {
-      console.error('Error logging in:', error.message)
-      setErrorMsg(error.message)
+
+    try {
+      const callbackUrl = new URL('/auth/callback', window.location.origin)
+      if (redirectTo && redirectTo !== '/dashboard') {
+        callbackUrl.searchParams.set('next', redirectTo)
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: callbackUrl.toString(),
+        },
+      })
+      
+      if (error) {
+        throw error
+      }
+    } catch (err: any) {
+      console.error('Google OAuth error:', err)
+      setErrorMsg(formatAuthError(err))
       setIsLoading(false)
     }
   }
 
+  // Live username uniqueness and format validator
   const handleUsernameChange = (val: string) => {
     const clean = cleanUsername(val).replace(/\s+/g, '')
     setUsername(clean)
@@ -96,7 +150,7 @@ export function AuthForm() {
       return
     }
 
-    const formatCheck = validateUsernameFormat(clean)
+    const formatCheck = validateUsername(clean)
     if (!formatCheck.valid) {
       setUsernameStatus({ checking: false, available: false, error: formatCheck.error })
       return
@@ -121,83 +175,147 @@ export function AuthForm() {
       } catch {
         setUsernameStatus({ checking: false, available: true })
       }
-    }, 350)
+    }, 300)
   }
 
+  // Password Recovery Request
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isLoading || isSubmitting.current) return
+    isSubmitting.current = true
     setIsLoading(true)
     setErrorMsg(null)
     setSuccessMsg(null)
 
-    if (!resetEmail.trim()) {
-      setErrorMsg("Please enter your email address.")
+    const normalizedResetEmail = normalizeEmail(resetEmail)
+    const emailCheck = validateEmail(normalizedResetEmail)
+    if (!emailCheck.valid) {
+      setErrorMsg(emailCheck.error || "Please enter a valid email address.")
       setIsLoading(false)
+      isSubmitting.current = false
       return
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
-        redirectTo: `${location.origin}/auth/callback?next=/auth/reset-password`,
+      const callbackUrl = new URL('/auth/callback', window.location.origin)
+      callbackUrl.searchParams.set('next', '/auth/reset-password')
+
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedResetEmail, {
+        redirectTo: callbackUrl.toString(),
       })
       
       if (error) throw error
       
-      setSuccessMsg("Password reset link sent! Please check your email inbox to proceed.")
+      // Generic success message to prevent user enumeration
+      setSuccessMsg("If an account exists with this email, you will receive password reset instructions shortly.")
     } catch (err: any) {
       console.error("Reset password error:", err)
-      setErrorMsg(err.message || "An error occurred while sending reset link.")
+      setErrorMsg(formatAuthError(err))
     } finally {
       setIsLoading(false)
+      isSubmitting.current = false
     }
   }
 
+  // Email/Password Authentication (Sign In & Sign Up)
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isLoading || isSubmitting.current) return
+    isSubmitting.current = true
     setIsLoading(true)
     setErrorMsg(null)
     setSuccessMsg(null)
 
-    if (!email || !password) {
-      setErrorMsg("Please fill in all fields.")
+    const normalizedEmail = normalizeEmail(email)
+
+    // Check if user accidentally entered a username into the email box
+    if (!normalizedEmail.includes('@')) {
+      setErrorMsg("Please enter your email address to continue.")
       setIsLoading(false)
+      isSubmitting.current = false
+      return
+    }
+
+    const emailCheck = validateEmail(normalizedEmail)
+    if (!emailCheck.valid) {
+      setErrorMsg(emailCheck.error || "Please enter a valid email address.")
+      setIsLoading(false)
+      isSubmitting.current = false
+      return
+    }
+
+    if (!password) {
+      setErrorMsg("Please enter your password.")
+      setIsLoading(false)
+      isSubmitting.current = false
       return
     }
 
     try {
       if (isSignUp) {
-        // Sign Up Flow
-        const finalUsername = cleanUsername(username || email.split('@')[0])
-        const formatCheck = validateUsernameFormat(finalUsername)
-        if (!formatCheck.valid) {
-          setErrorMsg(formatCheck.error || "Please enter a valid username (3-20 characters, alphanumeric & _)")
+        // --- SIGN UP VALIDATIONS ---
+        const nameCheck = validateFullName(fullName)
+        if (!nameCheck.valid) {
+          setErrorMsg(nameCheck.error || "Please enter your full name.")
           setIsLoading(false)
+          isSubmitting.current = false
           return
         }
 
-        // Live check uniqueness before signing up
+        const chosenUsername = cleanUsername(username || normalizedEmail.split('@')[0])
+        const usernameCheck = validateUsername(chosenUsername)
+        if (!usernameCheck.valid) {
+          setErrorMsg(usernameCheck.error || "Please enter a valid username (3-20 characters).")
+          setIsLoading(false)
+          isSubmitting.current = false
+          return
+        }
+
+        const passwordCheck = validatePassword(password)
+        if (!passwordCheck.valid) {
+          setErrorMsg(passwordCheck.error || "Password must be at least 8 characters long.")
+          setIsLoading(false)
+          isSubmitting.current = false
+          return
+        }
+
+        if (password !== confirmPassword) {
+          setErrorMsg("Passwords do not match. Please verify your confirm password.")
+          setIsLoading(false)
+          isSubmitting.current = false
+          return
+        }
+
+        // Live check uniqueness before creating
         try {
           const { data: existingUser } = await supabase
             .from('profiles')
             .select('id')
-            .ilike('username', finalUsername)
+            .ilike('username', chosenUsername)
             .maybeSingle()
           
           if (existingUser) {
-            setErrorMsg(`Username @${finalUsername} is already taken. Please choose another.`)
+            setErrorMsg(`Username @${chosenUsername} is already taken. Please choose another.`)
             setIsLoading(false)
+            isSubmitting.current = false
             return
           }
         } catch {}
 
+        const callbackUrl = new URL('/auth/callback', window.location.origin)
+        if (redirectTo && redirectTo !== '/dashboard') {
+          callbackUrl.searchParams.set('next', redirectTo)
+        }
+
         const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
+          email: normalizedEmail,
+          password: password,
           options: {
+            emailRedirectTo: callbackUrl.toString(),
             data: {
-              full_name: email.split('@')[0],
-              username: finalUsername,
-              avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(finalUsername)}`
+              full_name: fullName.trim(),
+              username: chosenUsername,
+              avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(chosenUsername)}`
             }
           }
         })
@@ -205,55 +323,103 @@ export function AuthForm() {
         if (error) throw error
         
         if (data?.session) {
-          setSuccessMsg("Account created! Logging you in...")
-          window.location.href = '/dashboard'
+          setSuccessMsg("Account created! Redirecting to dashboard...")
+          window.location.href = redirectTo || '/dashboard'
         } else {
-          setSuccessMsg("Account created! Please check your inbox for a verification email to activate your account.")
+          // Email confirmation is required by Supabase project settings
+          setEmailConfirmationSent(true)
           setIsLoading(false)
+          isSubmitting.current = false
         }
       } else {
-        // Sign In Flow
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+        // --- SIGN IN FLOW ---
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password: password,
         })
         
         if (error) throw error
-        window.location.href = '/dashboard'
+
+        if (data?.session) {
+          window.location.href = redirectTo || '/dashboard'
+        }
       }
     } catch (err: any) {
-      console.error("Auth error:", err)
-      setErrorMsg(err.message || "An authentication error occurred.")
-    } finally {
+      console.error("Auth submit error:", err)
+      setErrorMsg(formatAuthError(err))
       setIsLoading(false)
+      isSubmitting.current = false
     }
   }
 
-  // Forgot Password Slate
+  // Screen: Email Confirmation Instructions
+  if (emailConfirmationSent) {
+    return (
+      <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-16 h-16 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center mx-auto shadow-sm">
+          <Mail className="w-8 h-8" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
+          <p className="text-sm text-gray-500 leading-relaxed max-w-sm mx-auto">
+            We sent an activation link to <span className="font-semibold text-gray-900">{email}</span>. Please click the link inside to verify your account.
+          </p>
+        </div>
+        <div className="pt-2">
+          <Button
+            type="button"
+            onClick={() => {
+              setEmailConfirmationSent(false)
+              setIsSignUp(false)
+            }}
+            className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold shadow-sm text-sm cursor-pointer"
+          >
+            Back to Sign In
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Screen: Forgot Password Slate
   if (isForgotPassword) {
     return (
       <div className="space-y-6 text-left animate-in fade-in duration-200">
         <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-1.5">Reset Password 🔒</h3>
+          <button
+            type="button"
+            onClick={() => {
+              setIsForgotPassword(false)
+              setErrorMsg(null)
+              setSuccessMsg(null)
+            }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 mb-4 transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Sign In</span>
+          </button>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1.5">Reset Password 🔒</h2>
           <p className="text-sm text-gray-500 leading-relaxed">
-            Enter your email address below, and we'll send you a password recovery link.
+            Enter your registered email below, and we'll send you a password recovery link.
           </p>
         </div>
 
         <form onSubmit={handleResetPassword} className="space-y-4">
           {errorMsg && (
-            <div className="p-3 text-sm font-semibold text-red-600 bg-red-50 rounded-xl border border-red-100">
-              {errorMsg}
+            <div className="p-3.5 text-xs font-medium text-red-700 bg-red-50 rounded-xl border border-red-200 animate-in fade-in flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+              <span>{errorMsg}</span>
             </div>
           )}
           {successMsg && (
-            <div className="p-3 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-xl border border-emerald-100">
-              {successMsg}
+            <div className="p-3.5 text-xs font-medium text-emerald-800 bg-emerald-50 rounded-xl border border-emerald-200 animate-in fade-in flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+              <span>{successMsg}</span>
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="reset-email">Email address</Label>
+            <Label htmlFor="reset-email" className="text-xs font-semibold text-gray-700">Email address</Label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
               <Input 
@@ -261,9 +427,13 @@ export function AuthForm() {
                 type="email" 
                 placeholder="name@university.edu"
                 value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
+                onChange={(e) => {
+                  setResetEmail(e.target.value)
+                  if (errorMsg) setErrorMsg(null)
+                }}
                 disabled={isLoading}
-                className="pl-10 h-11 rounded-xl border-gray-200 focus-visible:ring-violet-500" 
+                autoComplete="email"
+                className="pl-10 h-11 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-sm" 
                 required
               />
             </div>
@@ -271,49 +441,69 @@ export function AuthForm() {
 
           <Button 
             type="submit" 
-            className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-white rounded-xl shadow-sm text-base font-semibold transition-all duration-200 flex items-center justify-center cursor-pointer"
-            disabled={isLoading}
+            className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-white rounded-xl shadow-sm text-sm font-semibold transition-all duration-200 flex items-center justify-center cursor-pointer"
+            disabled={isLoading || !resetEmail.trim()}
           >
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
             ) : (
               "Send Reset Link"
             )}
           </Button>
         </form>
-
-        <div className="text-center">
-          <button 
-            type="button"
-            onClick={() => {
-              setIsForgotPassword(false)
-              setErrorMsg(null)
-              setSuccessMsg(null)
-            }} 
-            className="text-violet-600 hover:text-violet-700 font-bold underline text-sm cursor-pointer"
-          >
-            Back to Sign In
-          </button>
-        </div>
       </div>
     )
   }
 
-  // Standard Login/Signup Slate
+  // Standard Login / Sign Up Slate
   return (
-    <div className="space-y-6 text-left">
-      {/* Google Login Button */}
+    <div className="space-y-5 text-left">
+      {/* Mode Switch Tabs (Sign In vs Create Account) */}
+      <div className="flex rounded-xl bg-gray-100/80 p-1 border border-gray-200/60">
+        <button
+          type="button"
+          onClick={() => {
+            setIsSignUp(false)
+            setErrorMsg(null)
+            setSuccessMsg(null)
+          }}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            !isSignUp 
+              ? 'bg-white text-gray-900 shadow-xs' 
+              : 'text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          Sign In
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setIsSignUp(true)
+            setErrorMsg(null)
+            setSuccessMsg(null)
+          }}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            isSignUp 
+              ? 'bg-white text-gray-900 shadow-xs' 
+              : 'text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          Create Account
+        </button>
+      </div>
+
+      {/* Google OAuth Login Button */}
       <Button 
         type="button"
         variant="outline" 
-        className="w-full h-12 rounded-xl text-base font-medium shadow-sm border-gray-200 bg-white hover:bg-gray-50 text-gray-900 hover:text-gray-900 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer"
+        className="w-full h-11 rounded-xl text-sm font-semibold shadow-xs border-gray-200 bg-white hover:bg-gray-50 text-gray-800 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer"
         onClick={handleGoogleLogin}
         disabled={isLoading}
       >
         {isLoading ? (
-          <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+          <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
         ) : (
-          <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" aria-hidden="true">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               fill="#4285F4"
@@ -332,73 +522,103 @@ export function AuthForm() {
             />
           </svg>
         )}
-        Continue with Google
+        <span>{isSignUp ? "Sign up with Google" : "Continue with Google"}</span>
       </Button>
 
-      {/* Separator */}
-      <div className="relative flex items-center justify-center">
+      {/* Modern Separator */}
+      <div className="relative flex items-center justify-center py-1">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-150"></div>
+          <div className="w-full border-t border-gray-200"></div>
         </div>
-        <span className="relative px-3 bg-white text-xs font-semibold uppercase tracking-wider text-gray-400">
-          or use email
+        <span className="relative px-3 bg-white text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          or continue with email
         </span>
       </div>
 
-      {/* Email/Password Form */}
-      <form onSubmit={handleEmailAuth} className="space-y-4">
+      {/* Main Form */}
+      <form onSubmit={handleEmailAuth} className="space-y-3.5">
         {errorMsg && (
-          <div className="p-3 text-sm font-semibold text-red-600 bg-red-50 rounded-xl border border-red-100">
-            {errorMsg}
+          <div className="p-3 text-xs font-medium text-red-700 bg-red-50 rounded-xl border border-red-200 animate-in fade-in flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+            <span>{errorMsg}</span>
           </div>
         )}
         {successMsg && (
-          <div className="p-3 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-xl border border-emerald-100">
-            {successMsg}
+          <div className="p-3 text-xs font-medium text-emerald-800 bg-emerald-50 rounded-xl border border-emerald-200 animate-in fade-in flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+            <span>{successMsg}</span>
           </div>
         )}
 
+        {/* Sign Up Fields: Full Name & Username */}
         {isSignUp && (
-          <div className="space-y-1.5 animate-in fade-in">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="username">Username (Unique Handle)</Label>
-              <span className="text-[11px] text-gray-400 font-normal">{username.length}/20</span>
+          <>
+            <div className="space-y-1 animate-in fade-in">
+              <Label htmlFor="fullname" className="text-xs font-semibold text-gray-700">Full Name</Label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
+                <Input 
+                  id="fullname" 
+                  type="text" 
+                  placeholder="e.g. Samir Alam"
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value)
+                    if (errorMsg) setErrorMsg(null)
+                  }}
+                  maxLength={50}
+                  disabled={isLoading}
+                  autoComplete="name"
+                  className="pl-10 h-10 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-sm" 
+                  required
+                />
+              </div>
             </div>
-            <div className="relative">
-              <span className="absolute left-3.5 top-3 text-sm font-bold text-gray-400 select-none">@</span>
-              <Input 
-                id="username" 
-                type="text" 
-                placeholder="your_handle"
-                value={username}
-                onChange={(e) => handleUsernameChange(e.target.value)}
-                maxLength={20}
-                disabled={isLoading}
-                className={`pl-9 h-11 rounded-xl border-gray-200 focus-visible:ring-violet-500 ${
-                  usernameStatus.available === false ? 'border-rose-400 focus-visible:ring-rose-400' : 
-                  usernameStatus.available === true ? 'border-emerald-400 focus-visible:ring-emerald-400' : ''
-                }`} 
-              />
-              {usernameStatus.checking && (
-                <Loader2 className="absolute right-3.5 top-3.5 w-4 h-4 animate-spin text-gray-400" />
+
+            <div className="space-y-1 animate-in fade-in">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="username" className="text-xs font-semibold text-gray-700">Username (Handle)</Label>
+                <span className="text-[11px] text-gray-400 font-normal">{username.length}/20</span>
+              </div>
+              <div className="relative">
+                <span className="absolute left-3.5 top-2.5 text-sm font-bold text-gray-400 select-none">@</span>
+                <Input 
+                  id="username" 
+                  type="text" 
+                  placeholder="username"
+                  value={username}
+                  onChange={(e) => {
+                    handleUsernameChange(e.target.value)
+                    if (errorMsg) setErrorMsg(null)
+                  }}
+                  maxLength={20}
+                  disabled={isLoading}
+                  autoComplete="username"
+                  className={`pl-9 pr-9 h-10 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-sm ${
+                    usernameStatus.available === false ? 'border-rose-400 focus-visible:ring-rose-400' : 
+                    usernameStatus.available === true ? 'border-emerald-400 focus-visible:ring-emerald-400' : ''
+                  }`} 
+                  required
+                />
+                {usernameStatus.checking && (
+                  <Loader2 className="absolute right-3.5 top-3 w-4 h-4 animate-spin text-gray-400" />
+                )}
+                {usernameStatus.available === true && (
+                  <Check className="absolute right-3.5 top-3 w-4 h-4 text-emerald-600 stroke-[2.5]" />
+                )}
+              </div>
+              {usernameStatus.available === false && (
+                <p className="text-[11px] font-medium text-rose-500 animate-in fade-in">
+                  {usernameStatus.error || "Username is already taken"}
+                </p>
               )}
             </div>
-            {usernameStatus.available === false && (
-              <p className="text-[11px] font-medium text-rose-500 animate-in fade-in">
-                {usernameStatus.error || "Username is already taken"}
-              </p>
-            )}
-            {usernameStatus.available === true && username.length >= 3 && (
-              <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 animate-in fade-in">
-                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>@{username} is available!</span>
-              </p>
-            )}
-          </div>
+          </>
         )}
 
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email address</Label>
+        {/* Email Address */}
+        <div className="space-y-1">
+          <Label htmlFor="email" className="text-xs font-semibold text-gray-700">Email address</Label>
           <div className="relative">
             <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
             <Input 
@@ -406,16 +626,22 @@ export function AuthForm() {
               type="email" 
               placeholder="name@university.edu"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                if (errorMsg) setErrorMsg(null)
+              }}
               disabled={isLoading}
-              className="pl-10 h-11 rounded-xl border-gray-200 focus-visible:ring-violet-500" 
+              autoComplete="email"
+              className="pl-10 h-10 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-sm" 
+              required
             />
           </div>
         </div>
 
-        <div className="space-y-1.5">
+        {/* Password */}
+        <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-xs font-semibold text-gray-700">Password</Label>
             {!isSignUp && (
               <button 
                 type="button" 
@@ -434,44 +660,96 @@ export function AuthForm() {
             <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
             <Input 
               id="password" 
-              type="password" 
-              placeholder="••••••••"
+              type={showPassword ? "text" : "password"} 
+              placeholder={isSignUp ? "At least 8 characters" : "••••••••"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                if (errorMsg) setErrorMsg(null)
+              }}
               disabled={isLoading}
-              className="pl-10 h-11 rounded-xl border-gray-200 focus-visible:ring-violet-500" 
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+              className="pl-10 pr-10 h-10 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-sm" 
+              required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
+          {isSignUp && (
+            <p className="text-[11px] text-gray-500 flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-violet-600 shrink-0" />
+              <span>Must be 8+ characters with a letter and a number</span>
+            </p>
+          )}
         </div>
 
+        {/* Sign Up: Confirm Password */}
+        {isSignUp && (
+          <div className="space-y-1 animate-in fade-in">
+            <Label htmlFor="confirm-password" className="text-xs font-semibold text-gray-700">Confirm Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
+              <Input 
+                id="confirm-password" 
+                type={showConfirmPassword ? "text" : "password"} 
+                placeholder="Repeat password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value)
+                  if (errorMsg) setErrorMsg(null)
+                }}
+                disabled={isLoading}
+                autoComplete="new-password"
+                className="pl-10 pr-10 h-10 rounded-xl border-gray-200 focus-visible:ring-violet-500 text-sm" 
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Remember Me Option (Sign In only) */}
+        {!isSignUp && (
+          <div className="flex items-center gap-2 pt-0.5">
+            <input 
+              id="remember-me"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 cursor-pointer"
+            />
+            <label htmlFor="remember-me" className="text-xs font-medium text-gray-600 cursor-pointer select-none">
+              Remember me on this device
+            </label>
+          </div>
+        )}
+
+        {/* Submit Button */}
         <Button 
           type="submit" 
-          className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-white rounded-xl shadow-sm text-base font-semibold transition-all duration-200 flex items-center justify-center cursor-pointer"
+          className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-white rounded-xl shadow-sm text-sm font-semibold transition-all duration-200 flex items-center justify-center cursor-pointer mt-2"
           disabled={isLoading}
         >
           {isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin text-white" />
           ) : (
             isSignUp ? "Create Account" : "Sign In"
           )}
         </Button>
       </form>
-
-      {/* Switch Mode Toggle */}
-      <div className="text-center text-sm font-semibold text-gray-500">
-        {isSignUp ? "Already have an account? " : "Don't have an account? "}
-        <button 
-          type="button"
-          onClick={() => {
-            setIsSignUp(!isSignUp)
-            setErrorMsg(null)
-            setSuccessMsg(null)
-          }} 
-          className="text-violet-600 hover:text-violet-700 font-bold underline cursor-pointer"
-        >
-          {isSignUp ? "Sign In" : "Sign Up"}
-        </button>
-      </div>
     </div>
   )
 }

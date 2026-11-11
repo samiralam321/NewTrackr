@@ -21,9 +21,11 @@ export function ProfileMenu() {
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
+    try {
+      await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
+    } catch {}
     await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    window.location.href = '/'
   }
 
   const handleShare = async () => {
