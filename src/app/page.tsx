@@ -1,114 +1,132 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { InstallButton } from "@/components/pwa/InstallPWA"
-import { Flame, Code2, Trophy, Briefcase, AtSign, ShieldCheck, Star, Users, BookOpen, Target, Award, Rocket, CheckCircle2 } from "lucide-react"
+import { Flame, Code2, Trophy, Briefcase, AtSign, ShieldCheck, Star, Users, UsersRound, BookOpen, Target, Award, CheckCircle2, Zap, TrendingUp, ArrowRight } from "lucide-react"
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-white text-gray-900 overflow-x-hidden selection:bg-violet-100 selection:text-violet-900">
-      {/* Sticky Header with Backdrop Blur */}
-      <header className="sticky top-0 z-50 flex h-20 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto w-full bg-white/90 backdrop-blur-md border-b border-gray-100/80 transition-all">
-        <Link href="/" className="flex items-center gap-1 md:gap-2 group">
-          <img 
-            src="/logo.png" 
-            alt="Trackr Logo" 
-            className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm scale-[1.3] origin-center transition-transform group-hover:scale-[1.35]" 
-          />
-          <span className="text-xl font-bold text-gray-900 ml-1 tracking-tight">Trackr</span>
-        </Link>
-        
-        {/* Navigation Links with Smooth Anchor Scrolling */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-          <a href="#features" className="hover:text-violet-600 transition-colors">Features</a>
-          <a href="#how-it-works" className="hover:text-violet-600 transition-colors">How it Works</a>
-          <a href="#why-trackr" className="hover:text-violet-600 transition-colors">Why Trackr?</a>
-          <a href="#community" className="hover:text-violet-600 transition-colors">Community</a>
-        </nav>
-
-        <div className="flex items-center gap-2 sm:gap-4">
-          <InstallButton className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-200 bg-violet-50 hover:bg-violet-100 active:scale-95 text-violet-700 text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer" />
-          <Link href="/auth" className="text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 px-2 py-1">
-            Log in
-          </Link>
-          <Link href="/auth">
-            <Button className="bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-full px-3.5 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm font-semibold shadow-sm transition-all hover:shadow-md hover:scale-105 active:scale-95">
-              Get Started
-            </Button>
-          </Link>
-        </div>
-      </header>
-
       <main className="flex-1">
-        {/* ================= HERO SECTION ================= */}
-        <section className="relative pt-10 md:pt-16 pb-16 md:pb-24 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-8 lg:gap-12 overflow-hidden px-6 sm:px-8">
-          
-          {/* Background Gradient Blob */}
-          <div className="absolute right-0 top-0 bottom-0 -z-10 w-full lg:w-[55%] bg-gradient-to-bl from-[#F8F6FE] via-[#F4F1FE] to-[#EAE4FD] lg:rounded-l-[150px] opacity-100 overflow-hidden">
-            <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-white/50 rounded-full blur-3xl"></div>
-            <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#E4DCFC]/50 rounded-full blur-3xl"></div>
+        {/* ================= HERO CONTAINER (Navbar + Hero Integrated on 4K Landscape Asset) ================= */}
+        <div 
+          className="relative w-full min-h-screen min-h-[100dvh] flex flex-col justify-between overflow-hidden bg-[#DFECFC]"
+        >
+          {/* Synchronously decoded high-priority hero background image - Eliminates reload flash/blink */}
+          <img 
+            src="/hero-bg.webp" 
+            alt="Trackr landscape background" 
+            role="presentation" 
+            fetchPriority="high"
+            loading="eager"
+            decoding="sync"
+            className="absolute inset-0 w-full h-full object-cover object-bottom pointer-events-none select-none z-0"
+          />
+          {/* Top Floating Pill Navigation Bar - Ribbon Style */}
+          <div className="relative z-50 w-full flex justify-center px-4 pt-4 sm:pt-6">
+            <header className="inline-flex items-center gap-4 sm:gap-7 lg:gap-8 px-3.5 sm:px-5 py-1.5 sm:py-2 bg-white rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-gray-100/90">
+              {/* Left: Trackr Logo & Brand */}
+              <Link href="/" className="flex items-center gap-1.5 group shrink-0">
+                <img 
+                  src="/logo.png" 
+                  alt="Trackr Logo" 
+                  width={32}
+                  height={32}
+                  className="w-7 h-7 sm:w-8 sm:h-8 object-contain scale-[1.1] origin-center transition-transform group-hover:scale-[1.15]" 
+                />
+                <span className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">Trackr</span>
+              </Link>
+              
+              {/* Navigation Links */}
+              <nav className="hidden md:flex items-center gap-5 lg:gap-6 text-xs sm:text-sm font-medium text-gray-600">
+                <a href="#features" className="hover:text-[#6B46C1] transition-colors">Features</a>
+                <a href="#how-it-works" className="hover:text-[#6B46C1] transition-colors">How it Works</a>
+                <a href="#why-trackr" className="hover:text-[#6B46C1] transition-colors">Why Trackr?</a>
+                <a href="#community" className="hover:text-[#6B46C1] transition-colors">Community</a>
+              </nav>
+
+              {/* Right Action Buttons */}
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <InstallButton 
+                  className="flex items-center gap-1 px-3 sm:px-3.5 h-7 sm:h-8 rounded-full border border-violet-200/90 bg-white hover:bg-violet-50/60 active:scale-95 text-[#6B46C1] text-xs font-semibold transition-all shadow-2xs cursor-pointer" 
+                  iconClassName="w-3.5 h-3.5 text-[#6B46C1]"
+                />
+                <Link href="/auth">
+                  <button 
+                    type="button"
+                    className="bg-[#6B46C1] hover:bg-[#5835A8] text-white rounded-full px-3.5 sm:px-4 h-7 sm:h-8 text-xs font-semibold shadow-xs transition-all hover:shadow-sm hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
+                  >
+                    Get Started
+                  </button>
+                </Link>
+              </div>
+            </header>
           </div>
-          
-          <div className="flex-1 text-left relative z-20">
-            <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-semibold mb-6">
-              <span>Track progress. Build daily discipline.</span>
+
+          {/* Hero Content Area - Centered in Viewport inside Lavender Dome - Shifted -35px Upward as a Group */}
+          <section className="relative z-10 flex-1 flex flex-col items-center justify-center pt-8 sm:pt-12 md:pt-14 pb-20 sm:pb-28 md:pb-36 max-w-4xl mx-auto px-6 sm:px-8 text-center w-full -translate-y-8 sm:-translate-y-[35px]">
+            
+            {/* Centered Pill Badge */}
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-xs border border-violet-100 shadow-[0_4px_16px_rgba(107,70,193,0.08)] mb-6 sm:mb-8 animate-hero-badge">
+              <span className="text-xs sm:text-sm font-semibold text-[#2D2459]">Join 25,000+ students</span>
+              <UsersRound className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6B46C1] shrink-0" />
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#2D2459] leading-[1.1]">
-              Share Progress.<br/>
-              <span className="text-[#6B46C1]">Stay Accountable.</span><br/>
-              <span className="text-[#48BB78]">Grow Together.</span>
+            {/* Editorial Serif Heading matching Playfair Display reference exactly */}
+            <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-[68px] text-[#1E1738] font-normal tracking-[-0.015em] leading-[1.15] max-w-3xl mx-auto animate-hero-heading">
+              <span className="block font-normal">A Space for Students to</span>
+              <span className="block italic text-[#6B46C1] font-normal mt-1 sm:mt-2">Share, Learn and Grow</span>
             </h1>
 
-            <p className="mt-6 text-base sm:text-lg text-[#615C75] max-w-lg leading-relaxed">
-              Trackr is a focused space for students to share daily learning progress, build consistency, and become 1% better every day.
+            {/* Hero Description */}
+            <p className="mt-5 sm:mt-6 text-base sm:text-lg md:text-xl text-[#524B6B] max-w-[620px] mx-auto leading-relaxed font-normal animate-hero-subtitle">
+              Trackr helps you share daily progress, build consistency, and stay accountable with a community of learners.
             </p>
 
-            <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            {/* Call-to-Action Buttons */}
+            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 w-full sm:w-auto animate-hero-cta">
               <Link href="/auth" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-xl px-8 py-6 text-base font-semibold shadow-md shadow-violet-200 transition-all hover:scale-105 active:scale-95">
-                  Start Your Journey
-                </Button>
+                <button 
+                  type="button"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#6B46C1] hover:bg-[#5835A8] text-white rounded-full px-8 py-3.5 text-sm sm:text-base font-semibold shadow-lg shadow-violet-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <span>Start Your Journey</span>
+                  <ArrowRight className="w-4 h-4 text-white" />
+                </button>
               </Link>
               <a href="#how-it-works" className="w-full sm:w-auto">
-                <Button variant="outline" className="w-full sm:w-auto rounded-xl px-8 py-6 text-base font-semibold border-gray-200 bg-white/80 hover:bg-white text-[#6B46C1] shadow-sm transition-all hover:scale-105 active:scale-95">
-                  See How It Works <span className="ml-2 text-xs">▶</span>
-                </Button>
+                <button 
+                  type="button"
+                  className="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-8 py-3.5 text-sm sm:text-base font-semibold border border-[#E2D9F3] bg-white hover:bg-violet-50 text-[#6B46C1] shadow-sm hover:shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <span>See How It Works</span>
+                  <span className="ml-2 text-xs text-[#6B46C1]">▶</span>
+                </button>
               </a>
             </div>
-            
-            {/* Social Proof */}
-            <div className="mt-12 flex items-center gap-4">
-              <div className="flex -space-x-3">
-                <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover aspect-square shadow-sm" src="/student-1.png" alt="Student 1"/>
-                <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover aspect-square shadow-sm" src="/student-2.png" alt="Student 2"/>
-                <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover aspect-square shadow-sm" src="/student-3.png" alt="Student 3"/>
-              </div>
-              <div className="text-sm">
-                <p className="font-semibold text-[#2D2459]">Join 25,000+ students</p>
-                <p className="text-[#615C75]">building their future together.</p>
-              </div>
-            </div>
-          </div>
 
-          {/* Hero Illustration */}
-          <div className="flex-1 relative z-10 flex justify-center items-center mt-4 lg:mt-0">
-            <div className="absolute top-[10%] right-[20%] text-yellow-300 animate-pulse text-2xl z-0">✦</div>
-            <div className="absolute bottom-[20%] left-[5%] text-[#6B46C1] animate-pulse text-xl z-0" style={{ animationDelay: '1s' }}>✨</div>
-            <div className="absolute top-[30%] left-[10%] text-violet-300 animate-pulse text-3xl z-0" style={{ animationDelay: '0.5s' }}>✦</div>
-            <div className="absolute bottom-[30%] right-[5%] text-yellow-200 animate-pulse text-2xl z-0" style={{ animationDelay: '1.5s' }}>✦</div>
-            
-            <div className="relative z-10 w-full lg:w-[120%] flex justify-center -my-16 lg:-my-32">
-              <img 
-                src="/hero-illustration.png" 
-                alt="Trackr Hero" 
-                className="w-full h-auto object-contain drop-shadow-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000 scale-[1.1] lg:scale-[1.2] origin-bottom lg:translate-x-8" 
-              />
+            {/* Social Proof & Value Props Bar Below Buttons */}
+            <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 text-xs sm:text-sm font-medium text-[#4A3E72] animate-hero-subtitle">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2">
+                <Users className="w-4 h-4 text-[#6B46C1] shrink-0" />
+                <span>Join 200+ students</span>
+              </div>
+              <span className="hidden sm:inline-block h-3.5 w-px bg-violet-300/70" aria-hidden="true" />
+              <div className="inline-flex items-center gap-1.5 sm:gap-2">
+                <Zap className="w-4 h-4 text-[#6B46C1] fill-[#6B46C1] shrink-0" />
+                <span>Build consistency</span>
+              </div>
+              <span className="hidden sm:inline-block h-3.5 w-px bg-violet-300/70" aria-hidden="true" />
+              <div className="inline-flex items-center gap-1.5 sm:gap-2">
+                <TrendingUp className="w-4 h-4 text-[#6B46C1] shrink-0" />
+                <span>Grow together</span>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
         {/* ================= HOW IT WORKS SECTION ================= */}
-        <section id="how-it-works" className="scroll-mt-6 md:scroll-mt-3 py-20 md:py-28 bg-[#F8F7FF] text-center relative border-y border-violet-100/50">
+        <section id="how-it-works" className="scroll-mt-0 py-20 md:py-28 bg-[#F8F7FF] text-center relative border-b border-violet-100/50">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100/80 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
               Simple Daily Rhythm
@@ -169,7 +187,7 @@ export default function LandingPage() {
         </section>
 
         {/* ================= FEATURES SECTION ================= */}
-        <section id="features" className="scroll-mt-6 md:scroll-mt-3 py-20 md:py-28 bg-white">
+        <section id="features" className="scroll-mt-0 py-20 md:py-28 bg-white">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
@@ -284,7 +302,7 @@ export default function LandingPage() {
         </section>
 
         {/* ================= WHY TRACKR? SECTION ================= */}
-        <section id="why-trackr" className="scroll-mt-6 md:scroll-mt-3 py-20 md:py-28 bg-[#FBFBFE] border-y border-violet-100/50">
+        <section id="why-trackr" className="scroll-mt-0 py-20 md:py-28 bg-[#FBFBFE] border-y border-violet-100/50">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
@@ -371,7 +389,7 @@ export default function LandingPage() {
         </section>
 
         {/* ================= COMMUNITY SECTION ================= */}
-        <section id="community" className="scroll-mt-6 md:scroll-mt-3 py-20 md:py-28 bg-white relative overflow-hidden">
+        <section id="community" className="scroll-mt-0 py-20 md:py-28 bg-white relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">

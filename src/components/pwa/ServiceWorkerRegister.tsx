@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { RefreshCw, X } from 'lucide-react'
 
-const APP_BUILD_ID = 'trackr_v2.3_build_oct31'
+const APP_BUILD_ID = 'trackr_v2.5_zero_blink_hero'
 
 export function ServiceWorkerRegister() {
   const [updateAvailable, setUpdateAvailable] = useState(false)
@@ -22,7 +22,7 @@ export function ServiceWorkerRegister() {
         if ('caches' in window) {
           caches.keys().then((keys) => {
             keys.forEach((k) => {
-              if (k !== 'trackr-v2.3') {
+              if (k !== 'trackr-v2.5') {
                 caches.delete(k)
               }
             })

@@ -308,7 +308,7 @@ export function InstallPWA() {
 
 export function InstallButton({ 
   className = "", 
-  iconClassName = "w-6 h-6", 
+  iconClassName = "w-4 h-4", 
   textClassName = "" 
 }: { 
   className?: string
@@ -319,7 +319,7 @@ export function InstallButton({
   const [showIOS, setShowIOS] = useState(false)
   const [showAndroid, setShowAndroid] = useState(false)
 
-  if (!isMounted || isStandalone) return null
+  if (isMounted && isStandalone) return null
 
   const handleClick = async () => {
     if (isIOS) {
@@ -336,6 +336,7 @@ export function InstallButton({
   return (
     <>
       <button
+        type="button"
         onClick={handleClick}
         className={className || "flex items-center gap-4 px-4 py-2.5 rounded-full font-medium text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors text-left cursor-pointer w-full"}
       >

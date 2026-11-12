@@ -1,16 +1,17 @@
 // Trackr PWA Service Worker
-// Version: 2.3.0 - Instant Network-First & Dynamic Cache Busting
-const CACHE_NAME = 'trackr-v2.3'
+// Version: 2.5.0 - Zero-Blink Hero & Cache-First Static Engine
+const CACHE_NAME = 'trackr-v2.5'
 const OFFLINE_URL = '/offline'
 
-// Precache essential offline fallback assets
+// Precache essential offline fallback and critical hero assets
 const PRECACHE_ASSETS = [
   OFFLINE_URL,
+  '/hero-bg.webp',
+  '/logo.png',
   '/icon-192x192.png',
   '/icon-512x512.png',
   '/icon-maskable-512x512.png',
   '/apple-touch-icon.png',
-  '/logo.png',
   '/manifest.json'
 ]
 
@@ -82,31 +83,41 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // RULE 4: Next.js Static Assets & Chunks -> Network-First with Cache Fallback
-  // Guarantees mobile devices always fetch the newly deployed bundle on reload
+  // RULE 4: Next.js Static Assets, Hero Media & Fonts -> Cache-First with Background Revalidation
+  // Delivers instant (0ms) zero-blink local rendering from CacheStorage on every refresh
   const isStaticAsset =
     url.pathname.startsWith('/_next/static/') ||
+    url.pathname === '/hero-bg.webp' ||
     url.pathname.startsWith('/icon-') ||
     url.pathname === '/logo.png' ||
     url.pathname === '/apple-touch-icon.png' ||
     url.pathname === '/favicon.ico' ||
     url.pathname.endsWith('.svg') ||
     url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.webp') ||
+    url.pathname.endsWith('.jpg') ||
     url.pathname.endsWith('.woff2')
 
   if (isStaticAsset) {
     event.respondWith(
-      fetch(request)
-        .then((networkResponse) => {
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          // Serve instantly from cache without waiting for network
+          fetch(request).then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse))
+            }
+          }).catch(() => {})
+          return cachedResponse
+        }
+        return fetch(request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const copy = networkResponse.clone()
             caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
           }
           return networkResponse
         })
-        .catch(() => {
-          return caches.match(request)
-        })
+      })
     )
     return
   }

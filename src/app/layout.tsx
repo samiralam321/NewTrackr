@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
@@ -9,6 +9,13 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  display: "swap",
+  style: ["normal", "italic"],
 });
 
 export const viewport: Viewport = {
@@ -60,11 +67,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} font-sans h-full antialiased scroll-smooth`}
+      className={`${inter.variable} ${playfair.variable} font-sans h-full antialiased scroll-smooth`}
       suppressHydrationWarning
     >
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="preload" as="image" href="/hero-bg.webp" type="image/webp" fetchPriority="high" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -97,7 +105,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} antialiased min-h-full flex flex-col`}>
+      <body className={`${inter.variable} ${playfair.variable} antialiased min-h-full flex flex-col`}>
         <ThemeProvider>
           {children}
           <ServiceWorkerRegister />
