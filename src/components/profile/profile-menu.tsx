@@ -4,6 +4,7 @@ import { useState } from "react"
 import { MoreVertical, Share2, Settings, HelpCircle, LogOut } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { LogoutModal } from "@/components/auth/logout-modal"
 
 export function ProfileMenu() {
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -135,39 +136,10 @@ export function ProfileMenu() {
       )}
 
       {/* Logout Confirmation Modal */}
-      {isConfirmOpen && (
-        <>
-          <div 
-            className="fixed inset-0 bg-black/60 z-[60] animate-in fade-in duration-200"
-            onClick={() => !isLoggingOut && setIsConfirmOpen(false)}
-          />
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
-            <div className="bg-white dark:bg-[#1A1A24] w-full max-w-[340px] rounded-[32px] p-8 shadow-2xl pointer-events-auto animate-in zoom-in-95 fade-in duration-200">
-              <h3 className="text-[22px] font-black text-[#111827] dark:text-white text-center mb-3">Leaving so soon?</h3>
-              <p className="text-[15px] text-[#6B7280] dark:text-gray-400 text-center mb-8 leading-relaxed px-2">
-                We're sad to see you go. Are you sure you want to log out of your session?
-              </p>
-              
-              <div className="flex flex-col gap-3">
-                <button 
-                  onClick={() => setIsConfirmOpen(false)}
-                  disabled={isLoggingOut}
-                  className="w-full h-14 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold rounded-2xl transition-colors active:scale-[0.98] flex items-center justify-center text-[16px]"
-                >
-                  Stay Logged In
-                </button>
-                <button 
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="w-full h-12 bg-transparent text-[#6B7280] hover:text-[#374151] dark:text-gray-400 dark:hover:text-gray-200 font-bold rounded-2xl transition-colors active:scale-[0.98] text-[15px]"
-                >
-                  {isLoggingOut ? "Logging out..." : "Yes, Log Out"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <LogoutModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+      />
 
       {/* Help & Support Modal */}
       {isHelpOpen && (

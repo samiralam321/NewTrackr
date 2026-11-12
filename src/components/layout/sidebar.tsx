@@ -13,6 +13,7 @@ import { InstallButton } from "@/components/pwa/InstallPWA"
 import { clearTrackrClientCaches } from "@/lib/cache/client-cache"
 import { scrollToFeedTop } from "@/lib/utils/scroll"
 import { prefetchNotifications } from "@/lib/notifications/notifications-service"
+import { LogoutModal } from "@/components/auth/logout-modal"
 
 export function Sidebar({ profile }: { profile?: any }) {
   const pathname = usePathname()
@@ -434,31 +435,11 @@ export function Sidebar({ profile }: { profile?: any }) {
       </div>
 
       {/* Logout Confirmation Modal */}
-      {isLogoutModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-[#1A1A24] rounded-[2rem] p-8 md:p-10 max-w-[400px] w-full shadow-2xl border border-gray-100 dark:border-[#2D2B3B] flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
-            <h3 className="text-2xl font-bold text-[#0f1419] dark:text-[#e7e9ea] mb-3 tracking-tight">Leaving so soon?</h3>
-            <p className="text-[15px] text-[#536471] dark:text-[#71767b] mb-8 px-2 leading-relaxed">
-              We're sad to see you go. Are you sure you want to log out of your session?
-            </p>
-            
-            <div className="flex flex-col gap-3 w-full">
-              <button 
-                onClick={() => setIsLogoutModalOpen(false)} 
-                className="w-full py-4 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-bold transition-all shadow-md hover:shadow-xl hover:shadow-violet-500/20 active:scale-[0.98]"
-              >
-                Stay Logged In
-              </button>
-              <button 
-                onClick={confirmLogout} 
-                className="w-full py-4 rounded-2xl bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 font-bold transition-all active:scale-[0.98]"
-              >
-                Yes, Log Out
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <LogoutModal 
+        isOpen={isLogoutModalOpen} 
+        onClose={() => setIsLogoutModalOpen(false)} 
+        onConfirm={confirmLogout} 
+      />
 
       {/* Contact Creator Modal */}
       {isContactOpen && (
