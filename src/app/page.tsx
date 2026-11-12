@@ -126,63 +126,171 @@ export default function LandingPage() {
         </div>
 
         {/* ================= HOW IT WORKS SECTION ================= */}
-        <section id="how-it-works" className="scroll-mt-0 py-20 md:py-28 bg-[#F8F7FF] text-center relative border-b border-violet-100/50">
-          <div className="max-w-7xl mx-auto px-6 sm:px-8">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100/80 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-3">
-              Simple Daily Rhythm
+        <section
+          id="how-it-works"
+          className="scroll-mt-0 bg-[#FAF9FE] relative overflow-hidden border-b border-violet-100/60"
+        >
+          {/* ── Main two-column layout: Left = Character | Right = Content ── */}
+          <div className="relative z-10 max-w-[1360px] mx-auto flex flex-col lg:flex-row lg:items-stretch min-h-[520px] lg:min-h-[580px]">
+
+            {/* ═══ LEFT COLUMN — 3D Character (35% on desktop) ═══ */}
+            <div className="relative flex-shrink-0 w-full lg:w-[35%] xl:w-[34%] flex items-end justify-center pt-10 pb-0 lg:pt-0 lg:pb-0 overflow-visible">
+              {/* Lavender circular aura behind character */}
+              <div
+                className="absolute left-1/2 -translate-x-1/2 lg:left-auto lg:translate-x-0 lg:-left-4 xl:-left-8 bottom-0 rounded-full pointer-events-none z-0"
+                style={{
+                  width: "clamp(320px, 36vw, 560px)",
+                  height: "clamp(320px, 36vw, 560px)",
+                  background: "radial-gradient(circle at 50% 55%, rgba(216,195,252,0.85) 0%, rgba(232,218,254,0.55) 42%, rgba(243,237,254,0.20) 65%, rgba(250,249,254,0) 80%)"
+                }}
+                aria-hidden="true"
+              />
+              {/* Character image — bottom-aligned */}
+              <img
+                src="/cheerful-student.webp"
+                alt="Cheerful student with laptop and backpack"
+                width={520}
+                height={570}
+                loading="lazy"
+                decoding="async"
+                className="relative z-10 w-[260px] sm:w-[300px] md:w-[340px] lg:w-full lg:max-w-[420px] xl:max-w-[460px] h-auto object-contain drop-shadow-xl select-none pointer-events-none"
+              />
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#2D2459] mb-3 tracking-tight">How Trackr Works</h2>
-            <p className="text-gray-500 mb-16 max-w-xl mx-auto text-base sm:text-lg">
-              A frictionless daily loop designed to turn small daily efforts into exponential career outcomes.
-            </p>
 
-            <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-12 md:gap-8 relative">
-              {/* Step 1 */}
-              <div className="flex flex-col items-center flex-1 z-10 group">
-                <div className="h-16 w-16 bg-violet-100 text-violet-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                  <BookOpen className="w-8 h-8" />
-                </div>
-                <h3 className="font-semibold text-gray-900 text-lg mb-2">1. Learn</h3>
-                <p className="text-sm text-gray-500 px-4 leading-relaxed">
-                  Spend 30+ minutes daily learning DSA, Web Dev, AI, or Core CS concepts.
-                </p>
-              </div>
-              
-              <div className="hidden md:block absolute top-8 left-[15%] right-[15%] h-0.5 bg-dashed border-t-2 border-dashed border-gray-200 -z-0" />
+            {/* ═══ RIGHT COLUMN — Heading + Subtitle + 4 Steps (65% on desktop) ═══ */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center px-5 sm:px-8 lg:px-8 xl:px-10 pt-8 sm:pt-10 lg:pt-14 pb-28 sm:pb-32 lg:pb-36 xl:pb-40">
 
-              {/* Step 2 */}
-              <div className="flex flex-col items-center flex-1 z-10 group">
-                <div className="h-16 w-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                  <Code2 className="w-8 h-8" />
-                </div>
-                <h3 className="font-semibold text-gray-900 text-lg mb-2">2. Log Progress</h3>
-                <p className="text-sm text-gray-500 px-4 leading-relaxed">
-                  Post what you built, problems solved, and paste syntax-highlighted code.
-                </p>
+              {/* Section label */}
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-violet-100/90 text-violet-700 text-xs font-semibold uppercase tracking-wider mb-4 shadow-2xs self-start">
+                Simple Daily Rhythm
               </div>
 
-              {/* Step 3 */}
-              <div className="flex flex-col items-center flex-1 z-10 group">
-                <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                  <Flame className="w-8 h-8 text-orange-500" />
-                </div>
-                <h3 className="font-semibold text-gray-900 text-lg mb-2">3. Keep The Streak</h3>
-                <p className="text-sm text-gray-500 px-4 leading-relaxed">
-                  Earn streak flames, unlock milestone badges, and climb campus leaderboards.
-                </p>
-              </div>
+              {/* Main heading */}
+              <h2 className="text-3xl sm:text-4xl lg:text-[38px] xl:text-[44px] font-bold text-[#1E1738] mb-3 tracking-tight leading-[1.15]">
+                How Trackr Works
+              </h2>
 
-              {/* Step 4 */}
-              <div className="flex flex-col items-center flex-1 z-10 group">
-                <div className="h-16 w-16 bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                  <Trophy className="w-8 h-8 text-pink-600" />
+              {/* Subtitle */}
+              <p className="text-[#524B6B] text-base sm:text-[17px] leading-relaxed font-normal mb-10 lg:mb-12 max-w-[520px]">
+                A frictionless daily loop designed to turn small daily efforts into exponential career outcomes.
+              </p>
+
+              {/* ── Four-Step Timeline ── */}
+              <div className="relative w-full">
+                {/* Dashed connecting line through icon centers */}
+                <div
+                  className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-0.5 border-t-2 border-dashed border-violet-200/80 z-0"
+                  aria-hidden="true"
+                />
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-2 md:gap-x-3 xl:gap-x-4 relative z-10">
+
+                  {/* Step 1: Learn */}
+                  <div className="flex flex-col items-center text-center group">
+                    <div className="w-14 h-14 bg-[#ECE8FD] rounded-2xl flex items-center justify-center mb-3.5 shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
+                      <BookOpen className="w-6 h-6 text-[#7C3AED]" />
+                    </div>
+                    <h3 className="font-bold text-[#1E1738] text-[13.5px] lg:text-[13.5px] xl:text-[14.5px] mb-1.5 tracking-tight whitespace-nowrap">
+                      1. Learn
+                    </h3>
+                    <p className="text-[11px] lg:text-[11.5px] xl:text-[12.5px] text-[#524B6B] leading-[1.6]">
+                      <span className="lg:block">Spend 30+ minutes daily</span>{" "}
+                      <span className="lg:block">learning DSA, Web Dev, AI,</span>{" "}
+                      <span className="lg:block">or Core CS concepts.</span>
+                    </p>
+                  </div>
+
+                  {/* Step 2: Log Progress */}
+                  <div className="flex flex-col items-center text-center group">
+                    <div className="w-14 h-14 bg-[#E0F2FE] rounded-2xl flex items-center justify-center mb-3.5 shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
+                      <Code2 className="w-6 h-6 text-[#0284C7]" />
+                    </div>
+                    <h3 className="font-bold text-[#1E1738] text-[13.5px] lg:text-[13.5px] xl:text-[14.5px] mb-1.5 tracking-tight whitespace-nowrap">
+                      2. Log Progress
+                    </h3>
+                    <p className="text-[11px] lg:text-[11.5px] xl:text-[12.5px] text-[#524B6B] leading-[1.6]">
+                      <span className="lg:block">Post what you built,</span>{" "}
+                      <span className="lg:block">problems solved, and paste</span>{" "}
+                      <span className="lg:block">syntax-highlighted code.</span>
+                    </p>
+                  </div>
+
+                  {/* Step 3: Keep The Streak */}
+                  <div className="flex flex-col items-center text-center group">
+                    <div className="w-14 h-14 bg-[#DCFCE7] rounded-2xl flex items-center justify-center mb-3.5 shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
+                      <Flame className="w-6 h-6 text-[#F97316] fill-[#F97316]/20" />
+                    </div>
+                    <h3 className="font-bold text-[#1E1738] text-[13.5px] lg:text-[13.5px] xl:text-[14.5px] mb-1.5 tracking-tight whitespace-nowrap">
+                      3. Keep The Streak
+                    </h3>
+                    <p className="text-[11px] lg:text-[11.5px] xl:text-[12.5px] text-[#524B6B] leading-[1.6]">
+                      <span className="lg:block">Earn streak flames, unlock</span>{" "}
+                      <span className="lg:block">milestone badges, and climb</span>{" "}
+                      <span className="lg:block">campus leaderboards.</span>
+                    </p>
+                  </div>
+
+                  {/* Step 4: Unlock Opportunities */}
+                  <div className="flex flex-col items-center text-center group">
+                    <div className="w-14 h-14 bg-[#FCE7F3] rounded-2xl flex items-center justify-center mb-3.5 shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
+                      <Trophy className="w-6 h-6 text-[#DB2777]" />
+                    </div>
+                    <h3 className="font-bold text-[#1E1738] text-[13.5px] lg:text-[13.5px] xl:text-[14.5px] mb-1.5 tracking-tight whitespace-nowrap">
+                      4. Unlock Opportunities
+                    </h3>
+                    <p className="text-[11px] lg:text-[11.5px] xl:text-[12.5px] text-[#524B6B] leading-[1.6]">
+                      <span className="lg:block">Discover curated hackathons,</span>{" "}
+                      <span className="lg:block">placement opportunities, and</span>{" "}
+                      <span className="lg:block">partner teams.</span>
+                    </p>
+                  </div>
+
                 </div>
-                <h3 className="font-semibold text-gray-900 text-lg mb-2">4. Unlock Opportunities</h3>
-                <p className="text-sm text-gray-500 px-4 leading-relaxed">
-                  Discover curated hackathons, placement opportunities, and partner teams.
-                </p>
               </div>
             </div>
+
+          </div>
+
+          {/* Bottom Flowing Water-Flow Waves — strictly below all text content */}
+          <div className="absolute inset-x-0 bottom-0 pointer-events-none select-none z-0 overflow-hidden leading-none" aria-hidden="true">
+            <svg
+              className="w-full h-16 sm:h-20 md:h-24 lg:h-[96px] xl:h-[104px] block"
+              viewBox="0 0 1440 120"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="trackrWaveBack" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ECE3FC" stopOpacity="0.55" />
+                  <stop offset="50%" stopColor="#E4D7FB" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#ECE3FC" stopOpacity="0.6" />
+                </linearGradient>
+                <linearGradient id="trackrWaveMid" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#E9DDFB" stopOpacity="0.75" />
+                  <stop offset="45%" stopColor="#DFCEFA" stopOpacity="0.85" />
+                  <stop offset="100%" stopColor="#EDE4FC" stopOpacity="0.8" />
+                </linearGradient>
+                <linearGradient id="trackrWaveFront" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#F5F0FE" stopOpacity="0.95" />
+                  <stop offset="50%" stopColor="#EFE7FC" stopOpacity="0.95" />
+                  <stop offset="100%" stopColor="#F7F3FE" stopOpacity="0.98" />
+                </linearGradient>
+              </defs>
+              {/* Layer 1: Soft back wave */}
+              <path
+                fill="url(#trackrWaveBack)"
+                d="M0,48 C220,18 440,78 720,46 C1000,14 1240,68 1440,34 L1440,120 L0,120 Z"
+              />
+              {/* Layer 2: Mid flowing curve */}
+              <path
+                fill="url(#trackrWaveMid)"
+                d="M0,64 C260,92 520,28 820,58 C1080,84 1280,42 1440,56 L1440,120 L0,120 Z"
+              />
+              {/* Layer 3: Smooth foreground pastel wave */}
+              <path
+                fill="url(#trackrWaveFront)"
+                d="M0,84 C300,52 600,98 920,72 C1160,52 1320,82 1440,68 L1440,120 L0,120 Z"
+              />
+            </svg>
           </div>
         </section>
 
