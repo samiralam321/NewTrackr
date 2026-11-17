@@ -51,13 +51,12 @@ export default function LandingPage() {
                   className="flex items-center gap-1 px-3 sm:px-3.5 h-7 sm:h-8 rounded-full border border-violet-200/90 bg-white hover:bg-violet-50/60 active:scale-95 text-[#6B46C1] text-xs font-semibold transition-all shadow-2xs cursor-pointer" 
                   iconClassName="w-3.5 h-3.5 text-[#6B46C1]"
                 />
-                <Link href="/auth">
-                  <button 
-                    type="button"
-                    className="bg-[#6B46C1] hover:bg-[#5835A8] text-white rounded-full px-3.5 sm:px-4 h-7 sm:h-8 text-xs font-semibold shadow-xs transition-all hover:shadow-sm hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
-                  >
-                    Get Started
-                  </button>
+                <Link
+                  href="/auth"
+                  prefetch={true}
+                  className="bg-[#6B46C1] hover:bg-[#5835A8] text-white rounded-full px-3.5 sm:px-4 h-7 sm:h-8 text-xs font-semibold shadow-xs transition-all hover:shadow-sm hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
+                >
+                  Get Started
                 </Link>
               </div>
             </header>
@@ -85,23 +84,20 @@ export default function LandingPage() {
 
             {/* Call-to-Action Buttons */}
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 w-full sm:w-auto animate-hero-cta">
-              <Link href="/auth" className="w-full sm:w-auto">
-                <button 
-                  type="button"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#6B46C1] hover:bg-[#5835A8] text-white rounded-full px-8 py-3.5 text-sm sm:text-base font-semibold shadow-lg shadow-violet-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                >
-                  <span>Start Your Journey</span>
-                  <ArrowRight className="w-4 h-4 text-white" />
-                </button>
+              <Link
+                href="/auth"
+                prefetch={true}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#6B46C1] hover:bg-[#5835A8] text-white rounded-full px-8 py-3.5 text-sm sm:text-base font-semibold shadow-lg shadow-violet-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <span>Start Your Journey</span>
+                <ArrowRight className="w-4 h-4 text-white" />
               </Link>
-              <a href="#how-it-works" className="w-full sm:w-auto">
-                <button 
-                  type="button"
-                  className="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-8 py-3.5 text-sm sm:text-base font-semibold border border-[#E2D9F3] bg-white hover:bg-violet-50 text-[#6B46C1] shadow-sm hover:shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                >
-                  <span>See How It Works</span>
-                  <span className="ml-2 text-xs text-[#6B46C1]">▶</span>
-                </button>
+              <a
+                href="#how-it-works"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-8 py-3.5 text-sm sm:text-base font-semibold border border-[#E2D9F3] bg-white hover:bg-violet-50 text-[#6B46C1] shadow-sm hover:shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <span>See How It Works</span>
+                <span className="ml-2 text-xs text-[#6B46C1]">▶</span>
               </a>
             </div>
 
@@ -630,15 +626,18 @@ export default function LandingPage() {
                   Join thousands of students who are showing up every single day to master code and land great careers.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4">
-                  <Link href="/auth" className="w-full sm:w-auto">
-                    <Button className="w-full sm:w-auto bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-xl px-8 py-6 text-base font-semibold shadow-md shadow-violet-200 transition-all hover:scale-105 active:scale-95">
-                      Get Started for Free
-                    </Button>
+                  <Link
+                    href="/auth"
+                    prefetch={true}
+                    className="w-full sm:w-auto inline-flex items-center justify-center bg-[#6B46C1] hover:bg-[#553C9A] text-white rounded-xl px-8 py-4 text-base font-semibold shadow-md shadow-violet-200 transition-all hover:scale-105 active:scale-95 text-center"
+                  >
+                    Get Started for Free
                   </Link>
-                  <a href="#community" className="w-full sm:w-auto">
-                    <Button variant="outline" className="w-full sm:w-auto rounded-xl px-8 py-6 text-base font-semibold border-gray-200 bg-transparent hover:bg-white shadow-sm transition-all hover:scale-105 active:scale-95 text-[#6B46C1]">
-                      Explore Community
-                    </Button>
+                  <a
+                    href="#community"
+                    className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl px-8 py-4 text-base font-semibold border border-gray-200 bg-transparent hover:bg-white shadow-sm transition-all hover:scale-105 active:scale-95 text-[#6B46C1] text-center"
+                  >
+                    Explore Community
                   </a>
                 </div>
               </div>

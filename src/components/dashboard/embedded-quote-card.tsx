@@ -104,9 +104,9 @@ export function EmbeddedQuoteCard({
   const codeLang = codeBlockMatch ? (codeBlockMatch[1].split(':')[0] || 'Code') : null
   const codeLines = codeBlockMatch ? codeBlockMatch[2].split('\n').length : 0
 
-  // Text content without code block for clean preview
+  // Text content without code block for clean preview (strip protocol prefixes for clean link display)
   const plainText = localPost.content 
-    ? localPost.content.replace(/```[\s\S]*?```/g, '').trim()
+    ? localPost.content.replace(/```[\s\S]*?```/g, '').replace(/https?:\/\//gi, '').trim()
     : ''
 
   // Card click toggles expansion on the same page with zero layout shift and zero buffering

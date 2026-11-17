@@ -12,8 +12,12 @@ export default function AuthPage() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-1 mb-8 relative z-20 group w-fit">
             <img 
-              src="/logo.png" 
+              src="/logo.webp" 
               alt="Trackr Logo" 
+              width={48}
+              height={48}
+              loading="eager"
+              decoding="async"
               className="w-12 h-12 object-contain drop-shadow-sm scale-[1.3] origin-center transition-transform group-hover:scale-[1.35]" 
             />
             <span className="text-xl font-bold text-[#2D2459] ml-1">Trackr</span>
@@ -68,8 +72,12 @@ export default function AuthPage() {
              {/* Character Image */}
              <div className="relative z-10 w-[92%] max-w-[340px] flex justify-center pb-2">
                <img 
-                 src="/auth-character.png" 
+                 src="/auth-character.webp" 
                  alt="Trackr Mascot" 
+                 width={340}
+                 height={300}
+                 loading="eager"
+                 decoding="async"
                  className="w-full h-auto object-contain drop-shadow-sm"
                />
              </div>
@@ -86,7 +94,7 @@ export default function AuthPage() {
                <div className="absolute -top-4 right-0 text-violet-200"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
                <div className="absolute top-8 -right-4 text-yellow-300"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5L12 0z"/></svg></div>
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-100/50">
-                <img src="/logo.png" alt="Trackr Logo" className="w-9 h-9 object-contain drop-shadow-sm scale-[1.3]" />
+                <img src="/logo.webp" alt="Trackr Logo" width={36} height={36} loading="eager" decoding="async" className="w-9 h-9 object-contain drop-shadow-sm scale-[1.3]" />
               </div>
             </div>
 

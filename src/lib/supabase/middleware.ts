@@ -17,6 +17,51 @@ export async function updateSession(request: NextRequest) {
     supabaseResponse.cookies.delete(legacyTokenName)
   }
 
+  const pathname = request.nextUrl.pathname
+  const isPublicRoute =
+    pathname === '/' ||
+    pathname === '/sw.js' ||
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/manifest.json' ||
+    pathname === '/offline' ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/icon-') ||
+    pathname === '/apple-touch-icon.png' ||
+    pathname === '/logo.png' ||
+    pathname === '/logo.webp' ||
+    pathname === '/auth-character.png' ||
+    pathname === '/auth-character.webp' ||
+    pathname === '/hero-bg.webp' ||
+    pathname === '/cheerful-student.webp'
+
+  // Fast-path: Check if client sent any Supabase auth session token cookies
+  const allCookies = request.cookies.getAll()
+  const hasAuthToken = allCookies.some(
+    (c) => c.name.startsWith(`sb-${projectRef}-auth-token`) || c.name.includes('auth-token')
+  )
+
+  // If no auth tokens exist at all, skip remote Supabase API calls completely:
+  if (!hasAuthToken) {
+    // 1. If accessing a protected route without any token, redirect to /auth immediately (0ms)
+    if (!isPublicRoute) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth'
+      const returnTarget = pathname + (request.nextUrl.search || '')
+      if (returnTarget && returnTarget !== '/') {
+        url.searchParams.set('redirectTo', returnTarget)
+      }
+      const redirectResponse = NextResponse.redirect(url)
+      if (isCorrupted) {
+        redirectResponse.cookies.delete(legacyTokenName)
+      }
+      return redirectResponse
+    }
+    // 2. If accessing a public route (/ or /auth or static/pwa), return immediately without waiting on Supabase cloud!
+    return supabaseResponse
+  }
+
+  // Auth token is present -> instantiate client and verify user session
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -65,19 +110,6 @@ export async function updateSession(request: NextRequest) {
     console.warn("Middleware caught auth session error:", err)
     user = null
   }
-
-  const pathname = request.nextUrl.pathname
-  const isPublicRoute =
-    pathname === '/' ||
-    pathname === '/sw.js' ||
-    pathname === '/manifest.webmanifest' ||
-    pathname === '/manifest.json' ||
-    pathname === '/offline' ||
-    pathname.startsWith('/auth') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/icon-') ||
-    pathname === '/apple-touch-icon.png' ||
-    pathname === '/logo.png'
 
   // If already authenticated and visiting the root /auth page, redirect immediately to /dashboard
   if (user && (pathname === '/auth' || pathname === '/auth/')) {

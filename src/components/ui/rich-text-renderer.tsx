@@ -41,6 +41,9 @@ function renderFormattedText(text: string, baseKey: string | number): React.Reac
         ? part 
         : `https://${part}`
 
+      // Strip https:// or http:// protocol from visible display text
+      const displayText = part.replace(/^https?:\/\//i, '')
+
       return (
         <a
           key={key}
@@ -50,7 +53,7 @@ function renderFormattedText(text: string, baseKey: string | number): React.Reac
           className="text-violet-600 dark:text-violet-400 font-medium hover:underline decoration-[1px] underline-offset-2 hover:decoration-violet-400/80 dark:hover:decoration-violet-400/80 inline-flex items-center gap-0.5 break-all hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
-          {part}
+          {displayText}
         </a>
       )
     }
@@ -176,16 +179,20 @@ export function RichTextRenderer({ content }: RichTextRendererProps) {
             if (tagName === "a") {
               const href = el.getAttribute("href") || ""
               const isExternal = href.startsWith("http://") || href.startsWith("https://")
+              const safeHref = href.startsWith("http://") || href.startsWith("https://")
+                ? href
+                : (href.startsWith("/") ? href : `https://${href}`)
+              const displayText = (el.textContent || href).replace(/^https?:\/\//i, "")
               return (
                 <a
                   key={currentKey}
-                  href={href}
+                  href={safeHref}
                   target={isExternal ? "_blank" : undefined}
                   rel={isExternal ? "noopener noreferrer" : undefined}
                   className="text-violet-600 dark:text-violet-400 font-medium hover:underline decoration-[1px] underline-offset-2 hover:decoration-violet-400/80 dark:hover:decoration-violet-400/80 inline-flex items-center gap-0.5 break-all transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {parseNodes(el.childNodes, currentKey)}
+                  {displayText}
                 </a>
               )
             }
