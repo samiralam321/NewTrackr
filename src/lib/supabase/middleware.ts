@@ -19,6 +19,7 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
   const isPublicRoute =
+    pathname.endsWith('.pdf') ||
     pathname === '/' ||
     pathname === '/sw.js' ||
     pathname === '/manifest.webmanifest' ||

@@ -18,8 +18,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - PWA files: sw.js, manifest.json, manifest.webmanifest, offline
-     * - static image/font extensions
+     * - static image/font/pdf extensions
      */
-    '/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.json|manifest.webmanifest|offline|icon-.*|apple-touch-icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.json|manifest.webmanifest|offline|icon-.*|apple-touch-icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2|pdf)$).*)',
   ],
 }

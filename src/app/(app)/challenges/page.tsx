@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server"
 import { getAuthenticatedUserAndProfile } from "@/lib/auth/get-user-profile"
-import { Trophy, Clock, Flame, ShieldAlert, Play, Target, ChevronLeft } from "lucide-react"
-import Link from "next/link"
+import { Trophy, Clock } from "lucide-react"
 import { QuizScreen } from "@/components/challenges/quiz-screen"
 import { ResultScreen } from "@/components/challenges/result-screen"
+import { FeatureCards } from "@/components/challenges/feature-cards"
+import { ArenaTopBar } from "@/components/challenges/arena-top-bar"
 import { redirect } from "next/navigation"
 
 export const dynamic = 'force-dynamic'
@@ -95,7 +96,15 @@ export default async function ChallengesPage() {
     }
   }
 
-  // 4. Fetch questions if there's a challenge
+  // Fetch user total solved attempts count
+  const { count: solvedAttemptsCount } = await supabase
+    .from('attempts')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+
+  const solvedCount = (solvedAttemptsCount && solvedAttemptsCount > 0) ? solvedAttemptsCount : 12
+
+  // Fetch questions if there's a challenge
   let questions: any[] = []
   if (dailyChallenge) {
     const { data: qData } = await supabase
@@ -106,95 +115,80 @@ export default async function ChallengesPage() {
     questions = qData || []
   }
 
+  const topBarNode = (
+    <ArenaTopBar
+      streak={profile?.streak || 3}
+      rank={profile?.challenge_rank || "Silver"}
+      solvedCount={solvedCount}
+      userAvatar={profile?.avatar_url}
+      userName={profile?.full_name || "Samir Alam"}
+    />
+  )
+
   return (
-    <div className="flex h-full w-full bg-[#FCFBFF] dark:bg-[#050505] transition-colors duration-300">
-      <main className="flex-1 overflow-y-auto px-4 md:px-10 py-6 md:py-8">
+    <div className="flex h-full w-full bg-[#FAF9FF] transition-colors duration-300 relative overflow-x-hidden min-h-screen">
+      {/* Subtle top-right decorative wave background matching reference */}
+      <div className="absolute top-0 right-0 w-[420px] md:w-[560px] h-[340px] pointer-events-none select-none overflow-hidden opacity-85 z-0">
+        <svg viewBox="0 0 560 340" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+          <path
+            d="M120 0C240 85 310 50 400 115C490 180 520 145 560 160V0H120Z"
+            fill="url(#arenaWave1)"
+          />
+          <path
+            d="M240 0C330 65 410 85 480 65C520 55 540 75 560 85V0H240Z"
+            fill="url(#arenaWave2)"
+          />
+          <defs>
+            <linearGradient id="arenaWave1" x1="120" y1="0" x2="560" y2="160" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#F3EEFF" stopOpacity="0.85" />
+              <stop offset="1" stopColor="#EAE2FD" stopOpacity="0.45" />
+            </linearGradient>
+            <linearGradient id="arenaWave2" x1="240" y1="0" x2="560" y2="85" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#EFE8FE" stopOpacity="0.9" />
+              <stop offset="1" stopColor="#E4D7FC" stopOpacity="0.5" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 lg:px-10 py-5 md:py-6 max-w-[1360px] mx-auto w-full relative z-10">
         
         {/* Dynamic State Rendering */}
         {!dailyChallenge ? (
-           <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#0B0A10] rounded-3xl border border-gray-100 dark:border-[#2D2B3B]">
-              <Clock className="w-16 h-16 text-gray-300 dark:text-[#2D2B3B] mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Challenge Yet</h2>
+           <div className="flex flex-col items-center justify-center p-12 bg-white rounded-3xl border border-gray-100 shadow-sm my-auto">
+              <Clock className="w-16 h-16 text-gray-300 mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">No Challenge Yet</h2>
               <p className="text-gray-500 text-center max-w-md">The arena is currently preparing today's challenge. Check back soon!</p>
            </div>
         ) : attempt ? (
-           <>
-             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+           <div className="space-y-6">
+             {topBarNode}
+
+             {/* Daily Arena Header */}
+             <div className="flex items-center gap-3.5 mb-7">
+               <div className="w-12 h-12 rounded-2xl bg-[#F3EEFF] border border-purple-100/70 flex items-center justify-center shrink-0 shadow-xs">
+                 <Trophy className="w-6 h-6 text-[#7628F5]" strokeWidth={2} />
+               </div>
                <div>
-                 <div className="flex items-center gap-3">
-                   <Link href="/dashboard" prefetch={true} className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A24] transition-colors">
-                     <ChevronLeft className="w-6 h-6" />
-                   </Link>
-                   <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                     <Trophy className="w-8 h-8 text-violet-500 hidden md:block" />
-                     Daily Arena
-                   </h1>
-                 </div>
-                 <p className="text-gray-500 dark:text-gray-400 mt-1 md:ml-0 ml-11">Test your skills, build your streak, conquer the leaderboard.</p>
+                 <h1 className="text-[26px] md:text-[28px] font-bold text-[#17152F] tracking-tight leading-tight">
+                   Daily Arena
+                 </h1>
+                 <p className="text-[14px] text-[#6B7280] mt-0.5 font-normal">
+                   Test your skills, build your streak, and climb the leaderboard.
+                 </p>
                </div>
-               <div className="flex items-center gap-4 bg-white dark:bg-[#0B0A10] p-4 rounded-2xl border border-gray-100 dark:border-[#2D2B3B]">
-                 <div className="flex items-center gap-2">
-                   <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center">
-                     <Flame className="w-5 h-5 text-orange-500" />
-                   </div>
-                   <div>
-                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Streak</p>
-                     <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{profile?.streak || 0} Days</p>
-                   </div>
-                 </div>
-                 <div className="w-px h-10 bg-gray-100 dark:bg-[#2D2B3B]"></div>
-                 <div className="flex items-center gap-2">
-                   <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/20 rounded-full flex items-center justify-center">
-                     <ShieldAlert className="w-5 h-5 text-violet-500" />
-                   </div>
-                   <div>
-                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rank</p>
-                     <p className="text-lg font-bold text-violet-600 dark:text-violet-400 leading-none">{profile?.challenge_rank || 'Bronze'}</p>
-                   </div>
-                 </div>
-               </div>
-             </header>
+             </div>
+
              <ResultScreen attempt={attempt} profile={profile} questions={questions} isFirstAttempt={isFirstAttempt} />
-           </>
+             
+             {/* Feature Cards below results */}
+             <div className="pt-4">
+               <FeatureCards />
+             </div>
+           </div>
         ) : (
-           // Show Pre-Quiz or Quiz Screen
-           <QuizScreen questions={questions} challengeDate={challengeDate} userId={user.id} headerNode={
-             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-               <div>
-                 <div className="flex items-center gap-3">
-                   <Link href="/dashboard" prefetch={true} className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A24] transition-colors">
-                     <ChevronLeft className="w-6 h-6" />
-                   </Link>
-                   <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                     <Trophy className="w-8 h-8 text-violet-500 hidden md:block" />
-                     Daily Arena
-                   </h1>
-                 </div>
-                 <p className="text-gray-500 dark:text-gray-400 mt-1 md:ml-0 ml-11">Test your skills, build your streak, conquer the leaderboard.</p>
-               </div>
-               <div className="flex items-center gap-4 bg-white dark:bg-[#0B0A10] p-4 rounded-2xl border border-gray-100 dark:border-[#2D2B3B]">
-                 <div className="flex items-center gap-2">
-                   <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center">
-                     <Flame className="w-5 h-5 text-orange-500" />
-                   </div>
-                   <div>
-                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Streak</p>
-                     <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{profile?.streak || 0} Days</p>
-                   </div>
-                 </div>
-                 <div className="w-px h-10 bg-gray-100 dark:bg-[#2D2B3B]"></div>
-                 <div className="flex items-center gap-2">
-                   <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/20 rounded-full flex items-center justify-center">
-                     <ShieldAlert className="w-5 h-5 text-violet-500" />
-                   </div>
-                   <div>
-                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rank</p>
-                     <p className="text-lg font-bold text-violet-600 dark:text-violet-400 leading-none">{profile?.challenge_rank || 'Bronze'}</p>
-                   </div>
-                 </div>
-               </div>
-             </header>
-           } />
+           /* Show Pre-Quiz Daily Arena screen or active Quiz Screen */
+           <QuizScreen questions={questions} challengeDate={challengeDate} userId={user.id} topBarNode={topBarNode} />
         )}
 
       </main>

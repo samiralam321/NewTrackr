@@ -2,7 +2,20 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Timer, AlertTriangle, CheckCircle2, ChevronRight, XCircle, Target } from "lucide-react"
+import { 
+  Timer, 
+  AlertTriangle, 
+  ChevronRight, 
+  Trophy, 
+  Calendar, 
+  Code2, 
+  Clock, 
+  RotateCcw, 
+  Play, 
+  Check 
+} from "lucide-react"
+import { CodingIllustration } from "./coding-illustration"
+import { FeatureCards } from "./feature-cards"
 
 type Question = {
   id: string
@@ -13,7 +26,17 @@ type Question = {
   correct_answer: string
 }
 
-export function QuizScreen({ questions, challengeDate, userId, headerNode }: { questions: Question[], challengeDate: string, userId: string, headerNode?: React.ReactNode }) {
+export function QuizScreen({ 
+  questions, 
+  challengeDate, 
+  userId,
+  topBarNode
+}: { 
+  questions: Question[]
+  challengeDate: string
+  userId: string
+  topBarNode?: React.ReactNode 
+}) {
   const [started, setStarted] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({})
@@ -129,7 +152,7 @@ export function QuizScreen({ questions, challengeDate, userId, headerNode }: { q
     })
 
     // Calculate new streak
-    let newStreak = 1;
+    let newStreak = 1
     const { data: previousAttempts } = await supabase
       .from('attempts')
       .select('challenge_date')
@@ -164,88 +187,190 @@ export function QuizScreen({ questions, challengeDate, userId, headerNode }: { q
     window.location.reload()
   }, [shuffledQuestions, selectedAnswers, timeLeft, userId, challengeDate, submitting])
 
+  // ================= PRE-QUIZ LANDING VIEW (EXACT MATCH TO REFERENCE IMAGE) =================
   if (!started) {
     return (
-      <div className="flex flex-col w-full h-full">
-        {headerNode}
-        <div className="max-w-2xl mx-auto mt-10 bg-white dark:bg-[#0B0A10] p-8 rounded-3xl border border-gray-100 dark:border-[#2D2B3B] shadow-sm text-center">
-        <div className="w-20 h-20 bg-violet-100 dark:bg-violet-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Target className="w-10 h-10 text-violet-600" />
-        </div>
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Today's Arena Challenge</h2>
-        <p className="text-gray-500 mb-8 text-lg">5 Questions • 10 Minutes • One Attempt</p>
-        
-        <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 p-4 rounded-xl text-left mb-8">
-          <h4 className="font-semibold text-orange-800 dark:text-orange-400 flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-4 h-4" /> Rules & Anti-Cheat
-          </h4>
-          <ul className="text-sm text-orange-700 dark:text-orange-300 space-y-1 list-disc pl-5">
-            <li>Do not switch tabs. Your quiz will auto-submit on the second warning.</li>
-            <li>Copy-pasting is disabled.</li>
-            <li>Score = (Correct × 100) - (Wrong × 20) - (Time in sec × 0.5).</li>
-            <li>Skipped questions give 0 points (no negative penalty).</li>
-          </ul>
+      <div className="flex flex-col w-full">
+        {/* Top Bar with Search & Quick Stats if provided */}
+        {topBarNode}
+
+        {/* A. Daily Arena Header */}
+        <div className="flex items-center gap-3.5 mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-[#F3EEFF] border border-purple-100/70 flex items-center justify-center shrink-0 shadow-xs">
+            <Trophy className="w-6 h-6 text-[#7628F5]" strokeWidth={2} />
+          </div>
+          <div>
+            <h1 className="text-[26px] md:text-[28px] font-bold text-[#17152F] tracking-tight leading-tight">
+              Daily Arena
+            </h1>
+            <p className="text-[14px] text-[#6B7280] mt-0.5 font-normal">
+              Test your skills, build your streak, and climb the leaderboard.
+            </p>
+          </div>
         </div>
 
-        <button 
-          onClick={() => setStarted(true)}
-          className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-4 px-12 rounded-full transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-violet-500/25"
-        >
-          START CHALLENGE
-        </button>
-      </div>
+        {/* B. Main Challenge Card */}
+        <div className="bg-white rounded-[24px] border border-[#EBE6F7] shadow-[0_4px_25px_rgba(118,40,245,0.03)] p-6 md:p-8 lg:p-9 mb-5 relative overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            {/* Left Section — Challenge Information */}
+            <div className="lg:col-span-5 flex flex-col justify-center">
+              {/* Today's Challenge Pill */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F3EEFF] text-[#7628F5] text-xs font-semibold w-fit mb-3.5">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Today's Challenge</span>
+              </div>
+
+              {/* Main Heading */}
+              <h2 className="text-2xl md:text-[30px] font-extrabold text-[#17152F] tracking-tight leading-tight mb-2">
+                Arena Challenge
+              </h2>
+
+              {/* Description */}
+              <p className="text-[14px] text-[#52525B] leading-relaxed mb-5 max-w-md">
+                A short and focused challenge to keep your problem-solving skills sharp.
+              </p>
+
+              {/* Metadata Row */}
+              <div className="flex items-center flex-wrap gap-3 md:gap-3.5 text-[13px] text-[#17152F] font-medium mb-6">
+                <div className="flex items-center gap-1.5">
+                  <Code2 className="w-4 h-4 text-[#7628F5]" />
+                  <span>5 Questions</span>
+                </div>
+                <span className="text-gray-300 select-none">|</span>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-[#7628F5]" />
+                  <span>10 Minutes</span>
+                </div>
+                <span className="text-gray-300 select-none">|</span>
+                <div className="flex items-center gap-1.5">
+                  <RotateCcw className="w-4 h-4 text-[#7628F5]" />
+                  <span>One Attempt</span>
+                </div>
+              </div>
+
+              {/* Start Challenge CTA Button */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setStarted(true)}
+                  className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-[#6E27E8] to-[#591AD9] text-white font-semibold text-[15px] shadow-md shadow-purple-600/25 hover:shadow-lg hover:shadow-purple-600/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  <Play className="w-4 h-4 fill-none stroke-[2.4] text-white" />
+                  <span>Start Challenge</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Centre Section — Coding Illustration */}
+            <div className="lg:col-span-3 flex items-center justify-center py-2 lg:py-0">
+              <CodingIllustration className="w-full max-w-[240px] md:max-w-[260px] h-auto" />
+            </div>
+
+            {/* Right Section — Rules & Anti-Cheat */}
+            <div className="lg:col-span-4 bg-[#FAF7FD] border border-[#EFEBF9] rounded-2xl p-5 md:p-6 flex flex-col justify-center">
+              <div className="flex items-center gap-2 mb-4">
+                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+                <h3 className="text-[15.5px] font-bold text-[#17152F]">
+                  Rules & Anti-Cheat
+                </h3>
+              </div>
+
+              <ul className="space-y-3">
+                <li className="flex items-start gap-2.5">
+                  <div className="w-[18px] h-[18px] rounded-full bg-[#B89CF8] flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-white stroke-[2.5]" />
+                  </div>
+                  <span className="text-[13px] text-[#374151] leading-[1.45]">
+                    Do not switch tabs. Your quiz will auto-submit on the second warning.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <div className="w-[18px] h-[18px] rounded-full bg-[#B89CF8] flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-white stroke-[2.5]" />
+                  </div>
+                  <span className="text-[13px] text-[#374151] leading-[1.45]">
+                    Copy-pasting is disabled.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <div className="w-[18px] h-[18px] rounded-full bg-[#B89CF8] flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-white stroke-[2.5]" />
+                  </div>
+                  <span className="text-[13px] text-[#374151] leading-[1.45]">
+                    Score = (Correct × 100) − (Wrong × 20) − (Time in sec × 0.5).
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <div className="w-[18px] h-[18px] rounded-full bg-[#B89CF8] flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-white stroke-[2.5]" />
+                  </div>
+                  <span className="text-[13px] text-[#374151] leading-[1.45]">
+                    Skipped questions give 0 points (no negative penalty).
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+        {/* C. Four Feature Cards Below the Main Card */}
+        <FeatureCards />
       </div>
     )
   }
 
+  // ================= ACTIVE QUIZ QUESTIONS VIEW =================
   const currentQ = shuffledQuestions[currentIndex]
 
   return (
-    <div className="max-w-3xl mx-auto" onCopy={(e) => e.preventDefault()} style={{ userSelect: 'none' }}>
+    <div className="max-w-3xl mx-auto w-full" onCopy={(e) => e.preventDefault()} style={{ userSelect: 'none' }}>
       {/* Top Bar */}
-      <div className="flex items-center justify-between mb-8 bg-white dark:bg-[#0B0A10] p-4 rounded-2xl border border-gray-100 dark:border-[#2D2B3B] sticky top-4 z-10">
+      <div className="flex items-center justify-between mb-8 bg-white p-4 rounded-2xl border border-gray-100 sticky top-4 z-10 shadow-xs">
         <div className="flex flex-col">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Progress</span>
-          <span className="text-lg font-bold text-gray-900 dark:text-white">Question {currentIndex + 1} <span className="text-gray-400">/ 5</span></span>
+          <span className="text-lg font-bold text-gray-900">Question {currentIndex + 1} <span className="text-gray-400">/ 5</span></span>
         </div>
         
-        <div className={`flex items-center gap-3 px-4 py-2 rounded-full font-mono font-bold text-lg ${timeLeft < 60 ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-gray-100 text-gray-900 dark:bg-[#1A1A24] dark:text-white'}`}>
+        <div className={`flex items-center gap-3 px-4 py-2 rounded-full font-mono font-bold text-lg ${timeLeft < 60 ? 'bg-red-100 text-red-600' : 'bg-[#F3EEFF] text-[#7628F5]'}`}>
           <Timer className="w-5 h-5" />
           {formatTime(timeLeft)}
         </div>
       </div>
 
       {/* Question Card */}
-      <div className="bg-white dark:bg-[#0B0A10] p-6 md:p-8 rounded-3xl border border-gray-100 dark:border-[#2D2B3B] mb-6 shadow-sm">
+      <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 mb-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <span className="px-3 py-1 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 rounded-full text-xs font-bold uppercase tracking-wider">
+          <span className="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-bold uppercase tracking-wider">
             {currentQ?.topic}
           </span>
-          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${currentQ?.difficulty === 'Hard' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'}`}>
+          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${currentQ?.difficulty === 'Hard' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
             {currentQ?.difficulty}
           </span>
         </div>
         
-        <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-8 leading-relaxed">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-8 leading-relaxed">
           {currentQ?.question}
         </h3>
 
         <div className="space-y-3">
-          {currentQ?.options.map((option, idx) => {
+          {currentQ?.options?.map((option, idx) => {
             const isSelected = selectedAnswers[currentQ.id] === option
             return (
               <button
                 key={idx}
+                type="button"
                 onClick={() => handleSelectOption(currentQ.id, option)}
-                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
                   isSelected 
-                    ? 'border-violet-600 bg-violet-50 dark:bg-violet-900/20 text-violet-900 dark:text-violet-100' 
-                    : 'border-gray-100 dark:border-[#2D2B3B] hover:border-violet-300 dark:hover:border-violet-700/50 text-gray-700 dark:text-gray-300 bg-transparent'
+                    ? 'border-violet-600 bg-violet-50 text-violet-900 shadow-xs' 
+                    : 'border-gray-100 hover:border-violet-300 text-gray-700 bg-transparent'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-violet-600' : 'border-gray-300 dark:border-gray-600'}`}>
-                    {isSelected && <div className="w-3 h-3 bg-violet-600 rounded-full" />}
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-violet-600 bg-violet-600' : 'border-gray-300'}`}>
+                    {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-full" />}
                   </div>
                   <span className="text-[15px] font-medium leading-relaxed">{option}</span>
                 </div>
@@ -258,25 +383,29 @@ export function QuizScreen({ questions, challengeDate, userId, headerNode }: { q
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <button
+          type="button"
           onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
           disabled={currentIndex === 0}
-          className="px-6 py-3 font-semibold text-gray-500 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 transition-colors"
+          className="px-6 py-3 font-semibold text-gray-500 hover:text-gray-900 disabled:opacity-30 transition-colors cursor-pointer"
         >
           Previous
         </button>
 
         {currentIndex < 4 ? (
           <button
+            type="button"
             onClick={() => setCurrentIndex(prev => prev + 1)}
-            className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-3 rounded-full font-bold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 bg-[#17152F] text-white px-8 py-3 rounded-full font-bold hover:bg-gray-800 transition-colors cursor-pointer shadow-sm"
           >
-            Next <ChevronRight className="w-5 h-5" />
+            <span>Next</span>
+            <ChevronRight className="w-5 h-5" />
           </button>
         ) : (
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex items-center gap-2 bg-violet-600 text-white px-10 py-3 rounded-full font-bold hover:bg-violet-700 transition-colors shadow-lg shadow-violet-500/25 disabled:opacity-50"
+            className="flex items-center gap-2 bg-gradient-to-r from-[#6E27E8] to-[#591AD9] text-white px-10 py-3 rounded-full font-bold hover:opacity-95 transition-all shadow-lg shadow-purple-500/25 disabled:opacity-50 cursor-pointer"
           >
             {submitting ? 'Submitting...' : 'Submit Challenge'}
           </button>
