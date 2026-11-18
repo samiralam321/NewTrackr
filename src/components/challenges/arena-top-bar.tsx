@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Search, Flame, Shield, Calendar, ChevronDown } from "lucide-react"
+import { Search, Flame, Shield, Calendar } from "lucide-react"
 import Link from "next/link"
 
 interface ArenaTopBarProps {
@@ -67,17 +67,16 @@ export function ArenaTopBar({
           </span>
         </div>
 
-        {/* Avatar with dropdown caret */}
+        {/* Avatar */}
         <Link
           href="/profile"
-          className="flex items-center gap-1.5 pl-1 pr-1 py-1 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
+          className="flex items-center pl-1 pr-1 py-1 rounded-full hover:opacity-90 transition-opacity cursor-pointer shrink-0"
         >
           <img
             src={userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=7628F5&color=fff&size=80`}
             alt={userName || "User"}
             className="w-9 h-9 rounded-full object-cover ring-2 ring-purple-100 shadow-xs"
           />
-          <ChevronDown className="w-3.5 h-3.5 text-gray-600" />
         </Link>
       </div>
     </div>

@@ -151,7 +151,7 @@ export default async function ChallengesPage() {
         </svg>
       </div>
 
-      <main className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 lg:px-10 py-5 md:py-6 max-w-[1360px] mx-auto w-full relative z-10">
+      <main className="flex-1 overflow-y-auto no-scrollbar px-4 sm:px-6 md:px-8 lg:px-10 py-5 md:py-6 max-w-[1360px] mx-auto w-full relative z-10">
         
         {/* Dynamic State Rendering */}
         {!dailyChallenge ? (
